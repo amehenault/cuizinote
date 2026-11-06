@@ -42,7 +42,7 @@ function TableDonnees({ points, unite, decimales }) {
 }
 
 /** Courbe à une seule série (poids). Points : [{ x: date ISO, y: nombre }]. */
-export function GraphiqueLigne({ points, unite = 'kg', libelle }) {
+export function GraphiqueLigne({ points, unite = 'lb', libelle }) {
   const svg = useRef(null);
   const [survol, setSurvol] = useState(null);
 

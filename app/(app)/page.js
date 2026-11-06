@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Flame, Footprints, Scale } from 'lucide-react';
 import { api } from '@/lib/client';
-import { EMPLACEMENTS, ajouterJours, debutSemaine, formaterJour, joursRestants, nombreFr, versIso } from '@/lib/dates';
+import { EMPLACEMENTS, ajouterJours, debutSemaine, enLb, formaterJour, joursRestants, nombreFr, versIso } from '@/lib/dates';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 import JournalJour from '@/components/JournalJour';
 import MenuSemaine from '@/components/MenuSemaine';
@@ -32,12 +32,12 @@ function Sante({ poids, pas, jour }) {
       </Link>
       <Link href="/sante" className="stat">
         <span className="stat__libelle"><Scale size={16} aria-hidden="true" />Poids</span>
-        <span className="stat__valeur">{dernier ? `${nombreFr(dernier.poids_kg, 1)} kg` : '-'}</span>
+        <span className="stat__valeur">{dernier ? `${nombreFr(enLb(dernier.poids_kg), 1)} lb` : '-'}</span>
         <span className="stat__note">
           {dernier
             ? `${new Date(dernier.mesure_le).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' })} · ${SOURCES[dernier.source] || dernier.source}`
             : 'Connectez Samsung Health dans Paramètres'}
-          {poids[1] && ` · ${dernier.poids_kg - poids[1].poids_kg > 0 ? '+' : ''}${nombreFr(dernier.poids_kg - poids[1].poids_kg, 1)} kg`}
+          {poids[1] && ` · ${dernier.poids_kg - poids[1].poids_kg > 0 ? '+' : ''}${nombreFr(enLb(dernier.poids_kg - poids[1].poids_kg), 1)} lb`}
         </span>
       </Link>
     </div>

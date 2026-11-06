@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Footprints, Scale, Settings, Smartphone, Trash2, Upload } from 'lucide-react';
 import { api } from '@/lib/client';
-import { nombreFr, versIso } from '@/lib/dates';
+import { enLb, nombreFr, versIso } from '@/lib/dates';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
 import { GraphiqueBarres, GraphiqueLigne } from '@/components/Graphiques';
 
@@ -53,7 +53,7 @@ export default function PageSante() {
   const [poids, setPoids] = useState([]);
   const [pas, setPas] = useState([]);
   const [message, setMessage] = useState({ type: 'info', texte: '' });
-  const [saisiePoids, setSaisiePoids] = useState({ mesure_le: maintenantLocal(), valeur: '', unite: 'kg' });
+  const [saisiePoids, setSaisiePoids] = useState({ mesure_le: maintenantLocal(), valeur: '', unite: 'lb' });
   const [saisiePas, setSaisiePas] = useState({ jour: versIso(), nombre: '' });
 
   const erreur = (texte) => setMessage({ type: 'erreur', texte });
@@ -124,9 +124,9 @@ export default function PageSante() {
         <div className="grille grille--stats">
           <div className="stat">
             <span className="stat__libelle"><Scale size={16} aria-hidden="true" />Dernier poids</span>
-            <span className="stat__valeur">{dernier ? `${nombreFr(dernier.poids_kg, 1)} kg` : '-'}</span>
+            <span className="stat__valeur">{dernier ? `${nombreFr(enLb(dernier.poids_kg), 1)} lb` : '-'}</span>
             {variation != null && (
-              <span className="stat__note">{variation > 0 ? '+' : ''}{nombreFr(variation, 1)} kg sur la période</span>
+              <span className="stat__note">{variation > 0 ? '+' : ''}{nombreFr(enLb(variation), 1)} lb sur la période</span>
             )}
           </div>
           <div className="stat">
@@ -148,7 +148,7 @@ export default function PageSante() {
 
         <section className="carte">
           <div className="carte__entete">
-            <h2 className="carte__titre"><Scale size={18} aria-hidden="true" />Poids (kg)</h2>
+            <h2 className="carte__titre"><Scale size={18} aria-hidden="true" />Poids (lb)</h2>
             <BoutonImport
               libelle="Importer VeSync"
               route="/api/sante/poids/import"
@@ -158,7 +158,7 @@ export default function PageSante() {
           </div>
           <div className="carte__corps">
             {poids.length > 0 ? (
-              <GraphiqueLigne points={poids.map((p) => ({ x: p.mesure_le, y: p.poids_kg }))} unite="kg" libelle="Évolution du poids" />
+              <GraphiqueLigne points={poids.map((p) => ({ x: p.mesure_le, y: Math.round(enLb(p.poids_kg) * 10) / 10 }))} unite="lb" libelle="Évolution du poids" />
             ) : (
               <p className="champ__aide">Aucune pesée sur la période.</p>
             )}
@@ -166,8 +166,8 @@ export default function PageSante() {
               <input className="champ__saisie champ__saisie--court" type="datetime-local" value={saisiePoids.mesure_le} onChange={(e) => setSaisiePoids({ ...saisiePoids, mesure_le: e.target.value })} aria-label="Date de la pesée" required />
               <input className="champ__saisie champ__saisie--court" inputMode="decimal" placeholder="Poids" value={saisiePoids.valeur} onChange={(e) => setSaisiePoids({ ...saisiePoids, valeur: e.target.value })} aria-label="Poids" required />
               <select className="champ__saisie champ__saisie--court" value={saisiePoids.unite} onChange={(e) => setSaisiePoids({ ...saisiePoids, unite: e.target.value })} aria-label="Unité">
-                <option value="kg">kg</option>
                 <option value="lb">lb</option>
+                <option value="kg">kg</option>
               </select>
               <button type="submit" className="bouton bouton--principal">Ajouter</button>
             </form>
@@ -176,7 +176,7 @@ export default function PageSante() {
                 {[...poids].reverse().slice(0, 5).map((p) => (
                   <li key={p.id} className="liste__element">
                     <div className="liste__principal">
-                      <p className="liste__titre">{nombreFr(p.poids_kg, 1)} kg</p>
+                      <p className="liste__titre">{nombreFr(enLb(p.poids_kg), 1)} lb</p>
                       <p className="liste__detail">
                         {new Date(p.mesure_le).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })} · {p.source}
                       </p>
