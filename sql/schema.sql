@@ -203,3 +203,8 @@ CREATE INDEX IF NOT EXISTS journal_utilisateur_idx ON journal(utilisateur_id, jo
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS unite text NOT NULL DEFAULT 'g';
 ALTER TABLE aliments DROP CONSTRAINT IF EXISTS aliments_unite_check;
 ALTER TABLE aliments ADD CONSTRAINT aliments_unite_check CHECK (unite IN ('g', 'ml'));
+
+-- Widget Android : clé à lecture seule (calories du jour), empreinte SHA-256 seulement
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_widget text UNIQUE;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_widget_cree_le timestamptz;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS widget_vu_le timestamptz;
