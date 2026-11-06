@@ -23,7 +23,7 @@ Application Web (ordinateur et mobile, installable sur l'écran d'accueil) pour 
 - Aucune donnée dans le navigateur : pas de localStorage, sessionStorage ni IndexedDB.
 - Session : cookie `__Host-` httpOnly, Secure, SameSite=Lax ; seule l'empreinte SHA-256 du jeton est en base.
 - Mots de passe hachés avec bcrypt (coût 12), 12 caractères minimum.
-- Inscriptions limitées aux courriels listés dans `INSCRIPTIONS_AUTORISEES`.
+- Inscription sur invitation : code `CODE_INVITATION` (comparé à temps constant) ou courriel listé dans `INSCRIPTIONS_AUTORISEES`.
 - Limitation des tentatives (connexion, inscription, IA, imports) stockée en base.
 - Protection CSRF : vérification de l'en-tête Origin sur toute requête qui modifie des données.
 - CSP stricte avec nonce par requête, HSTS, X-Frame-Options, Permissions-Policy.
@@ -38,7 +38,8 @@ Voir `.env.example`.
 | Variable | Rôle |
 | --- | --- |
 | `DATABASE_URL` | Chaîne de connexion Neon |
-| `INSCRIPTIONS_AUTORISEES` | Courriels autorisés à créer un compte, séparés par des virgules |
+| `INSCRIPTIONS_AUTORISEES` | Courriels autorisés à créer un compte sans code, séparés par des virgules |
+| `CODE_INVITATION` | Code à partager : permet de s'inscrire avec n'importe quel courriel |
 | `GEMINI_API_KEY` | Clé gratuite Gemini pour l'assistant (https://aistudio.google.com/apikey) |
 | `GEMINI_MODELE` | Facultatif, `gemini-flash-latest` par défaut |
 

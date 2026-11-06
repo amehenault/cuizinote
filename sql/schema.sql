@@ -160,3 +160,19 @@ CREATE TABLE IF NOT EXISTS pas (
   source         text NOT NULL DEFAULT 'manuel',
   UNIQUE (utilisateur_id, jour)
 );
+
+-- Synchronisation automatique (application passerelle Android -> Cuizinote).
+-- Seule l'empreinte SHA-256 de la clé personnelle est conservée.
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_sante text UNIQUE;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_sante_cree_le timestamptz;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS synchro_sante_le timestamptz;
+
+-- Intervalles de pas bruts (HC Webhook) : dédoublonnés, puis additionnés par jour.
+CREATE TABLE IF NOT EXISTS pas_intervalles (
+  utilisateur_id uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  debut          timestamptz NOT NULL,
+  fin            timestamptz NOT NULL,
+  jour           date NOT NULL,
+  nombre         integer NOT NULL CHECK (nombre >= 0),
+  PRIMARY KEY (utilisateur_id, debut, fin)
+);

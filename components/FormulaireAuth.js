@@ -8,7 +8,7 @@ import { Message } from './Elements';
 
 export default function FormulaireAuth({ mode }) {
   const inscription = mode === 'inscription';
-  const [valeurs, setValeurs] = useState({ nom: '', courriel: '', motDePasse: '' });
+  const [valeurs, setValeurs] = useState({ nom: '', courriel: '', motDePasse: '', codeInvitation: '' });
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
 
@@ -67,6 +67,13 @@ export default function FormulaireAuth({ mode }) {
             />
             {inscription && <span className="champ__aide">12 caractères minimum.</span>}
           </label>
+          {inscription && (
+            <label className="champ">
+              <span className="champ__libelle">Code d&apos;invitation</span>
+              <input className="champ__saisie" autoComplete="off" maxLength={100} {...champ('codeInvitation')} />
+              <span className="champ__aide">Fourni par la personne qui vous invite.</span>
+            </label>
+          )}
           <Message type="erreur">{erreur}</Message>
           <button type="submit" className="bouton bouton--principal bouton--bloc" disabled={envoi}>
             {inscription ? <UserPlus size={16} aria-hidden="true" /> : <LogIn size={16} aria-hidden="true" />}

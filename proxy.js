@@ -7,7 +7,9 @@ export function proxy(requete) {
 
   // API : refus des requêtes qui modifient des données depuis une autre origine (CSRF).
   if (pathname.startsWith('/api/')) {
-    if (!METHODES_SURES.has(requete.method)) {
+    // Exception : la réception santé n'utilise aucun cookie, seulement une clé personnelle
+    // envoyée par l'application passerelle du téléphone (qui n'envoie pas d'en-tête Origin).
+    if (!METHODES_SURES.has(requete.method) && pathname !== '/api/sante/reception') {
       const origine = requete.headers.get('origin');
       const hote = requete.headers.get('x-forwarded-host') || requete.headers.get('host');
       let valide = false;

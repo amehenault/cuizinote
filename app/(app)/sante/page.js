@@ -6,6 +6,7 @@ import { api } from '@/lib/client';
 import { nombreFr, versIso } from '@/lib/dates';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
 import { GraphiqueBarres, GraphiqueLigne } from '@/components/Graphiques';
+import SynchroSante from '@/components/SynchroSante';
 
 const PERIODES = [
   [30, '30 jours'],
@@ -158,6 +159,8 @@ export default function PageSante() {
           </form>
         </div>
 
+        <SynchroSante />
+
         <section className="carte">
           <div className="carte__entete">
             <h2 className="carte__titre"><Scale size={18} aria-hidden="true" />Poids (kg)</h2>
@@ -203,7 +206,7 @@ export default function PageSante() {
             <details>
               <summary className="champ__aide">Comment exporter mes pesées depuis VeSync ?</summary>
               <p className="champ__aide">
-                VeSync n&apos;offre pas d&apos;API publique. Dans l&apos;application VeSync, ouvrez votre balance, allez dans
+                Pour un import ponctuel : dans l&apos;application VeSync, ouvrez votre balance, allez dans
                 l&apos;historique des mesures puis utilisez l&apos;option d&apos;exportation des données (fichier CSV). Importez ce
                 fichier ici : les doublons sont mis à jour, jamais dupliqués. Les livres sont converties en kilogrammes.
               </p>
@@ -251,7 +254,7 @@ export default function PageSante() {
             <details>
               <summary className="champ__aide">Comment exporter mes pas depuis Samsung Health ?</summary>
               <p className="champ__aide">
-                Samsung Health ne permet pas l&apos;accès direct depuis un site Web. Dans l&apos;application : Menu, Paramètres,
+                Pour un import ponctuel sans application passerelle : dans Samsung Health, ouvrez Menu, Paramètres,
                 puis « Télécharger les données personnelles ». Dans le dossier créé sur le téléphone, choisissez le fichier
                 dont le nom contient <strong>step_daily_trend</strong> et importez-le ici.
               </p>
