@@ -63,7 +63,7 @@ export default function Coquille({ nom, children }) {
         </ul>
         <div className="nav__pied">
           <p className="nav__utilisateur">Connecté : {nom}</p>
-          <button type="button" className="bouton bouton--fantome bouton--petit" onClick={deconnecter}>
+          <button type="button" className="bouton bouton--fantome bouton--petit nav__deconnexion" onClick={deconnecter}>
             <LogOut size={16} aria-hidden="true" />
             Se déconnecter
           </button>

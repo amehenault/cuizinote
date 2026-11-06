@@ -2,25 +2,43 @@
    Variables globales - aucune couleur nommée : uniquement des rôles
    ========================================================================== */
 :root {
+  /* Palette de base (les 6 teintes de référence, de la plus claire à la plus foncée) */
+  --palette-1: #fdc79c;
+  --palette-2: #f2735c;
+  --palette-3: #a63a58;
+  --palette-4: #4f2150;
+  --palette-5: #4b5f49;
+  --palette-6: #b6cfa6;
+
   /* Marque */
-  --couleur-primaire: #2f6b4f;
-  --couleur-primaire-fonce: #22513b;
-  --couleur-primaire-pale: #e3efe8;
-  --couleur-secondaire: #c8642f;
-  --couleur-secondaire-pale: #f8e8de;
-  --couleur-accent: #6b5ca5;
-  --couleur-accent-pale: #ebe8f5;
+  --couleur-primaire: var(--palette-4);
+  --couleur-primaire-fonce: #3b1740;
+  --couleur-primaire-pale: #f1e7f1;
+  --couleur-secondaire: var(--palette-2);
+  --couleur-secondaire-fonce: #c4503a;
+  --couleur-secondaire-pale: #fde6d2;
+  --couleur-accent: var(--palette-5);
+  --couleur-accent-pale: #e4eedc;
 
   /* Surfaces et texte */
-  --couleur-fond: #f6f4ef;
-  --couleur-surface: #ffffff;
-  --couleur-surface-2: #efece4;
-  --couleur-texte: #1e2420;
-  --couleur-texte-attenue: #59625c;
+  --couleur-fond: var(--palette-6);
+  --couleur-surface: #fff1e3;
+  --couleur-surface-2: #f8e3cd;
+  --couleur-champ: #ffffff;
+  --couleur-texte: #2b1b2c;
+  --couleur-texte-attenue: #5f5361;
+  --couleur-texte-sur-fond: #3d3240;
   --couleur-texte-inverse: #ffffff;
-  --couleur-bordure: #d9d4c9;
-  --couleur-bordure-forte: #b9b2a3;
-  --couleur-voile: rgb(20 24 22 / 0.55);
+  --couleur-bordure: #ecd5bf;
+  --couleur-bordure-forte: #c9ad94;
+  --couleur-voile: rgb(43 27 44 / 0.55);
+
+  /* Menu de navigation */
+  --couleur-nav: var(--palette-4);
+  --couleur-nav-texte: #fff1e3;
+  --couleur-nav-survol: rgb(255 241 227 / 0.12);
+  --couleur-nav-actif: var(--palette-1);
+  --couleur-nav-actif-texte: var(--palette-4);
 
   /* Boutons */
   --couleur-btn1: var(--couleur-primaire);
@@ -29,33 +47,33 @@
   --couleur-btn2: var(--couleur-surface);
   --couleur-btn2-survol: var(--couleur-surface-2);
   --couleur-btn2-texte: var(--couleur-texte);
-  --couleur-btn3: var(--couleur-secondaire);
-  --couleur-btn3-survol: #a9501f;
+  --couleur-btn3: var(--palette-3);
+  --couleur-btn3-survol: #8a2d48;
   --couleur-btn3-texte: var(--couleur-texte-inverse);
   --couleur-btn-danger: #b3261e;
   --couleur-btn-danger-texte: var(--couleur-texte-inverse);
 
   /* États */
-  --couleur-succes: #2e7d4a;
-  --couleur-succes-pale: #e1f2e6;
-  --couleur-alerte: #9a6400;
-  --couleur-alerte-pale: #fdf0d5;
+  --couleur-succes: #3f513d;
+  --couleur-succes-pale: #e4eedc;
+  --couleur-alerte: #8a4a12;
+  --couleur-alerte-pale: #fde6d2;
   --couleur-danger: #b3261e;
   --couleur-danger-pale: #fbe4e2;
-  --couleur-focus: #3c7dd9;
+  --couleur-focus: var(--couleur-secondaire-fonce);
 
   /* Emplacements de l'inventaire */
-  --couleur-frigo: #2d7aa3;
-  --couleur-frigo-pale: #e1eff7;
-  --couleur-congelateur: #4a5fb0;
-  --couleur-congelateur-pale: #e5e9f8;
-  --couleur-garde-manger: #8a6a2f;
-  --couleur-garde-manger-pale: #f4ecdc;
+  --couleur-frigo: var(--palette-5);
+  --couleur-frigo-pale: #e4eedc;
+  --couleur-congelateur: var(--palette-4);
+  --couleur-congelateur-pale: #f1e7f1;
+  --couleur-garde-manger: #9a4430;
+  --couleur-garde-manger-pale: #fde6d2;
 
-  /* Graphiques */
-  --couleur-graphique-1: #13875a;
-  --couleur-graphique-2: #c95b2a;
-  --couleur-graphique-grille: #e4e0d6;
+  /* Graphiques (validés : saturation et contraste suffisants sur fond clair) */
+  --couleur-graphique-1: var(--palette-3);
+  --couleur-graphique-2: var(--couleur-secondaire-fonce);
+  --couleur-graphique-grille: #eee3da;
 
   /* Typographie */
   --police: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -76,6 +94,7 @@
   --espace-7: 3rem;
 
   /* Formes */
+  --epaisseur-contour: 6px; /* contour coloré des tuiles de chiffres */
   --rayon-s: 6px;
   --rayon-m: 10px;
   --rayon-l: 16px;

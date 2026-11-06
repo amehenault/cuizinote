@@ -628,3 +628,167 @@
   align-items: center;
   gap: var(--espace-2);
 }
+
+/* ==========================================================================
+   Bloc : journal (calories mangées de la journée)
+   ========================================================================== */
+.journal {
+  overflow: hidden;
+}
+
+.journal__jour {
+  text-transform: capitalize;
+}
+
+.journal__section {
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+
+.journal__entete {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+  padding: var(--espace-3) var(--espace-4);
+}
+
+.journal__titre {
+  flex: 1;
+  font-size: var(--taille-m);
+  font-weight: 700;
+}
+
+.journal__kcal {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--couleur-texte-attenue);
+}
+
+.journal__ajouter {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  color: var(--couleur-btn1-texte);
+  background: var(--couleur-btn1);
+  border: 0;
+  border-radius: var(--rayon-rond);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.journal__ajouter:hover {
+  background: var(--couleur-btn1-survol);
+}
+
+.journal__liste {
+  margin: 0;
+  padding: 0 var(--espace-4) var(--espace-3);
+  list-style: none;
+}
+
+.journal__entree {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: var(--espace-3);
+  padding: var(--espace-2) var(--espace-3);
+  font-size: var(--taille-s);
+  text-align: left;
+  background: var(--couleur-surface-2);
+  border: 0;
+  border-radius: var(--rayon-s);
+  cursor: pointer;
+}
+
+.journal__entree + .journal__entree,
+.journal__liste li + li {
+  margin-top: var(--espace-1);
+}
+
+.journal__entree:hover {
+  background: var(--couleur-primaire-pale);
+}
+
+.journal__nom {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.journal__detail {
+  color: var(--couleur-texte-attenue);
+}
+
+.journal__valeur {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.journal__total {
+  display: grid;
+  gap: var(--espace-2);
+  padding: var(--espace-4);
+  background: var(--couleur-secondaire-pale);
+}
+
+.journal__total-valeur {
+  font-size: var(--taille-l);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.journal__apercu {
+  font-size: var(--taille-l);
+  font-weight: 700;
+  color: var(--couleur-primaire);
+}
+
+/* Onglets principaux de l'accueil */
+.onglets--principal .onglets__bouton {
+  padding: var(--espace-3) var(--espace-4);
+  font-size: var(--taille-m);
+}
+
+/* Menu de la semaine : aujourd'hui bien encadré, repas cliquables */
+.semaine__jour--aujourdhui {
+  border: 3px solid var(--palette-2);
+  box-shadow: var(--ombre-m);
+}
+
+.semaine__badge {
+  margin-left: var(--espace-2);
+  text-transform: none;
+}
+
+button.semaine__repas-nom {
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+button.semaine__repas-nom:hover {
+  color: var(--couleur-primaire);
+  text-decoration: underline;
+}
+
+.semaine__manger {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--couleur-btn1-texte);
+  background: var(--couleur-btn1);
+  border: 0;
+  border-radius: var(--rayon-rond);
+  cursor: pointer;
+}
+
+.semaine__manger--fait {
+  background: var(--couleur-succes);
+}

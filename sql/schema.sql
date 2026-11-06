@@ -176,3 +176,25 @@ CREATE TABLE IF NOT EXISTS pas_intervalles (
   nombre         integer NOT NULL CHECK (nombre >= 0),
   PRIMARY KEY (utilisateur_id, debut, fin)
 );
+
+-- Six moments de repas (ajout de dessert et autre)
+ALTER TABLE planification DROP CONSTRAINT IF EXISTS planification_moment_check;
+ALTER TABLE planification ADD CONSTRAINT planification_moment_check
+  CHECK (moment IN ('dejeuner', 'diner', 'souper', 'dessert', 'collation', 'autre'));
+
+-- Journal : ce qui a réellement été mangé (calories figées au moment de l'ajout, modifiables)
+CREATE TABLE IF NOT EXISTS journal (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  utilisateur_id   uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  jour             date NOT NULL,
+  moment           text NOT NULL CHECK (moment IN ('dejeuner', 'diner', 'souper', 'dessert', 'collation', 'autre')),
+  libelle          text NOT NULL,
+  recette_id       uuid REFERENCES recettes(id) ON DELETE SET NULL,
+  aliment_id       uuid REFERENCES aliments(id) ON DELETE SET NULL,
+  planification_id uuid REFERENCES planification(id) ON DELETE SET NULL,
+  portions         numeric(6,2) NOT NULL DEFAULT 1,
+  grammes          numeric(8,2),
+  kcal             numeric(8,2),
+  cree_le          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS journal_utilisateur_idx ON journal(utilisateur_id, jour);

@@ -106,7 +106,7 @@
   width: 100%;
   min-height: 42px;
   padding: var(--espace-2) var(--espace-3);
-  background: var(--couleur-surface);
+  background: var(--couleur-champ);
   border: 1px solid var(--couleur-bordure-forte);
   border-radius: var(--rayon-m);
   transition: border-color var(--transition);
@@ -272,7 +272,7 @@
   gap: var(--espace-1);
   padding: var(--espace-1) var(--espace-2);
   min-height: 42px;
-  background: var(--couleur-surface);
+  background: var(--couleur-champ);
   border: 1px solid var(--couleur-bordure-forte);
   border-radius: var(--rayon-m);
 }
@@ -549,7 +549,7 @@
 }
 
 .etoiles__bouton--plein {
-  color: var(--couleur-secondaire);
+  color: var(--couleur-secondaire-fonce);
 }
 
 .etoiles__bouton:disabled {
@@ -769,4 +769,38 @@ a.stat:hover {
 .liste__bouton .liste__titre,
 .liste__bouton .liste__detail {
   display: block;
+}
+
+
+/* Tuiles de chiffres : contour uniforme d'une couleur de la palette pour chacune */
+.stat {
+  border: var(--epaisseur-contour) solid var(--palette-2);
+}
+
+.grille--stats > .stat:nth-child(4n + 2) {
+  border-color: var(--palette-3);
+}
+
+.grille--stats > .stat:nth-child(4n + 3) {
+  border-color: var(--palette-5);
+}
+
+.grille--stats > .stat:nth-child(4n + 4) {
+  border-color: var(--palette-4);
+}
+
+.stat__libelle svg,
+.carte__titre svg {
+  color: var(--palette-3);
+}
+
+/* Éléments posés directement sur le fond coloré */
+.onglets {
+  background: rgb(255 241 227 / 0.55);
+}
+
+.vide {
+  color: var(--couleur-texte-sur-fond);
+  background: rgb(255 241 227 / 0.45);
+  border-color: var(--couleur-surface);
 }

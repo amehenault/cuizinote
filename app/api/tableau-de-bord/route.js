@@ -1,21 +1,21 @@
 import { z } from 'zod';
 import { q, q1 } from '@/lib/db';
 import { ErreurHttp, ok, route } from '@/lib/http';
-import { listerPlanification } from '@/lib/planification';
+import { listerJournal } from '@/lib/planification';
 
 export const GET = route(async ({ requete, utilisateur }) => {
   // La date du jour vient du navigateur pour respecter le fuseau horaire de l'utilisateur.
   const jour = z.iso.date().safeParse(requete.nextUrl.searchParams.get('jour'));
   if (!jour.success) throw new ErreurHttp(400, 'Date invalide');
 
-  const [repas, poids, pas, expirent, totaux] = await Promise.all([
-    listerPlanification(utilisateur.id, jour.data, jour.data),
+  const [journal, poids, pas, expirent, totaux] = await Promise.all([
+    listerJournal(utilisateur.id, jour.data),
     q(
-      `SELECT mesure_le, poids_kg::float FROM poids WHERE utilisateur_id = $1 ORDER BY mesure_le DESC LIMIT 2`,
+      `SELECT mesure_le, poids_kg::float, source FROM poids WHERE utilisateur_id = $1 ORDER BY mesure_le DESC LIMIT 2`,
       [utilisateur.id]
     ),
     q(
-      `SELECT to_char(jour, 'YYYY-MM-DD') AS jour, nombre FROM pas
+      `SELECT to_char(jour, 'YYYY-MM-DD') AS jour, nombre, source FROM pas
         WHERE utilisateur_id = $1 AND jour > $2::date - 7 AND jour <= $2::date ORDER BY jour`,
       [utilisateur.id, jour.data]
     ),
@@ -36,7 +36,7 @@ export const GET = route(async ({ requete, utilisateur }) => {
 
   return ok({
     utilisateur: { nom: utilisateur.nom, objectif_kcal: utilisateur.objectif_kcal },
-    repas,
+    journal,
     poids,
     pas,
     expirent,
