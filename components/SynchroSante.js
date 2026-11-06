@@ -64,9 +64,16 @@ export default function SynchroSante() {
       </div>
       <div className="carte__corps">
         <p className="champ__aide">
-          Une application passerelle sur votre téléphone Android lit Samsung Health (via Health Connect) et envoie
-          automatiquement vos pas et votre poids à Cuizinote.
+          Samsung Health ne peut pas envoyer ses données directement à un site Web. Une petite application gratuite
+          installée sur votre téléphone Android (Life Dashboard Companion) lit vos pas et votre poids, puis les envoie
+          à Cuizinote plusieurs fois par jour, sans que vous ayez rien à faire.
         </p>
+        {adresse.includes('localhost') && (
+          <Message type="alerte">
+            Vous êtes sur la version locale : votre téléphone ne pourra pas joindre cette adresse. Faites cette étape
+            sur le site en ligne (cuizinote.vercel.app).
+          </Message>
+        )}
         {etat?.active && (
           <p className="champ__aide">
             {etat.derniere_synchro
@@ -98,19 +105,36 @@ export default function SynchroSante() {
         </div>
         <Message type="erreur">{erreur}</Message>
 
-        <details>
-          <summary className="champ__aide">Comment configurer mon téléphone ?</summary>
-          <ol className="assistant__liste">
-            <li>Dans Samsung Health : Paramètres, Health Connect, autorisez le partage des pas et du poids.</li>
+        <details open={!etat?.derniere_synchro}>
+          <summary className="liste__titre">Marche à suivre (une seule fois, environ 10 minutes)</summary>
+          <ol className="assistant__liste synchro__etapes">
             <li>
-              Installez <strong>Life Dashboard Companion</strong> (F-Droid, gratuit) : il envoie les pas et le poids.
-              Autre choix : <strong>HC Webhook</strong> (pas seulement, activez l&apos;agrégation des pas).
+              <strong>Ici, dans Cuizinote :</strong> cliquez sur « Activer la synchronisation ». Copiez l&apos;adresse et la
+              valeur de l&apos;en-tête, puis envoyez-les-vous (courriel ou notes) pour les avoir sur votre téléphone.
             </li>
-            <li>Dans l&apos;application, ajoutez un webhook avec l&apos;adresse ci-dessus.</li>
-            <li>Ajoutez l&apos;en-tête <strong>Authorization</strong> avec la valeur <strong>Bearer</strong> suivie de votre clé.</li>
-            <li>Activez les types Pas et Poids, puis utilisez « Envoyer un test » : la date de dernière réception doit apparaître ici.</li>
+            <li>
+              <strong>Dans Samsung Health :</strong> menu, Paramètres, Health Connect. Autorisez le partage des pas et du
+              poids. Sur Android 14 et plus, Health Connect se trouve aussi dans les paramètres du téléphone.
+            </li>
+            <li>
+              <strong>Installez l&apos;application :</strong> elle n&apos;est pas sur le Play Store. Installez d&apos;abord
+              F-Droid (f-droid.org), puis cherchez « Life Dashboard Companion » et installez-la.
+            </li>
+            <li>
+              <strong>Dans Life Dashboard Companion :</strong> onglet Santé, autorisez la lecture des pas et du poids. Ajoutez
+              un webhook avec l&apos;adresse copiée. Dans « Headers » (en-têtes), ajoutez le nom <strong>Authorization</strong> et
+              la valeur qui commence par <strong>Bearer czs_</strong>.
+            </li>
+            <li>
+              <strong>Testez :</strong> appuyez sur « Send test » (Envoyer un test). En rechargeant cette page, la ligne
+              « Dernière réception » doit afficher l&apos;heure du test. C&apos;est terminé : vos pas et votre poids
+              arriveront ensuite automatiquement.
+            </li>
           </ol>
-          <p className="champ__aide">Si votre balance VeSync est reliée à Samsung Health ou Health Connect, les pesées arriveront aussi automatiquement.</p>
+          <p className="champ__aide">
+            Les pesées de votre balance VeSync arrivent aussi, si l&apos;application VeSync est reliée à Samsung Health ou
+            Health Connect. Clé perdue ? Générez-en une nouvelle et remplacez-la dans l&apos;application.
+          </p>
         </details>
       </div>
     </section>

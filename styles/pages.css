@@ -792,3 +792,9 @@ button.semaine__repas-nom:hover {
 .semaine__manger--fait {
   background: var(--couleur-succes);
 }
+
+.synchro__etapes {
+  display: grid;
+  gap: var(--espace-2);
+  margin-top: var(--espace-2);
+}
