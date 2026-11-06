@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Footprints, Scale, Target, Trash2, Upload } from 'lucide-react';
+import Link from 'next/link';
+import { Footprints, Scale, Settings, Smartphone, Trash2, Upload } from 'lucide-react';
 import { api } from '@/lib/client';
 import { nombreFr, versIso } from '@/lib/dates';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
 import { GraphiqueBarres, GraphiqueLigne } from '@/components/Graphiques';
-import SynchroSante from '@/components/SynchroSante';
 
 const PERIODES = [
   [30, '30 jours'],
@@ -52,7 +52,6 @@ export default function PageSante() {
   const [jours, setJours] = useState(90);
   const [poids, setPoids] = useState([]);
   const [pas, setPas] = useState([]);
-  const [objectif, setObjectif] = useState('');
   const [message, setMessage] = useState({ type: 'info', texte: '' });
   const [saisiePoids, setSaisiePoids] = useState({ mesure_le: maintenantLocal(), valeur: '', unite: 'kg' });
   const [saisiePas, setSaisiePas] = useState({ jour: versIso(), nombre: '' });
@@ -67,21 +66,6 @@ export default function PageSante() {
   useEffect(() => {
     charger();
   }, [charger]);
-
-  useEffect(() => {
-    api('/api/compte').then((u) => setObjectif(u.objectif_kcal ? String(u.objectif_kcal) : '')).catch(() => {});
-  }, []);
-
-  async function enregistrerObjectif(e) {
-    e.preventDefault();
-    const n = versNombre(objectif);
-    try {
-      await api('/api/compte', { methode: 'PATCH', corps: { objectif_kcal: n ? Math.round(n) : null } });
-      setMessage({ type: 'succes', texte: 'Objectif calorique enregistré.' });
-    } catch (err) {
-      erreur(err.message);
-    }
-  }
 
   async function ajouterPoids(e) {
     e.preventDefault();
@@ -124,7 +108,7 @@ export default function PageSante() {
 
   return (
     <>
-      <EntetePage titre="Santé" sousTitre="Poids (balance VeSync), pas (Samsung Health) et objectif calorique">
+      <EntetePage titre="Santé" sousTitre="Poids (balance VeSync) et pas (Samsung Health)">
         <div className="onglets" role="tablist">
           {PERIODES.map(([v, l]) => (
             <button key={v} type="button" role="tab" aria-selected={jours === v} className={`onglets__bouton${jours === v ? ' onglets__bouton--actif' : ''}`} onClick={() => setJours(v)}>
@@ -150,16 +134,17 @@ export default function PageSante() {
             <span className="stat__valeur">{moyennePas != null ? nombreFr(moyennePas) : '-'}</span>
             <span className="stat__note">par jour</span>
           </div>
-          <form className="stat" onSubmit={enregistrerObjectif}>
-            <label className="stat__libelle" htmlFor="objectif"><Target size={16} aria-hidden="true" />Objectif quotidien (kcal)</label>
-            <div className="rangee">
-              <input id="objectif" className="champ__saisie champ__saisie--court" inputMode="numeric" value={objectif} onChange={(e) => setObjectif(e.target.value)} />
-              <button type="submit" className="bouton bouton--secondaire bouton--petit">Enregistrer</button>
-            </div>
-          </form>
         </div>
 
-        <SynchroSante />
+        <Link href="/parametres" className="carte carte--accent carte--lien">
+          <div className="carte__corps">
+            <h2 className="carte__titre"><Smartphone size={18} aria-hidden="true" />Connecter Samsung Health</h2>
+            <p className="champ__aide">
+              Recevez vos pas et votre poids automatiquement depuis votre téléphone. La connexion se configure dans
+              Paramètres (icône <Settings size={12} aria-hidden="true" className="icone-en-ligne" />).
+            </p>
+          </div>
+        </Link>
 
         <section className="carte">
           <div className="carte__entete">

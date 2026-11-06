@@ -727,3 +727,46 @@ a.stat {
 a.stat:hover {
   border-color: var(--couleur-primaire);
 }
+
+.carte--lien {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow var(--transition);
+}
+
+.carte--lien:hover {
+  box-shadow: var(--ombre-m);
+}
+
+.icone-en-ligne {
+  display: inline;
+  vertical-align: -2px;
+}
+
+.etiquette--succes {
+  color: var(--couleur-succes);
+  background: var(--couleur-succes-pale);
+}
+
+.liste__bouton {
+  padding: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.liste__bouton:hover .liste__titre {
+  color: var(--couleur-primaire);
+}
+
+.liste__marque {
+  margin-left: var(--espace-2);
+  vertical-align: 1px;
+}
+
+.liste__bouton .liste__titre,
+.liste__bouton .liste__detail {
+  display: block;
+}

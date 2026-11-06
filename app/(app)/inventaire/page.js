@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Archive, Bot, Pencil, Plus, Refrigerator, ScanBarcode, Snowflake, Trash2, Unlink } from 'lucide-react';
+import { Apple, Archive, Bot, Pencil, Plus, Refrigerator, ScanBarcode, ShoppingCart, Snowflake, Trash2, Unlink } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, formaterJour, joursRestants, nombreFr } from '@/lib/dates';
 import { Chargement, EntetePage, EtatVide, Message, Modale, versNombre } from '@/components/Elements';
@@ -126,6 +126,14 @@ export default function PageInventaire() {
   return (
     <>
       <EntetePage titre="Inventaire" sousTitre="Ce qu'il y a dans votre frigo, votre congélateur et votre garde-manger">
+        <Link href="/epicerie" className="bouton bouton--secondaire">
+          <ShoppingCart size={16} aria-hidden="true" />
+          Épicerie
+        </Link>
+        <Link href="/aliments" className="bouton bouton--secondaire">
+          <Apple size={16} aria-hidden="true" />
+          Aliments
+        </Link>
         <Link href="/assistant" className="bouton bouton--accent">
           <Bot size={16} aria-hidden="true" />
           Idées de repas

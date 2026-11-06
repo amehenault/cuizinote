@@ -11,20 +11,22 @@ import {
   LayoutDashboard,
   LogOut,
   Refrigerator,
-  ShoppingCart,
+  Settings,
   Apple,
 } from 'lucide-react';
 import { api } from '@/lib/client';
 
+// bureau : visible seulement dans le menu latéral (ordinateur). Sur téléphone, ces pages
+// sont accessibles par des boutons dans les pages (Inventaire, Recettes, Accueil).
 const LIENS = [
   { href: '/', libelle: 'Accueil', Icone: LayoutDashboard },
   { href: '/recettes', libelle: 'Recettes', Icone: BookOpen },
   { href: '/planificateur', libelle: 'Semaine', Icone: CalendarDays },
   { href: '/inventaire', libelle: 'Inventaire', Icone: Refrigerator },
-  { href: '/epicerie', libelle: 'Épicerie', Icone: ShoppingCart },
-  { href: '/aliments', libelle: 'Aliments', Icone: Apple },
-  { href: '/assistant', libelle: 'Assistant', Icone: Bot },
+  { href: '/aliments', libelle: 'Aliments', Icone: Apple, bureau: true },
+  { href: '/assistant', libelle: 'Assistant', Icone: Bot, bureau: true },
   { href: '/sante', libelle: 'Santé', Icone: HeartPulse },
+  { href: '/parametres', libelle: 'Paramètres', Icone: Settings },
 ];
 
 export default function Coquille({ nom, children }) {
@@ -43,10 +45,10 @@ export default function Coquille({ nom, children }) {
           Cuizinote
         </Link>
         <ul className="nav__liste">
-          {LIENS.map(({ href, libelle, Icone }) => {
+          {LIENS.map(({ href, libelle, Icone, bureau }) => {
             const actif = href === '/' ? chemin === '/' : chemin.startsWith(href);
             return (
-              <li key={href} className="nav__element">
+              <li key={href} className={`nav__element${bureau ? ' nav__element--bureau' : ''}`}>
                 <Link
                   href={href}
                   className={`nav__lien${actif ? ' nav__lien--actif' : ''}`}

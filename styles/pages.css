@@ -607,3 +607,24 @@
     grid-template-columns: 1fr auto;
   }
 }
+
+.recette__ingredient {
+  align-items: center;
+}
+
+.recette__ingredient-choix {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.recette__ingredient-etat {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--espace-2);
+}

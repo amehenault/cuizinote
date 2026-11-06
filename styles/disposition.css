@@ -51,7 +51,12 @@
 }
 
 .nav__element {
-  flex: 1 0 64px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.nav__element--bureau {
+  display: none;
 }
 
 .nav__lien {
@@ -119,7 +124,9 @@
     overflow: visible;
   }
 
-  .nav__element {
+  .nav__element,
+  .nav__element--bureau {
+    display: block;
     flex: none;
   }
 

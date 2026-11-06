@@ -1,22 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Apple, Pencil, Plus, ScanBarcode, Search, Trash2 } from 'lucide-react';
+import { Apple, Check, Pencil, Plus, ScanBarcode, Search, Trash2 } from 'lucide-react';
 import { api } from '@/lib/client';
 import { nombreFr } from '@/lib/dates';
 import { Chargement, EntetePage, EtatVide, Message, Modale } from '@/components/Elements';
 import AjoutParScan from '@/components/AjoutParScan';
+import FicheAliment from '@/components/FicheAliment';
 import FormulaireAliment from '@/components/FormulaireAliment';
+import { trouverEnInventaire } from '@/lib/disponibilite';
 
 export default function PageAliments() {
   const [aliments, setAliments] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [modale, setModale] = useState(null); // { type: 'scan' | 'formulaire', aliment? }
   const [erreur, setErreur] = useState('');
+  const [inventaire, setInventaire] = useState([]);
 
   const charger = () => api('/api/aliments').then(setAliments).catch((e) => setErreur(e.message));
+  const chargerInventaire = () => api('/api/inventaire').then(setInventaire).catch(() => {});
   useEffect(() => {
     charger();
+    chargerInventaire();
   }, []);
 
   async function supprimer(a) {
@@ -78,17 +83,25 @@ export default function PageAliments() {
                 ) : (
                   <span className="aliment__vignette aliment__vignette--vide"><Apple size={20} aria-hidden="true" /></span>
                 )}
-                <div className="liste__principal">
-                  <p className="liste__titre">{a.nom}</p>
-                  <p className="liste__detail">
+                <button type="button" className="liste__principal liste__bouton" onClick={() => setModale({ type: 'fiche', aliment: a })}>
+                  <span className="liste__titre">
+                    {a.nom}
+                    {trouverEnInventaire({ aliment_id: a.id, nom: a.nom }, inventaire) && (
+                      <span className="etiquette etiquette--succes liste__marque">
+                        <Check size={12} aria-hidden="true" />
+                        J&apos;ai
+                      </span>
+                    )}
+                  </span>
+                  <span className="liste__detail">
                     {[a.marque, a.kcal_100g != null && `${nombreFr(a.kcal_100g)} kcal/100 g`,
                       a.proteines_100g != null && `P ${nombreFr(a.proteines_100g, 1)} g`,
                       a.glucides_100g != null && `G ${nombreFr(a.glucides_100g, 1)} g`,
                       a.lipides_100g != null && `L ${nombreFr(a.lipides_100g, 1)} g`]
                       .filter(Boolean)
                       .join(' · ')}
-                  </p>
-                </div>
+                  </span>
+                </button>
                 <div className="liste__actions">
                   <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => setModale({ type: 'formulaire', aliment: a })} aria-label={`Modifier ${a.nom}`}>
                     <Pencil size={16} aria-hidden="true" />
@@ -105,6 +118,16 @@ export default function PageAliments() {
 
       <Modale titre="Scanner un code-barres" ouverte={modale?.type === 'scan'} onFermer={() => { setModale(null); charger(); }}>
         <AjoutParScan onEnregistre={enregistre} />
+      </Modale>
+      <Modale titre="Fiche de l'aliment" ouverte={modale?.type === 'fiche'} onFermer={() => setModale(null)}>
+        {modale?.type === 'fiche' && (
+          <FicheAliment
+            aliment={modale.aliment}
+            inventaire={inventaire}
+            onModifier={() => setModale({ type: 'formulaire', aliment: modale.aliment })}
+            onInventaireChange={chargerInventaire}
+          />
+        )}
       </Modale>
       <Modale
         titre={modale?.aliment?.id ? 'Modifier l\'aliment' : 'Nouvel aliment'}

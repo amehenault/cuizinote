@@ -3,9 +3,10 @@
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarPlus, Clock, ExternalLink, Flame, Pencil, ShoppingCart, Trash2, Users } from 'lucide-react';
+import { CalendarPlus, Check, CircleAlert, Clock, ExternalLink, Flame, Pencil, ShoppingCart, Trash2, Users } from 'lucide-react';
 import { api, urlImage } from '@/lib/client';
 import { MOMENTS, versIso } from '@/lib/dates';
+import { LIBELLES_EMPLACEMENT, trouverEnInventaire } from '@/lib/disponibilite';
 import { Chargement, EntetePage, Etoiles, Message, Modale, versNombre } from '@/components/Elements';
 
 function Nutrition({ recette }) {
@@ -46,9 +47,18 @@ export default function PageRecette({ params }) {
   const [erreur, setErreur] = useState('');
   const [info, setInfo] = useState('');
   const [planif, setPlanif] = useState(null);
+  const [inventaire, setInventaire] = useState(null);
+  const [aAcheter, setAAcheter] = useState(new Set());
 
   useEffect(() => {
-    api(`/api/recettes/${id}`).then(setRecette).catch((e) => setErreur(e.message));
+    Promise.all([api(`/api/recettes/${id}`), api('/api/inventaire')])
+      .then(([rec, inv]) => {
+        setRecette(rec);
+        setInventaire(inv);
+        // Par défaut, on coche seulement les ingrédients manquants
+        setAAcheter(new Set(rec.ingredients.map((ing, n) => (trouverEnInventaire(ing, inv) ? null : n)).filter((n) => n !== null)));
+      })
+      .catch((e) => setErreur(e.message));
   }, [id]);
 
   async function supprimer() {
@@ -61,16 +71,29 @@ export default function PageRecette({ params }) {
     }
   }
 
-  async function versEpicerie() {
+  async function ajouterAEpicerie() {
+    const choisis = recette.ingredients.filter((_, n) => aAcheter.has(n));
+    if (!choisis.length) {
+      setInfo('Rien à ajouter : vous avez déjà tout.');
+      return;
+    }
     try {
       await Promise.all(
-        recette.ingredients.map((i) => api('/api/epicerie', { methode: 'POST', corps: { nom: i.texte, rayon: recette.titre.slice(0, 60) } }))
+        choisis.map((i) => api('/api/epicerie', { methode: 'POST', corps: { nom: i.texte, rayon: recette.titre.slice(0, 60) } }))
       );
-      setInfo(`${recette.ingredients.length} ingrédient(s) ajouté(s) à la liste d'épicerie.`);
+      setInfo(`${choisis.length} ingrédient${choisis.length > 1 ? 's' : ''} ajouté${choisis.length > 1 ? 's' : ''} à la liste d'épicerie.`);
     } catch (e) {
       setErreur(e.message);
     }
   }
+
+  const basculerAchat = (n) =>
+    setAAcheter((x) => {
+      const copie = new Set(x);
+      if (copie.has(n)) copie.delete(n);
+      else copie.add(n);
+      return copie;
+    });
 
   async function planifier(e) {
     e.preventDefault();
@@ -90,6 +113,7 @@ export default function PageRecette({ params }) {
   if (!recette) return <Chargement />;
 
   const temps = (recette.temps_preparation || 0) + (recette.temps_cuisson || 0);
+  const manquants = inventaire ? recette.ingredients.filter((i) => !trouverEnInventaire(i, inventaire)).length : 0;
 
   return (
     <article className="recette">
@@ -105,9 +129,9 @@ export default function PageRecette({ params }) {
           <CalendarPlus size={16} aria-hidden="true" />
           Planifier
         </button>
-        <button type="button" className="bouton bouton--secondaire" onClick={versEpicerie}>
+        <button type="button" className="bouton bouton--secondaire" onClick={ajouterAEpicerie}>
           <ShoppingCart size={16} aria-hidden="true" />
-          Vers l&apos;épicerie
+          Ajouter les manquants
         </button>
         <Link href={`/recettes/${id}/modifier`} className="bouton bouton--secondaire">
           <Pencil size={16} aria-hidden="true" />
@@ -146,14 +170,50 @@ export default function PageRecette({ params }) {
           <section className="carte">
             <div className="carte__corps">
               <h2>Ingrédients</h2>
+              {inventaire && recette.ingredients.length > 0 && (
+                <p className="champ__aide">
+                  {recette.ingredients.length - manquants} sur {recette.ingredients.length} en inventaire. Cochez ce que vous voulez acheter.
+                </p>
+              )}
               <ul className="recette__ingredients">
-                {recette.ingredients.map((i, n) => (
-                  <li key={n} className="recette__ingredient">
-                    <span>{i.texte}{i.grammes ? ` (${i.grammes} g)` : ''}</span>
-                    {i.kcal != null && <span className="recette__ingredient-kcal">{i.kcal} kcal</span>}
-                  </li>
-                ))}
+                {recette.ingredients.map((i, n) => {
+                  const dispo = inventaire ? trouverEnInventaire(i, inventaire) : null;
+                  return (
+                    <li key={n} className="recette__ingredient">
+                      <label className="recette__ingredient-choix">
+                        <input
+                          type="checkbox"
+                          className="epicerie__case"
+                          checked={aAcheter.has(n)}
+                          onChange={() => basculerAchat(n)}
+                          aria-label={`Acheter : ${i.texte}`}
+                        />
+                        <span>{i.texte}{i.grammes ? ` (${i.grammes} g)` : ''}</span>
+                      </label>
+                      <span className="recette__ingredient-etat">
+                        {inventaire && (dispo ? (
+                          <span className="etiquette etiquette--succes">
+                            <Check size={12} aria-hidden="true" />
+                            J&apos;ai ({LIBELLES_EMPLACEMENT[dispo.emplacement]})
+                          </span>
+                        ) : (
+                          <span className="etiquette etiquette--alerte">
+                            <CircleAlert size={12} aria-hidden="true" />
+                            Manquant
+                          </span>
+                        ))}
+                        {i.kcal != null && <span className="recette__ingredient-kcal">{i.kcal} kcal</span>}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
+              {recette.ingredients.length > 0 && (
+                <button type="button" className="bouton bouton--principal" onClick={ajouterAEpicerie} disabled={!aAcheter.size}>
+                  <ShoppingCart size={16} aria-hidden="true" />
+                  Ajouter {aAcheter.size} ingrédient{aAcheter.size > 1 ? 's' : ''} à l&apos;épicerie
+                </button>
+              )}
             </div>
           </section>
         </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Check, ChevronLeft, ChevronRight, Circle, CalendarDays, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Circle, CalendarDays, ListChecks, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { api } from '@/lib/client';
 import { MOMENTS, ajouterJours, debutSemaine, formaterJour, nombreFr, versIso } from '@/lib/dates';
 import { EntetePage, Message, Modale, versNombre } from '@/components/Elements';
@@ -173,6 +173,10 @@ export default function PagePlanificateur() {
           <ShoppingCart size={16} aria-hidden="true" />
           Générer l&apos;épicerie
         </button>
+        <Link href="/epicerie" className="bouton bouton--secondaire">
+          <ListChecks size={16} aria-hidden="true" />
+          Liste d&apos;épicerie
+        </Link>
       </EntetePage>
 
       <Message type={message.type}>{message.texte}</Message>

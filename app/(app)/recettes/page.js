@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Plus, Search } from 'lucide-react';
+import { Apple, BookOpen, Plus, Search } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, EtatVide, Message } from '@/components/Elements';
 import CarteRecette from '@/components/CarteRecette';
@@ -29,6 +29,10 @@ export default function PageRecettes() {
   return (
     <>
       <EntetePage titre="Mes recettes" sousTitre="Votre banque de recettes et de plats">
+        <Link href="/aliments" className="bouton bouton--secondaire">
+          <Apple size={16} aria-hidden="true" />
+          Aliments
+        </Link>
         <Link href="/recettes/nouvelle" className="bouton bouton--principal">
           <Plus size={16} aria-hidden="true" />
           Nouvelle recette
