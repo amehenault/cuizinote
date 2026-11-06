@@ -1,0 +1,220 @@
+'use client';
+
+import { use, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { CalendarPlus, Clock, ExternalLink, Flame, Pencil, ShoppingCart, Trash2, Users } from 'lucide-react';
+import { api, urlImage } from '@/lib/client';
+import { MOMENTS, versIso } from '@/lib/dates';
+import { Chargement, EntetePage, Etoiles, Message, Modale, versNombre } from '@/components/Elements';
+
+function Nutrition({ recette }) {
+  const valeurs = [
+    ['kcal', 'kcal', recette.kcal],
+    ['proteines', 'Protéines (g)', recette.proteines],
+    ['glucides', 'Glucides (g)', recette.glucides],
+    ['lipides', 'Lipides (g)', recette.lipides],
+  ];
+  if (valeurs.every(([, , v]) => v == null)) {
+    return <p className="champ__aide">Aucune valeur nutritive. Liez des ingrédients à la banque d&apos;aliments ou saisissez-les.</p>;
+  }
+  return (
+    <div className="pile pile--serre">
+      <div className="nutrition">
+        {valeurs.map(([cle, libelle, v]) => (
+          <div key={cle} className="nutrition__valeur">
+            <span className="nutrition__nombre">{v == null ? '-' : Math.round(v)}</span>
+            <span className="nutrition__libelle">{libelle}</span>
+          </div>
+        ))}
+      </div>
+      <p className="nutrition__source">
+        Par portion.{' '}
+        {recette.kcal_calcule != null
+          ? `Calculé à partir de ${recette.ingredients_lies} ingrédient${recette.ingredients_lies > 1 ? 's' : ''} lié${recette.ingredients_lies > 1 ? 's' : ''}.`
+          : 'Valeurs saisies ou importées.'}
+        {recette.kcal_calcule != null && recette.kcal_portion != null && ` Valeur importée : ${Math.round(recette.kcal_portion)} kcal.`}
+      </p>
+    </div>
+  );
+}
+
+export default function PageRecette({ params }) {
+  const { id } = use(params);
+  const routeur = useRouter();
+  const [recette, setRecette] = useState(null);
+  const [erreur, setErreur] = useState('');
+  const [info, setInfo] = useState('');
+  const [planif, setPlanif] = useState(null);
+
+  useEffect(() => {
+    api(`/api/recettes/${id}`).then(setRecette).catch((e) => setErreur(e.message));
+  }, [id]);
+
+  async function supprimer() {
+    if (!window.confirm('Supprimer définitivement cette recette ?')) return;
+    try {
+      await api(`/api/recettes/${id}`, { methode: 'DELETE' });
+      routeur.push('/recettes');
+    } catch (e) {
+      setErreur(e.message);
+    }
+  }
+
+  async function versEpicerie() {
+    try {
+      await Promise.all(
+        recette.ingredients.map((i) => api('/api/epicerie', { methode: 'POST', corps: { nom: i.texte, rayon: recette.titre.slice(0, 60) } }))
+      );
+      setInfo(`${recette.ingredients.length} ingrédient(s) ajouté(s) à la liste d'épicerie.`);
+    } catch (e) {
+      setErreur(e.message);
+    }
+  }
+
+  async function planifier(e) {
+    e.preventDefault();
+    try {
+      await api('/api/planificateur', {
+        methode: 'POST',
+        corps: { jour: planif.jour, moment: planif.moment, recette_id: id, portions: versNombre(planif.portions) || 1 },
+      });
+      setPlanif(null);
+      setInfo('Recette ajoutée au planificateur.');
+    } catch (err) {
+      setErreur(err.message);
+    }
+  }
+
+  if (erreur && !recette) return <Message type="erreur">{erreur}</Message>;
+  if (!recette) return <Chargement />;
+
+  const temps = (recette.temps_preparation || 0) + (recette.temps_cuisson || 0);
+
+  return (
+    <article className="recette">
+      {recette.image_id && (
+        <div className="recette__couverture">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="recette__image" src={urlImage(recette.image_id)} alt={recette.titre} />
+        </div>
+      )}
+
+      <EntetePage titre={recette.titre} sousTitre={recette.description}>
+        <button type="button" className="bouton bouton--principal" onClick={() => setPlanif({ jour: versIso(), moment: 'souper', portions: '1' })}>
+          <CalendarPlus size={16} aria-hidden="true" />
+          Planifier
+        </button>
+        <button type="button" className="bouton bouton--secondaire" onClick={versEpicerie}>
+          <ShoppingCart size={16} aria-hidden="true" />
+          Vers l&apos;épicerie
+        </button>
+        <Link href={`/recettes/${id}/modifier`} className="bouton bouton--secondaire">
+          <Pencil size={16} aria-hidden="true" />
+          Modifier
+        </Link>
+        <button type="button" className="bouton bouton--fantome bouton--icone" onClick={supprimer} aria-label="Supprimer la recette">
+          <Trash2 size={18} aria-hidden="true" />
+        </button>
+      </EntetePage>
+
+      <Message type="succes">{info}</Message>
+      <Message type="erreur">{erreur}</Message>
+
+      <div className="recette__meta">
+        <span className="carte-recette__info"><Users size={16} aria-hidden="true" />{recette.portions} portion{recette.portions > 1 ? 's' : ''}</span>
+        {recette.temps_preparation > 0 && <span className="carte-recette__info"><Clock size={16} aria-hidden="true" />Préparation {recette.temps_preparation} min</span>}
+        {recette.temps_cuisson > 0 && <span className="carte-recette__info"><Flame size={16} aria-hidden="true" />Cuisson {recette.temps_cuisson} min</span>}
+        {temps > 0 && <span className="carte-recette__info">Total {temps} min</span>}
+        {recette.note > 0 && <Etoiles valeur={recette.note} />}
+      </div>
+
+      {recette.etiquettes.length > 0 && (
+        <div className="carte-recette__etiquettes">
+          {recette.etiquettes.map((e) => <span key={e} className="etiquette">{e}</span>)}
+        </div>
+      )}
+
+      <div className="recette__colonnes">
+        <div className="pile">
+          <section className="carte">
+            <div className="carte__corps">
+              <h2>Valeurs nutritives</h2>
+              <Nutrition recette={recette} />
+            </div>
+          </section>
+          <section className="carte">
+            <div className="carte__corps">
+              <h2>Ingrédients</h2>
+              <ul className="recette__ingredients">
+                {recette.ingredients.map((i, n) => (
+                  <li key={n} className="recette__ingredient">
+                    <span>{i.texte}{i.grammes ? ` (${i.grammes} g)` : ''}</span>
+                    {i.kcal != null && <span className="recette__ingredient-kcal">{i.kcal} kcal</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        </div>
+        <div className="pile">
+          <section className="carte">
+            <div className="carte__corps">
+              <h2>Préparation</h2>
+              {recette.etapes.length ? (
+                <ol className="recette__etapes">
+                  {recette.etapes.map((e, n) => <li key={n} className="recette__etape">{e}</li>)}
+                </ol>
+              ) : (
+                <p className="champ__aide">Aucune étape.</p>
+              )}
+            </div>
+          </section>
+          {(recette.commentaires || recette.source_url) && (
+            <section className="carte">
+              <div className="carte__corps">
+                <h2>Notes</h2>
+                {recette.commentaires && <p className="recette__commentaires">{recette.commentaires}</p>}
+                {recette.source_url && (
+                  <a href={recette.source_url} target="_blank" rel="noopener noreferrer nofollow" className="carte-recette__info">
+                    <ExternalLink size={14} aria-hidden="true" />
+                    Recette originale
+                  </a>
+                )}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+
+      <Modale titre="Planifier cette recette" ouverte={!!planif} onFermer={() => setPlanif(null)}>
+        {planif && (
+          <form className="formulaire" onSubmit={planifier}>
+            <div className="formulaire__ligne">
+              <label className="champ">
+                <span className="champ__libelle">Jour</span>
+                <input className="champ__saisie" type="date" required value={planif.jour} onChange={(e) => setPlanif({ ...planif, jour: e.target.value })} />
+              </label>
+              <label className="champ">
+                <span className="champ__libelle">Repas</span>
+                <select className="champ__saisie" value={planif.moment} onChange={(e) => setPlanif({ ...planif, moment: e.target.value })}>
+                  {MOMENTS.map((m) => <option key={m.valeur} value={m.valeur}>{m.libelle}</option>)}
+                </select>
+              </label>
+              <label className="champ">
+                <span className="champ__libelle">Portions mangées</span>
+                <input className="champ__saisie" inputMode="decimal" value={planif.portions} onChange={(e) => setPlanif({ ...planif, portions: e.target.value })} />
+              </label>
+            </div>
+            <div className="formulaire__actions">
+              <button type="submit" className="bouton bouton--principal">
+                <CalendarPlus size={16} aria-hidden="true" />
+                Ajouter au planificateur
+              </button>
+            </div>
+          </form>
+        )}
+      </Modale>
+    </article>
+  );
+}

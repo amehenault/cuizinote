@@ -1,0 +1,28 @@
+{
+  "name": "cuizinote",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cuizinote - recettes, nutrition, inventaire, planification de repas et suivi santé",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:migrate": "node scripts/migrate.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.9",
+    "lucide-react": "^1.70.0",
+    "next": "^16.4.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.7"
+  }
+}

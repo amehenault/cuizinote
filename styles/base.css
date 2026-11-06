@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Variables globales - aucune couleur nommée : uniquement des rôles
+   ========================================================================== */
+:root {
+  /* Marque */
+  --couleur-primaire: #2f6b4f;
+  --couleur-primaire-fonce: #22513b;
+  --couleur-primaire-pale: #e3efe8;
+  --couleur-secondaire: #c8642f;
+  --couleur-secondaire-pale: #f8e8de;
+  --couleur-accent: #6b5ca5;
+  --couleur-accent-pale: #ebe8f5;
+
+  /* Surfaces et texte */
+  --couleur-fond: #f6f4ef;
+  --couleur-surface: #ffffff;
+  --couleur-surface-2: #efece4;
+  --couleur-texte: #1e2420;
+  --couleur-texte-attenue: #59625c;
+  --couleur-texte-inverse: #ffffff;
+  --couleur-bordure: #d9d4c9;
+  --couleur-bordure-forte: #b9b2a3;
+  --couleur-voile: rgb(20 24 22 / 0.55);
+
+  /* Boutons */
+  --couleur-btn1: var(--couleur-primaire);
+  --couleur-btn1-survol: var(--couleur-primaire-fonce);
+  --couleur-btn1-texte: var(--couleur-texte-inverse);
+  --couleur-btn2: var(--couleur-surface);
+  --couleur-btn2-survol: var(--couleur-surface-2);
+  --couleur-btn2-texte: var(--couleur-texte);
+  --couleur-btn3: var(--couleur-secondaire);
+  --couleur-btn3-survol: #a9501f;
+  --couleur-btn3-texte: var(--couleur-texte-inverse);
+  --couleur-btn-danger: #b3261e;
+  --couleur-btn-danger-texte: var(--couleur-texte-inverse);
+
+  /* États */
+  --couleur-succes: #2e7d4a;
+  --couleur-succes-pale: #e1f2e6;
+  --couleur-alerte: #9a6400;
+  --couleur-alerte-pale: #fdf0d5;
+  --couleur-danger: #b3261e;
+  --couleur-danger-pale: #fbe4e2;
+  --couleur-focus: #3c7dd9;
+
+  /* Emplacements de l'inventaire */
+  --couleur-frigo: #2d7aa3;
+  --couleur-frigo-pale: #e1eff7;
+  --couleur-congelateur: #4a5fb0;
+  --couleur-congelateur-pale: #e5e9f8;
+  --couleur-garde-manger: #8a6a2f;
+  --couleur-garde-manger-pale: #f4ecdc;
+
+  /* Graphiques */
+  --couleur-graphique-1: #13875a;
+  --couleur-graphique-2: #c95b2a;
+  --couleur-graphique-grille: #e4e0d6;
+
+  /* Typographie */
+  --police: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --taille-xs: 0.75rem;
+  --taille-s: 0.875rem;
+  --taille-m: 1rem;
+  --taille-l: 1.25rem;
+  --taille-xl: 1.625rem;
+  --taille-xxl: 2.125rem;
+
+  /* Espacements */
+  --espace-1: 0.25rem;
+  --espace-2: 0.5rem;
+  --espace-3: 0.75rem;
+  --espace-4: 1rem;
+  --espace-5: 1.5rem;
+  --espace-6: 2rem;
+  --espace-7: 3rem;
+
+  /* Formes */
+  --rayon-s: 6px;
+  --rayon-m: 10px;
+  --rayon-l: 16px;
+  --rayon-rond: 999px;
+  --ombre-s: 0 1px 2px rgb(30 36 32 / 0.08);
+  --ombre-m: 0 4px 14px rgb(30 36 32 / 0.1);
+  --ombre-l: 0 18px 50px rgb(30 36 32 / 0.22);
+
+  --largeur-nav: 248px;
+  --hauteur-nav-mobile: 64px;
+  --transition: 160ms ease;
+}
+
+/* ==========================================================================
+   Réinitialisation
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--police);
+  font-size: var(--taille-m);
+  line-height: 1.5;
+  color: var(--couleur-texte);
+  background: var(--couleur-fond);
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+h1 { font-size: var(--taille-xl); line-height: 1.2; }
+h2 { font-size: var(--taille-l); line-height: 1.3; }
+h3 { font-size: var(--taille-m); }
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--couleur-primaire);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--couleur-focus);
+  outline-offset: 2px;
+}
+
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

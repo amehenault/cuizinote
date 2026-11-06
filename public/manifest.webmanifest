@@ -1,0 +1,13 @@
+{
+  "name": "Cuizinote",
+  "short_name": "Cuizinote",
+  "description": "Recettes, nutrition, inventaire, planification de repas et suivi santé",
+  "lang": "fr-CA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#2f6b4f",
+  "icons": [
+    { "src": "/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

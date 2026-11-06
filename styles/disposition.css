@@ -1,0 +1,242 @@
+/* ==========================================================================
+   Bloc : app (coquille de l'application)
+   ========================================================================== */
+.app {
+  min-height: 100dvh;
+}
+
+.app__contenu {
+  padding: var(--espace-5) var(--espace-4) calc(var(--hauteur-nav-mobile) + var(--espace-6));
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .app {
+    display: grid;
+    grid-template-columns: var(--largeur-nav) 1fr;
+  }
+
+  .app__contenu {
+    width: 100%;
+    padding: var(--espace-6) var(--espace-6) var(--espace-7);
+  }
+}
+
+/* ==========================================================================
+   Bloc : nav
+   ========================================================================== */
+.nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 20;
+  height: var(--hauteur-nav-mobile);
+  background: var(--couleur-surface);
+  border-top: 1px solid var(--couleur-bordure);
+  box-shadow: var(--ombre-m);
+}
+
+.nav__marque {
+  display: none;
+}
+
+.nav__liste {
+  display: flex;
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--espace-1);
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav__element {
+  flex: 1 0 64px;
+}
+
+.nav__lien {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  padding: var(--espace-1);
+  font-size: 0.6875rem;
+  color: var(--couleur-texte-attenue);
+  text-decoration: none;
+  border-radius: var(--rayon-m);
+  transition: color var(--transition), background var(--transition);
+}
+
+.nav__lien:hover {
+  color: var(--couleur-primaire);
+}
+
+.nav__lien--actif {
+  color: var(--couleur-primaire);
+  font-weight: 600;
+}
+
+.nav__libelle {
+  white-space: nowrap;
+}
+
+.nav__pied {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .nav {
+    position: sticky;
+    top: 0;
+    inset: auto;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: var(--espace-5) var(--espace-3);
+    border-top: 0;
+    border-right: 1px solid var(--couleur-bordure);
+    box-shadow: none;
+  }
+
+  .nav__marque {
+    display: flex;
+    align-items: center;
+    gap: var(--espace-2);
+    padding: 0 var(--espace-3) var(--espace-5);
+    font-size: var(--taille-l);
+    font-weight: 700;
+    color: var(--couleur-primaire);
+    text-decoration: none;
+  }
+
+  .nav__liste {
+    flex-direction: column;
+    gap: var(--espace-1);
+    height: auto;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .nav__element {
+    flex: none;
+  }
+
+  .nav__lien {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--espace-3);
+    padding: var(--espace-2) var(--espace-3);
+    font-size: var(--taille-s);
+  }
+
+  .nav__lien:hover {
+    background: var(--couleur-surface-2);
+  }
+
+  .nav__lien--actif {
+    background: var(--couleur-primaire-pale);
+  }
+
+  .nav__pied {
+    display: block;
+    margin-top: auto;
+    padding: var(--espace-3);
+    border-top: 1px solid var(--couleur-bordure);
+  }
+
+  .nav__utilisateur {
+    margin-bottom: var(--espace-2);
+    font-size: var(--taille-s);
+    color: var(--couleur-texte-attenue);
+  }
+}
+
+/* ==========================================================================
+   Bloc : entete (en-tête de page)
+   ========================================================================== */
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espace-3);
+  margin-bottom: var(--espace-5);
+}
+
+.entete__titres {
+  display: grid;
+  gap: var(--espace-1);
+}
+
+.entete__sous-titre {
+  color: var(--couleur-texte-attenue);
+  font-size: var(--taille-s);
+}
+
+.entete__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-2);
+}
+
+/* ==========================================================================
+   Bloc : grille
+   ========================================================================== */
+.grille {
+  display: grid;
+  gap: var(--espace-4);
+}
+
+.grille--cartes {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.grille--deux {
+  grid-template-columns: 1fr;
+}
+
+.grille--stats {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+@media (min-width: 760px) {
+  .grille--deux {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ==========================================================================
+   Bloc : pile (empilement vertical)
+   ========================================================================== */
+.pile {
+  display: grid;
+  gap: var(--espace-4);
+}
+
+.pile--serre {
+  gap: var(--espace-2);
+}
+
+.pile--large {
+  gap: var(--espace-6);
+}
+
+/* ==========================================================================
+   Bloc : rangee (alignement horizontal)
+   ========================================================================== */
+.rangee {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-2);
+}
+
+.rangee--espacee {
+  justify-content: space-between;
+}
+
+.rangee--fin {
+  justify-content: flex-end;
+}

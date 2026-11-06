@@ -1,0 +1,598 @@
+/* ==========================================================================
+   Bloc : auth (connexion / inscription)
+   ========================================================================== */
+.auth {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--espace-4);
+  background: linear-gradient(160deg, var(--couleur-primaire-pale), var(--couleur-fond) 55%, var(--couleur-secondaire-pale));
+}
+
+.auth__boite {
+  display: grid;
+  gap: var(--espace-5);
+  width: 100%;
+  max-width: 420px;
+  padding: var(--espace-6) var(--espace-5);
+  background: var(--couleur-surface);
+  border-radius: var(--rayon-l);
+  box-shadow: var(--ombre-l);
+}
+
+.auth__marque {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  color: var(--couleur-primaire);
+  font-size: var(--taille-xl);
+  font-weight: 700;
+}
+
+.auth__texte {
+  color: var(--couleur-texte-attenue);
+  font-size: var(--taille-s);
+}
+
+/* ==========================================================================
+   Bloc : carte-recette
+   ========================================================================== */
+.carte-recette {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+  box-shadow: var(--ombre-s);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.carte-recette:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ombre-m);
+}
+
+.carte-recette__visuel {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  color: var(--couleur-bordure-forte);
+  background: var(--couleur-surface-2);
+}
+
+.carte-recette__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carte-recette__corps {
+  display: grid;
+  gap: var(--espace-2);
+  padding: var(--espace-3) var(--espace-4) var(--espace-4);
+}
+
+.carte-recette__titre {
+  font-size: var(--taille-m);
+  line-height: 1.3;
+}
+
+.carte-recette__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-3);
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+.carte-recette__info {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-1);
+}
+
+.carte-recette__etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-1);
+}
+
+/* ==========================================================================
+   Bloc : filtres
+   ========================================================================== */
+.filtres {
+  display: grid;
+  gap: var(--espace-3);
+  margin-bottom: var(--espace-5);
+}
+
+.filtres__etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-1);
+}
+
+/* ==========================================================================
+   Bloc : recette (fiche détaillée)
+   ========================================================================== */
+.recette {
+  display: grid;
+  gap: var(--espace-5);
+}
+
+.recette__couverture {
+  overflow: hidden;
+  aspect-ratio: 21 / 9;
+  border-radius: var(--rayon-l);
+  background: var(--couleur-surface-2);
+}
+
+.recette__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recette__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-4);
+  color: var(--couleur-texte-attenue);
+  font-size: var(--taille-s);
+}
+
+.recette__colonnes {
+  display: grid;
+  gap: var(--espace-5);
+}
+
+@media (min-width: 900px) {
+  .recette__colonnes {
+    grid-template-columns: minmax(260px, 1fr) 2fr;
+    align-items: start;
+  }
+}
+
+.recette__ingredients {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recette__ingredient {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espace-2);
+  padding: var(--espace-2) 0;
+  border-bottom: 1px solid var(--couleur-bordure);
+  font-size: var(--taille-s);
+}
+
+.recette__ingredient-kcal {
+  flex: none;
+  color: var(--couleur-texte-attenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.recette__etapes {
+  display: grid;
+  gap: var(--espace-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+}
+
+.recette__etape {
+  position: relative;
+  padding-left: 2.6rem;
+  counter-increment: etape;
+}
+
+.recette__etape::before {
+  content: counter(etape);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  font-size: var(--taille-s);
+  font-weight: 700;
+  color: var(--couleur-texte-inverse);
+  background: var(--couleur-primaire);
+  border-radius: var(--rayon-rond);
+}
+
+.recette__commentaires {
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   Bloc : nutrition
+   ========================================================================== */
+.nutrition {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--espace-2);
+}
+
+.nutrition__valeur {
+  display: grid;
+  padding: var(--espace-2);
+  text-align: center;
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-m);
+}
+
+.nutrition__nombre {
+  font-size: var(--taille-l);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.nutrition__libelle {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+.nutrition__source {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+/* ==========================================================================
+   Bloc : editeur-lignes (ingrédients et étapes)
+   ========================================================================== */
+.editeur-lignes {
+  display: grid;
+  gap: var(--espace-2);
+}
+
+.editeur-lignes__ligne {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--espace-2);
+  align-items: start;
+  padding: var(--espace-2);
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-m);
+}
+
+.editeur-lignes__champs {
+  display: grid;
+  gap: var(--espace-2);
+  min-width: 0;
+}
+
+@media (min-width: 700px) {
+  .editeur-lignes__champs--ingredient {
+    grid-template-columns: 2fr 1.4fr 90px;
+  }
+}
+
+.editeur-lignes__numero {
+  font-size: var(--taille-xs);
+  font-weight: 700;
+  color: var(--couleur-texte-attenue);
+}
+
+.editeur-lignes__lie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-1);
+  min-height: 36px;
+  padding: var(--espace-1) var(--espace-2);
+  font-size: var(--taille-xs);
+  color: var(--couleur-primaire-fonce);
+  background: var(--couleur-primaire-pale);
+  border-radius: var(--rayon-s);
+}
+
+/* ==========================================================================
+   Bloc : importeur (import depuis un lien)
+   ========================================================================== */
+.importeur {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-2);
+}
+
+.importeur__champ {
+  flex: 1 1 260px;
+}
+
+/* ==========================================================================
+   Bloc : semaine (planificateur)
+   ========================================================================== */
+.semaine {
+  display: grid;
+  gap: var(--espace-3);
+}
+
+@media (min-width: 1100px) {
+  .semaine {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--espace-2);
+  }
+}
+
+.semaine__jour {
+  display: grid;
+  align-content: start;
+  gap: var(--espace-2);
+  padding: var(--espace-3);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+}
+
+.semaine__jour--aujourdhui {
+  border-color: var(--couleur-primaire);
+  box-shadow: 0 0 0 2px var(--couleur-primaire-pale);
+}
+
+.semaine__entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--espace-2);
+}
+
+.semaine__nom {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.semaine__total {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.semaine__moment {
+  display: grid;
+  gap: var(--espace-1);
+}
+
+.semaine__moment-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--taille-xs);
+  font-weight: 600;
+  color: var(--couleur-texte-attenue);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.semaine__repas {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-1);
+  padding: var(--espace-1) var(--espace-2);
+  font-size: var(--taille-s);
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-s);
+}
+
+.semaine__repas--mange {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.semaine__repas-nom {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: inherit;
+  text-decoration: none;
+}
+
+.semaine__repas-kcal {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Bloc : epicerie
+   ========================================================================== */
+.epicerie__article--coche .liste__titre {
+  color: var(--couleur-texte-attenue);
+  text-decoration: line-through;
+}
+
+.epicerie__case {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--couleur-primaire);
+}
+
+/* ==========================================================================
+   Bloc : scanneur (code-barres)
+   ========================================================================== */
+.scanneur {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--couleur-texte);
+  border-radius: var(--rayon-l);
+}
+
+.scanneur__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanneur__cadre {
+  position: absolute;
+  inset: 30% 12%;
+  border: 3px solid var(--couleur-texte-inverse);
+  border-radius: var(--rayon-m);
+  box-shadow: 0 0 0 999px rgb(0 0 0 / 0.35);
+}
+
+/* ==========================================================================
+   Bloc : aliment (fiche compacte)
+   ========================================================================== */
+.aliment__vignette {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-s);
+}
+
+.aliment__vignette--vide {
+  display: grid;
+  place-items: center;
+  color: var(--couleur-bordure-forte);
+}
+
+/* ==========================================================================
+   Bloc : assistant (IA)
+   ========================================================================== */
+.assistant {
+  display: grid;
+  gap: var(--espace-4);
+}
+
+.assistant__fil {
+  display: grid;
+  gap: var(--espace-3);
+}
+
+.assistant__bulle {
+  max-width: 85%;
+  padding: var(--espace-3) var(--espace-4);
+  white-space: pre-wrap;
+  border-radius: var(--rayon-l);
+}
+
+.assistant__bulle--utilisateur {
+  justify-self: end;
+  color: var(--couleur-texte-inverse);
+  background: var(--couleur-primaire);
+}
+
+.assistant__bulle--ia {
+  justify-self: start;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+}
+
+.assistant__propositions {
+  display: grid;
+  gap: var(--espace-3);
+}
+
+@media (min-width: 900px) {
+  .assistant__propositions {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+.assistant__saisie {
+  position: sticky;
+  bottom: calc(var(--hauteur-nav-mobile) + var(--espace-2));
+  display: grid;
+  gap: var(--espace-2);
+  padding: var(--espace-3);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+  box-shadow: var(--ombre-m);
+}
+
+@media (min-width: 900px) {
+  .assistant__saisie {
+    bottom: var(--espace-4);
+  }
+}
+
+.assistant__liste {
+  margin: 0;
+  padding-left: var(--espace-5);
+  font-size: var(--taille-s);
+}
+
+/* ==========================================================================
+   Bloc : graphique
+   ========================================================================== */
+.graphique {
+  position: relative;
+}
+
+.graphique__svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.graphique__grille {
+  stroke: var(--couleur-graphique-grille);
+  stroke-width: 1;
+}
+
+.graphique__axe {
+  font-size: 11px;
+  fill: var(--couleur-texte-attenue);
+}
+
+.graphique__ligne {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.graphique__ligne--serie1 {
+  stroke: var(--couleur-graphique-1);
+}
+
+.graphique__barre--serie2 {
+  fill: var(--couleur-graphique-2);
+}
+
+.graphique__barre--attenuee {
+  opacity: 0.35;
+}
+
+.graphique__point {
+  fill: var(--couleur-graphique-1);
+  stroke: var(--couleur-surface);
+  stroke-width: 2;
+}
+
+.graphique__repere {
+  stroke: var(--couleur-texte-attenue);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.graphique__info {
+  position: absolute;
+  z-index: 5;
+  padding: var(--espace-1) var(--espace-2);
+  font-size: var(--taille-xs);
+  white-space: nowrap;
+  color: var(--couleur-texte);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-s);
+  box-shadow: var(--ombre-m);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+}
+
+.graphique__info-valeur {
+  font-weight: 700;
+}

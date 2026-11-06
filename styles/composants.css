@@ -1,0 +1,729 @@
+/* ==========================================================================
+   Bloc : bouton
+   ========================================================================== */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espace-2);
+  min-height: 40px;
+  padding: var(--espace-2) var(--espace-4);
+  font-size: var(--taille-s);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--rayon-m);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.bouton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bouton--principal {
+  background: var(--couleur-btn1);
+  color: var(--couleur-btn1-texte);
+}
+
+.bouton--principal:hover:not(:disabled) {
+  background: var(--couleur-btn1-survol);
+}
+
+.bouton--secondaire {
+  background: var(--couleur-btn2);
+  color: var(--couleur-btn2-texte);
+  border-color: var(--couleur-bordure);
+}
+
+.bouton--secondaire:hover:not(:disabled) {
+  background: var(--couleur-btn2-survol);
+}
+
+.bouton--accent {
+  background: var(--couleur-btn3);
+  color: var(--couleur-btn3-texte);
+}
+
+.bouton--accent:hover:not(:disabled) {
+  background: var(--couleur-btn3-survol);
+}
+
+.bouton--danger {
+  background: var(--couleur-btn-danger);
+  color: var(--couleur-btn-danger-texte);
+}
+
+.bouton--fantome {
+  background: transparent;
+  color: var(--couleur-texte-attenue);
+}
+
+.bouton--fantome:hover:not(:disabled) {
+  background: var(--couleur-surface-2);
+  color: var(--couleur-texte);
+}
+
+.bouton--icone {
+  min-height: 36px;
+  width: 36px;
+  padding: 0;
+}
+
+.bouton--petit {
+  min-height: 32px;
+  padding: var(--espace-1) var(--espace-3);
+  font-size: var(--taille-xs);
+}
+
+.bouton--bloc {
+  width: 100%;
+}
+
+/* ==========================================================================
+   Bloc : champ (formulaires)
+   ========================================================================== */
+.champ {
+  display: grid;
+  gap: var(--espace-1);
+  min-width: 0;
+}
+
+.champ__libelle {
+  font-size: var(--taille-s);
+  font-weight: 600;
+}
+
+.champ__aide {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+.champ__saisie {
+  width: 100%;
+  min-height: 42px;
+  padding: var(--espace-2) var(--espace-3);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-m);
+  transition: border-color var(--transition);
+}
+
+.champ__saisie:focus {
+  border-color: var(--couleur-primaire);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--couleur-primaire-pale);
+}
+
+.champ__saisie--zone {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.champ__saisie--compact {
+  min-height: 36px;
+  padding: var(--espace-1) var(--espace-2);
+}
+
+.champ--case {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+}
+
+.champ__groupe {
+  display: flex;
+  gap: var(--espace-2);
+}
+
+/* ==========================================================================
+   Bloc : formulaire
+   ========================================================================== */
+.formulaire {
+  display: grid;
+  gap: var(--espace-4);
+}
+
+.formulaire__ligne {
+  display: grid;
+  gap: var(--espace-3);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.formulaire__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espace-2);
+}
+
+/* ==========================================================================
+   Bloc : carte
+   ========================================================================== */
+.carte {
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+  box-shadow: var(--ombre-s);
+}
+
+.carte__corps {
+  display: grid;
+  gap: var(--espace-3);
+  padding: var(--espace-4);
+}
+
+.carte__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-2);
+  padding: var(--espace-4) var(--espace-4) 0;
+}
+
+.carte__titre {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  font-size: var(--taille-m);
+}
+
+.carte--accent {
+  border-color: var(--couleur-primaire);
+  background: var(--couleur-primaire-pale);
+}
+
+/* ==========================================================================
+   Bloc : etiquette (pastille)
+   ========================================================================== */
+.etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-1);
+  padding: 2px var(--espace-2);
+  font-size: var(--taille-xs);
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--couleur-primaire-fonce);
+  background: var(--couleur-primaire-pale);
+  border: 1px solid transparent;
+  border-radius: var(--rayon-rond);
+  text-transform: capitalize;
+}
+
+.etiquette--bouton {
+  cursor: pointer;
+}
+
+.etiquette--active {
+  color: var(--couleur-texte-inverse);
+  background: var(--couleur-primaire);
+}
+
+.etiquette--neutre {
+  color: var(--couleur-texte-attenue);
+  background: var(--couleur-surface-2);
+}
+
+.etiquette--frigo {
+  color: var(--couleur-frigo);
+  background: var(--couleur-frigo-pale);
+}
+
+.etiquette--congelateur {
+  color: var(--couleur-congelateur);
+  background: var(--couleur-congelateur-pale);
+}
+
+.etiquette--garde-manger {
+  color: var(--couleur-garde-manger);
+  background: var(--couleur-garde-manger-pale);
+}
+
+.etiquette--alerte {
+  color: var(--couleur-alerte);
+  background: var(--couleur-alerte-pale);
+}
+
+.etiquette--danger {
+  color: var(--couleur-danger);
+  background: var(--couleur-danger-pale);
+}
+
+.etiquette__retirer {
+  display: inline-flex;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Bloc : saisie-etiquettes
+   ========================================================================== */
+.saisie-etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-1);
+  padding: var(--espace-1) var(--espace-2);
+  min-height: 42px;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-m);
+}
+
+.saisie-etiquettes__champ {
+  flex: 1 1 120px;
+  min-width: 100px;
+  padding: var(--espace-1);
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+
+.saisie-etiquettes__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-1);
+  margin-top: var(--espace-2);
+}
+
+/* ==========================================================================
+   Bloc : modale
+   ========================================================================== */
+.modale {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: end center;
+  padding: 0;
+  background: var(--couleur-voile);
+}
+
+.modale__boite {
+  width: 100%;
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: var(--couleur-surface);
+  border-radius: var(--rayon-l) var(--rayon-l) 0 0;
+  box-shadow: var(--ombre-l);
+}
+
+.modale__entete {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-2);
+  padding: var(--espace-4);
+  background: var(--couleur-surface);
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+
+.modale__corps {
+  padding: var(--espace-4);
+}
+
+@media (min-width: 700px) {
+  .modale {
+    place-items: center;
+    padding: var(--espace-5);
+  }
+
+  .modale__boite {
+    max-width: 620px;
+    border-radius: var(--rayon-l);
+  }
+
+  .modale__boite--large {
+    max-width: 900px;
+  }
+}
+
+/* ==========================================================================
+   Bloc : message (retours d'état)
+   ========================================================================== */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espace-2);
+  padding: var(--espace-3);
+  font-size: var(--taille-s);
+  border-radius: var(--rayon-m);
+}
+
+.message--erreur {
+  color: var(--couleur-danger);
+  background: var(--couleur-danger-pale);
+}
+
+.message--succes {
+  color: var(--couleur-succes);
+  background: var(--couleur-succes-pale);
+}
+
+.message--info {
+  color: var(--couleur-primaire-fonce);
+  background: var(--couleur-primaire-pale);
+}
+
+.message--alerte {
+  color: var(--couleur-alerte);
+  background: var(--couleur-alerte-pale);
+}
+
+/* ==========================================================================
+   Bloc : vide (état vide)
+   ========================================================================== */
+.vide {
+  display: grid;
+  justify-items: center;
+  gap: var(--espace-3);
+  padding: var(--espace-7) var(--espace-4);
+  text-align: center;
+  color: var(--couleur-texte-attenue);
+  border: 2px dashed var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+}
+
+.vide__icone {
+  color: var(--couleur-bordure-forte);
+}
+
+/* ==========================================================================
+   Bloc : onglets
+   ========================================================================== */
+.onglets {
+  display: flex;
+  gap: var(--espace-1);
+  padding: var(--espace-1);
+  margin-bottom: var(--espace-4);
+  overflow-x: auto;
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-m);
+}
+
+.onglets__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-2);
+  flex: 1 0 auto;
+  justify-content: center;
+  padding: var(--espace-2) var(--espace-3);
+  font-size: var(--taille-s);
+  font-weight: 600;
+  color: var(--couleur-texte-attenue);
+  background: transparent;
+  border: 0;
+  border-radius: var(--rayon-s);
+  cursor: pointer;
+}
+
+.onglets__bouton--actif {
+  color: var(--couleur-texte);
+  background: var(--couleur-surface);
+  box-shadow: var(--ombre-s);
+}
+
+.onglets__compte {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+/* ==========================================================================
+   Bloc : liste
+   ========================================================================== */
+.liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.liste__element {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+  padding: var(--espace-3) var(--espace-4);
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+
+.liste__element:last-child {
+  border-bottom: 0;
+}
+
+.liste__principal {
+  flex: 1;
+  min-width: 0;
+}
+
+.liste__titre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.liste__detail {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+.liste__actions {
+  display: flex;
+  gap: var(--espace-1);
+}
+
+/* ==========================================================================
+   Bloc : stat (tuile de chiffre)
+   ========================================================================== */
+.stat {
+  display: grid;
+  gap: var(--espace-1);
+  padding: var(--espace-4);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+}
+
+.stat__libelle {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  font-size: var(--taille-s);
+  color: var(--couleur-texte-attenue);
+}
+
+.stat__valeur {
+  font-size: var(--taille-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__note {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+/* ==========================================================================
+   Bloc : jauge
+   ========================================================================== */
+.jauge {
+  height: 8px;
+  overflow: hidden;
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-rond);
+}
+
+.jauge__remplissage {
+  height: 100%;
+  background: var(--couleur-primaire);
+  border-radius: var(--rayon-rond);
+  transition: width var(--transition);
+}
+
+.jauge__remplissage--depasse {
+  background: var(--couleur-secondaire);
+}
+
+/* ==========================================================================
+   Bloc : etoiles (note)
+   ========================================================================== */
+.etoiles {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.etoiles__bouton {
+  display: inline-flex;
+  padding: 2px;
+  color: var(--couleur-bordure-forte);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.etoiles__bouton--plein {
+  color: var(--couleur-secondaire);
+}
+
+.etoiles__bouton:disabled {
+  cursor: default;
+}
+
+/* ==========================================================================
+   Bloc : chargement
+   ========================================================================== */
+.chargement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espace-2);
+  padding: var(--espace-6);
+  color: var(--couleur-texte-attenue);
+}
+
+.chargement__icone {
+  animation: rotation 900ms linear infinite;
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Bloc : recherche
+   ========================================================================== */
+.recherche {
+  position: relative;
+}
+
+.recherche__icone {
+  position: absolute;
+  top: 50%;
+  left: var(--espace-3);
+  color: var(--couleur-texte-attenue);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.recherche__saisie {
+  padding-left: 2.4rem;
+}
+
+.recherche__resultats {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--espace-1);
+  list-style: none;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-m);
+  box-shadow: var(--ombre-m);
+}
+
+.recherche__option {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: var(--espace-2);
+  padding: var(--espace-2) var(--espace-3);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--rayon-s);
+  cursor: pointer;
+}
+
+.recherche__option:hover,
+.recherche__option--active {
+  background: var(--couleur-primaire-pale);
+}
+
+.recherche__option-detail {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+/* ==========================================================================
+   Bloc : televersement (image)
+   ========================================================================== */
+.televersement {
+  display: grid;
+  gap: var(--espace-2);
+}
+
+.televersement__zone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  color: var(--couleur-texte-attenue);
+  background: var(--couleur-surface-2);
+  border: 2px dashed var(--couleur-bordure-forte);
+  border-radius: var(--rayon-l);
+  cursor: pointer;
+}
+
+.televersement__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.televersement__invite {
+  display: grid;
+  justify-items: center;
+  gap: var(--espace-2);
+  font-size: var(--taille-s);
+}
+
+.televersement__fichier {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Bloc : tableau
+   ========================================================================== */
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--taille-s);
+}
+
+.tableau__cellule {
+  padding: var(--espace-2) var(--espace-3);
+  text-align: left;
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+
+.tableau__cellule--entete {
+  font-size: var(--taille-xs);
+  font-weight: 600;
+  color: var(--couleur-texte-attenue);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tableau__cellule--nombre {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.recherche__vide {
+  padding: var(--espace-2) var(--espace-3);
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+.champ__saisie--court {
+  width: auto;
+  flex: 0 1 180px;
+}
+
+a.stat {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--transition);
+}
+
+a.stat:hover {
+  border-color: var(--couleur-primaire);
+}
