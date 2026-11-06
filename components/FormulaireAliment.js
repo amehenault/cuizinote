@@ -5,26 +5,33 @@ import { Save } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Message, versNombre } from './Elements';
 
-// Nutriments stockés en grammes pour 100 g ; chacun peut être saisi en g ou en mg.
+// Nutriments stockés en grammes pour 100 g. Unité affichée par défaut comme sur une étiquette
+// canadienne : grammes pour les macronutriments, milligrammes pour le sodium.
 const NUTRIMENTS = [
-  ['proteines_100g', 'Protéines'],
-  ['glucides_100g', 'Glucides'],
-  ['lipides_100g', 'Lipides'],
-  ['fibres_100g', 'Fibres'],
-  ['sucres_100g', 'Sucres'],
-  ['sel_100g', 'Sel'],
+  ['proteines_100g', 'Protéines', 'g'],
+  ['glucides_100g', 'Glucides', 'g'],
+  ['lipides_100g', 'Lipides', 'g'],
+  ['fibres_100g', 'Fibres', 'g'],
+  ['sucres_100g', 'Sucres', 'g'],
+  ['sodium_100g', 'Sodium', 'mg'],
 ];
 
-const versTexte = (v) => (v == null ? '' : String(Math.round(v * 100) / 100));
+/** Arrondi d'étiquette : entier (calories, mg) ou une décimale (grammes). */
+const arrondir = (v, decimales) => {
+  const f = 10 ** decimales;
+  return Math.round(v * f) / f;
+};
+const versTexte = (v, decimales = 2) => (v == null ? '' : String(arrondir(v, decimales)));
 
 /** Valeur stockée (pour 100) -> valeur affichée selon la base choisie (portion ou 100). */
 const depuis100 = (v, base, portionG) => (v == null ? null : base === 'portion' && portionG ? (v * portionG) / 100 : v);
 /** Valeur affichée -> valeur à stocker (pour 100). */
 const vers100 = (v, base, portionG) => (v == null ? null : base === 'portion' ? (v * 100) / portionG : v);
 
-function initialNutriment(g) {
-  if (g != null && g > 0 && g < 1) return { valeur: versTexte(g * 1000), unite: 'mg' };
-  return { valeur: versTexte(g), unite: 'g' };
+/** Valeur en grammes -> champ affiché, dans l'unité par défaut du nutriment, arrondi comme sur l'étiquette. */
+function initialNutriment(g, unite) {
+  if (g == null) return { valeur: '', unite };
+  return unite === 'mg' ? { valeur: versTexte(g * 1000, 0), unite } : { valeur: versTexte(g, 1), unite };
 }
 
 export default function FormulaireAliment({ initial = {}, onEnregistre }) {
@@ -37,11 +44,13 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
     code_barre: initial.code_barre || '',
     unite: initial.unite || 'g',
     portion_texte: initial.portion_texte || '',
-    portion_g: versTexte(initial.portion_g),
-    kcal: versTexte(depuis100(initial.kcal_100g, baseInitiale, initial.portion_g)),
+    portion_g: versTexte(initial.portion_g, 1),
+    kcal: versTexte(depuis100(initial.kcal_100g, baseInitiale, initial.portion_g), 0),
   }));
   const [nutriments, setNutriments] = useState(() =>
-    Object.fromEntries(NUTRIMENTS.map(([cle]) => [cle, initialNutriment(depuis100(initial[cle], baseInitiale, initial.portion_g))]))
+    Object.fromEntries(
+      NUTRIMENTS.map(([cle, , unite]) => [cle, initialNutriment(depuis100(initial[cle], baseInitiale, initial.portion_g), unite)])
+    )
   );
   const [erreur, setErreur] = useState('');
   const [erreurPortion, setErreurPortion] = useState(false);
@@ -61,12 +70,14 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
       return;
     }
     const facteur = nouvelle === 'portion' ? portionG / 100 : 100 / portionG;
-    const convertir = (t) => {
+    const convertir = (t, decimales) => {
       const n = versNombre(t);
-      return n == null ? t : versTexte(n * facteur);
+      return n == null ? t : versTexte(n * facteur, decimales);
     };
-    setValeurs((v) => ({ ...v, kcal: convertir(v.kcal) }));
-    setNutriments((n) => Object.fromEntries(Object.entries(n).map(([k, x]) => [k, { ...x, valeur: convertir(x.valeur) }])));
+    setValeurs((v) => ({ ...v, kcal: convertir(v.kcal, 0) }));
+    setNutriments((n) =>
+      Object.fromEntries(Object.entries(n).map(([k, x]) => [k, { ...x, valeur: convertir(x.valeur, x.unite === 'mg' ? 0 : 1) }]))
+    );
     setBase(nouvelle);
   }
 
@@ -96,6 +107,8 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
         portion_g: portionG,
         kcal_100g: vers100(versNombre(valeurs.kcal), base, portionG),
         image_url: initial.image_url || null,
+        // Ancien champ « sel » (n'est plus affiché) : conservé tel quel
+        sel_100g: initial.sel_100g ?? null,
         ...Object.fromEntries(
           NUTRIMENTS.map(([cle]) => {
             const n = versNombre(nutriments[cle].valeur);

@@ -217,3 +217,6 @@ ALTER TABLE recettes ADD COLUMN IF NOT EXISTS nutrition_manuelle boolean NOT NUL
 
 -- Calories d'un ingrédient libre (non lié à un produit), pour la quantité de la recette
 ALTER TABLE recette_ingredients ADD COLUMN IF NOT EXISTS kcal numeric(8,2);
+
+-- Sodium (comme sur les étiquettes canadiennes), en grammes pour 100 g ; affiché en mg
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS sodium_100g numeric(10,4);

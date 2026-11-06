@@ -16,10 +16,10 @@ export const PUT = route(async ({ requete, utilisateur, params }) => {
   const a = await lireCorps(requete, schemaAliment);
   const ligne = await q1(
     `UPDATE aliments SET nom=$1, marque=$2, code_barre=$3, kcal_100g=$4, proteines_100g=$5, glucides_100g=$6,
-            lipides_100g=$7, fibres_100g=$8, sucres_100g=$9, sel_100g=$10, portion_g=$11, image_url=$12, unite=$15, portion_texte=$16
+            lipides_100g=$7, fibres_100g=$8, sucres_100g=$9, sel_100g=$10, portion_g=$11, image_url=$12, unite=$15, portion_texte=$16, sodium_100g=$17
       WHERE id=$13 AND utilisateur_id=$14 RETURNING ${COLONNES_ALIMENT}`,
     [a.nom, a.marque, a.code_barre, a.kcal_100g, a.proteines_100g, a.glucides_100g, a.lipides_100g,
-      a.fibres_100g, a.sucres_100g, a.sel_100g, a.portion_g, a.image_url, verifierUuid(params.id), utilisateur.id, a.unite, a.portion_texte]
+      a.fibres_100g, a.sucres_100g, a.sel_100g, a.portion_g, a.image_url, verifierUuid(params.id), utilisateur.id, a.unite, a.portion_texte, a.sodium_100g]
   );
   if (!ligne) throw new ErreurHttp(404, 'Aliment introuvable');
   return ok(ligne);
