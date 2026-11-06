@@ -798,3 +798,20 @@ button.semaine__repas-nom:hover {
   gap: var(--espace-2);
   margin-top: var(--espace-2);
 }
+
+/* ==========================================================================
+   Bloc : import (CookMate)
+   ========================================================================== */
+.import__liste {
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--espace-2) var(--espace-2) var(--espace-2) var(--espace-5);
+  font-size: var(--taille-s);
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-m);
+}
+
+.import__doublon {
+  color: var(--couleur-texte-attenue);
+}

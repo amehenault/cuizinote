@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Apple, Bot, LogOut, Target, UserRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
+import ImportCookmate from '@/components/ImportCookmate';
 import SynchroSante from '@/components/SynchroSante';
 
 export default function PageParametres() {
@@ -84,6 +85,8 @@ export default function PageParametres() {
       </section>
 
       <SynchroSante />
+
+      <ImportCookmate />
 
       <section className="carte">
         <div className="carte__entete">

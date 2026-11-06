@@ -6,7 +6,7 @@ import { api, urlImage } from '@/lib/client';
 import { Message } from './Elements';
 
 /** Réduit l'image dans le navigateur (1600 px max, WebP) avant l'envoi au serveur. */
-async function reduire(fichier) {
+export async function reduire(fichier) {
   const bitmap = await createImageBitmap(fichier);
   const echelle = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
   const toile = document.createElement('canvas');
