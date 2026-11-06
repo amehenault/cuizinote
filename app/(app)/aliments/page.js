@@ -103,7 +103,7 @@ export default function PageAliments() {
         </div>
       )}
 
-      <Modale titre="Scanner un code-barres" ouverte={modale?.type === 'scan'} onFermer={() => setModale(null)}>
+      <Modale titre="Scanner un code-barres" ouverte={modale?.type === 'scan'} onFermer={() => { setModale(null); charger(); }}>
         <AjoutParScan onEnregistre={enregistre} />
       </Modale>
       <Modale

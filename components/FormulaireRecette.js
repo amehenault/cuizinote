@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, Calculator, Download, Link2, Plus, Save, Trash2, Unlink } from 'lucide-react';
+import { ArrowDown, ArrowUp, Calculator, Download, Link2, Pencil, Plus, Save, ScanBarcode, Trash2, Unlink } from 'lucide-react';
 import { api } from '@/lib/client';
-import { Etoiles, Message, versNombre } from './Elements';
+import { Etoiles, Message, Modale, versNombre } from './Elements';
+import AjoutParScan from './AjoutParScan';
+import FormulaireAliment from './FormulaireAliment';
 import RechercheAliment from './RechercheAliment';
 import SaisieEtiquettes from './SaisieEtiquettes';
 import TeleversementImage from './TeleversementImage';
@@ -54,7 +56,44 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
   const [lien, setLien] = useState('');
   const [importation, setImportation] = useState({ enCours: false, message: '', type: 'info' });
 
+  const [scanOuvert, setScanOuvert] = useState(false);
+  const [alimentEdite, setAlimentEdite] = useState(null);
+
   const maj = (cle, valeur) => setR((x) => ({ ...x, [cle]: valeur }));
+
+  /** Ajoute une ligne d'ingrédient déjà liée à un produit de la banque. */
+  function ajouterProduit(a) {
+    const ligne = {
+      texte: a.marque ? `${a.nom} (${a.marque})` : a.nom,
+      aliment_id: a.id,
+      aliment_nom: a.nom,
+      kcal_100g: a.kcal_100g,
+      grammes: texte(a.portion_g || 100),
+    };
+    setR((x) => {
+      const liste = [...x.ingredients];
+      const derniere = liste[liste.length - 1];
+      if (derniere && !derniere.texte.trim() && !derniere.aliment_id) liste.pop();
+      return { ...x, ingredients: [...liste, ligne] };
+    });
+  }
+
+  async function modifierProduit(id) {
+    try {
+      setAlimentEdite(await api(`/api/aliments/${id}`));
+    } catch (e) {
+      setErreur(e.message);
+    }
+  }
+
+  /** Après modification d'un produit, met à jour toutes les lignes qui l'utilisent. */
+  function produitModifie(a) {
+    setR((x) => ({
+      ...x,
+      ingredients: x.ingredients.map((i) => (i.aliment_id === a.id ? { ...i, aliment_nom: a.nom, kcal_100g: a.kcal_100g } : i)),
+    }));
+    setAlimentEdite(null);
+  }
   const champ = (cle) => ({ value: r[cle], onChange: (e) => maj(cle, e.target.value) });
 
   const majIngredient = (i, changements) =>
@@ -215,7 +254,18 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                     />
                     {ing.aliment_id ? (
                       <div className="editeur-lignes__lie">
-                        <span>{ing.aliment_nom}</span>
+                        <span>
+                          {ing.aliment_nom}
+                          {ing.kcal_100g != null && ` · ${Math.round(ing.kcal_100g)} kcal/100 g`}
+                        </span>
+                        <button
+                          type="button"
+                          className="etiquette__retirer"
+                          onClick={() => modifierProduit(ing.aliment_id)}
+                          aria-label={`Modifier les calories de ${ing.aliment_nom}`}
+                        >
+                          <Pencil size={14} aria-hidden="true" />
+                        </button>
                         <button
                           type="button"
                           className="etiquette__retirer"
@@ -260,6 +310,13 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                 </div>
               ))}
             </div>
+            <div className="editeur-lignes__ajout">
+              <RechercheAliment placeholder="Ajouter un produit de ma banque" onChoisir={ajouterProduit} />
+              <button type="button" className="bouton bouton--secondaire" onClick={() => setScanOuvert(true)}>
+                <ScanBarcode size={16} aria-hidden="true" />
+                Scanner un produit
+              </button>
+            </div>
             <div className="rangee rangee--espacee">
               <button
                 type="button"
@@ -267,7 +324,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                 onClick={() => setR((x) => ({ ...x, ingredients: [...x.ingredients, { texte: '', aliment_id: null, grammes: '' }] }))}
               >
                 <Plus size={14} aria-hidden="true" />
-                Ajouter un ingrédient
+                Ajouter un ingrédient libre
               </button>
               {calcul && (
                 <span className="etiquette">
@@ -386,6 +443,20 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
           </button>
         </div>
       </form>
+
+      <Modale titre="Scanner un produit" ouverte={scanOuvert} onFermer={() => setScanOuvert(false)}>
+        {scanOuvert && (
+          <AjoutParScan
+            onEnregistre={(a) => {
+              ajouterProduit(a);
+              setScanOuvert(false);
+            }}
+          />
+        )}
+      </Modale>
+      <Modale titre="Modifier le produit" ouverte={!!alimentEdite} onFermer={() => setAlimentEdite(null)}>
+        {alimentEdite && <FormulaireAliment key={alimentEdite.id} initial={alimentEdite} onEnregistre={produitModifie} />}
+      </Modale>
     </div>
   );
 }

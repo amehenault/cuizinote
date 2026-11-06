@@ -3,6 +3,15 @@ import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 import { schemaAliment } from '@/lib/schemas';
 import { COLONNES_ALIMENT } from '@/lib/colonnes';
 
+export const GET = route(async ({ utilisateur, params }) => {
+  const ligne = await q1(`SELECT ${COLONNES_ALIMENT} FROM aliments WHERE id = $1 AND utilisateur_id = $2`, [
+    verifierUuid(params.id),
+    utilisateur.id,
+  ]);
+  if (!ligne) throw new ErreurHttp(404, 'Aliment introuvable');
+  return ok(ligne);
+});
+
 export const PUT = route(async ({ requete, utilisateur, params }) => {
   const a = await lireCorps(requete, schemaAliment);
   const ligne = await q1(

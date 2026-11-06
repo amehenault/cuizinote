@@ -596,3 +596,14 @@
 .graphique__info-valeur {
   font-weight: 700;
 }
+
+.editeur-lignes__ajout {
+  display: grid;
+  gap: var(--espace-2);
+}
+
+@media (min-width: 700px) {
+  .editeur-lignes__ajout {
+    grid-template-columns: 1fr auto;
+  }
+}

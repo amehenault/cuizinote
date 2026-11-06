@@ -1,13 +1,16 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { Check, RotateCcw } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, Message } from './Elements';
 import FormulaireAliment from './FormulaireAliment';
 import ScanneurCodeBarre from './ScanneurCodeBarre';
 
-/** Scanner un code-barres, récupérer les valeurs nutritives, vérifier puis enregistrer l'aliment. */
+/**
+ * Scanne un code-barres. Un produit trouvé dans Open Food Facts est ajouté
+ * automatiquement à la banque d'aliments, puis peut être corrigé.
+ */
 export default function AjoutParScan({ onEnregistre }) {
   const [etape, setEtape] = useState('scan');
   const [resultat, setResultat] = useState(null);
@@ -18,9 +21,14 @@ export default function AjoutParScan({ onEnregistre }) {
     setErreur('');
     try {
       const r = await api(`/api/aliments/code-barre/${code}`);
-      setResultat(r);
+      if (r.provenance === 'openfoodfacts') {
+        const enregistre = await api('/api/aliments', { methode: 'POST', corps: r.aliment });
+        setResultat({ provenance: 'ajoute', aliment: enregistre });
+      } else {
+        setResultat(r);
+      }
     } catch (e) {
-      setErreur(`${e.message}. Vous pouvez saisir les valeurs vous-même.`);
+      setErreur(`${e.message}. Saisissez les valeurs vous-même pour l'ajouter à votre banque.`);
       setResultat({ provenance: 'manuel', aliment: { code_barre: code } });
     }
     setEtape('formulaire');
@@ -29,16 +37,28 @@ export default function AjoutParScan({ onEnregistre }) {
   if (etape === 'scan') return <ScanneurCodeBarre onDetecte={detecte} />;
   if (etape === 'recherche') return <Chargement texte="Recherche du produit..." />;
 
+  const dejaEnregistre = Boolean(resultat.aliment.id);
+
   return (
     <div className="pile">
-      {resultat.provenance === 'banque' && <Message type="info">Cet aliment est déjà dans votre banque.</Message>}
-      {resultat.provenance === 'openfoodfacts' && <Message type="succes">Produit trouvé dans Open Food Facts. Vérifiez les valeurs.</Message>}
+      {resultat.provenance === 'banque' && <Message type="info">Ce produit est déjà dans votre banque. Vous pouvez corriger ses valeurs.</Message>}
+      {resultat.provenance === 'ajoute' && (
+        <Message type="succes">Produit ajouté à votre banque d&apos;aliments. Corrigez les calories au besoin.</Message>
+      )}
       <Message type="alerte">{erreur}</Message>
-      <FormulaireAliment initial={resultat.aliment} onEnregistre={onEnregistre} />
-      <button type="button" className="bouton bouton--fantome" onClick={() => { setResultat(null); setEtape('scan'); }}>
-        <RotateCcw size={16} aria-hidden="true" />
-        Scanner un autre produit
-      </button>
+      <FormulaireAliment key={resultat.aliment.id || 'nouveau'} initial={resultat.aliment} onEnregistre={onEnregistre} />
+      <div className="rangee rangee--espacee">
+        <button type="button" className="bouton bouton--fantome" onClick={() => { setResultat(null); setEtape('scan'); }}>
+          <RotateCcw size={16} aria-hidden="true" />
+          Scanner un autre produit
+        </button>
+        {dejaEnregistre && (
+          <button type="button" className="bouton bouton--secondaire" onClick={() => onEnregistre(resultat.aliment)}>
+            <Check size={16} aria-hidden="true" />
+            Utiliser tel quel
+          </button>
+        )}
+      </div>
     </div>
   );
 }
