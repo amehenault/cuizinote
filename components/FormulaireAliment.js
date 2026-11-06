@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Save } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Message, versNombre } from './Elements';
@@ -44,6 +44,8 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
     Object.fromEntries(NUTRIMENTS.map(([cle]) => [cle, initialNutriment(depuis100(initial[cle], baseInitiale, initial.portion_g))]))
   );
   const [erreur, setErreur] = useState('');
+  const [erreurPortion, setErreurPortion] = useState(false);
+  const champPortion = useRef(null);
   const [envoi, setEnvoi] = useState(false);
 
   const changer = (cle) => (e) => setValeurs((v) => ({ ...v, [cle]: e.target.value }));
@@ -71,6 +73,13 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
   async function soumettre(e) {
     e.preventDefault();
     setErreur('');
+    // Portion obligatoire : on remonte jusqu'au champ et on le signale.
+    if (!valeurs.portion_texte.trim()) {
+      setErreurPortion(true);
+      champPortion.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      champPortion.current?.focus({ preventScroll: true });
+      return;
+    }
     const portionG = versNombre(valeurs.portion_g);
     if (base === 'portion' && !portionG) {
       setErreur(`Indiquez le poids de la portion (en ${valeurs.unite}) pour entrer les valeurs par portion.`);
@@ -125,14 +134,24 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
 
       <div className="formulaire__ligne">
         <label className="champ">
-          <span className="champ__libelle">Portion (comme sur l&apos;étiquette)</span>
+          <span className="champ__libelle">Portion (comme sur l&apos;étiquette) *</span>
           <input
-            className="champ__saisie"
-            placeholder="Ex. : 2 c. à soupe, 15 croustilles, 2 tranches"
+            ref={champPortion}
+            className={`champ__saisie${erreurPortion ? ' champ__saisie--erreur' : ''}`}
             value={valeurs.portion_texte}
-            onChange={changer('portion_texte')}
+            onChange={(e) => {
+              changer('portion_texte')(e);
+              if (e.target.value.trim()) setErreurPortion(false);
+            }}
             maxLength={60}
+            aria-invalid={erreurPortion}
+            aria-describedby="aide-portion"
           />
+          {erreurPortion ? (
+            <span className="champ__erreur" id="aide-portion" role="alert">Cette information est obligatoire.</span>
+          ) : (
+            <span className="champ__aide" id="aide-portion">Ex. : 2 c. à soupe, 15 croustilles, 2 tranches</span>
+          )}
         </label>
         <div className="champ">
           <span className="champ__libelle">Poids de cette portion</span>

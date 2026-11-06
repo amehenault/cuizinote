@@ -880,3 +880,15 @@ a.stat:hover {
   color: var(--couleur-texte-attenue);
   background: var(--couleur-surface-2);
 }
+
+.champ__saisie--erreur,
+.champ__saisie--erreur:focus {
+  border-color: var(--couleur-danger);
+  box-shadow: 0 0 0 3px var(--couleur-danger-pale);
+}
+
+.champ__erreur {
+  font-size: var(--taille-xs);
+  font-weight: 700;
+  color: var(--couleur-danger);
+}
