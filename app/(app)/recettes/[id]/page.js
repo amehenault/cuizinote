@@ -34,7 +34,7 @@ function Nutrition({ recette }) {
         {recette.nutrition_manuelle
           ? 'Valeurs saisies manuellement.'
           : recette.kcal_calcule != null
-            ? `Calculé automatiquement à partir de ${recette.ingredients_lies} ingrédient${recette.ingredients_lies > 1 ? 's' : ''} lié${recette.ingredients_lies > 1 ? 's' : ''}.`
+            ? `Calculé automatiquement à partir de ${recette.ingredients_lies} ingrédient${recette.ingredients_lies > 1 ? 's' : ''} (produits liés et calories saisies).`
             : 'Valeurs saisies ou importées.'}
       </p>
     </div>

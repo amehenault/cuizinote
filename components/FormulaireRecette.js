@@ -52,6 +52,7 @@ function etatInitial(r = {}) {
       unite: i.unite || 'g',
       portion_g: i.portion_g ?? null,
       portion_texte: i.portion_texte || null,
+      kcal: texte(i.kcal_libre),
       // Affiché en nombre de portions de l'étiquette quand c'est possible
       grammes:
         i.aliment_id && i.portion_g && i.grammes != null
@@ -134,17 +135,19 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
   // Calcul en direct des calories à partir des ingrédients liés à la banque d'aliments
   const calcul = useMemo(() => {
     const lies = r.ingredients.filter((i) => i.aliment_id && enGrammes(i) != null && i.kcal_100g != null);
-    if (!lies.length) return null;
+    const libres = r.ingredients.filter((i) => !i.aliment_id && versNombre(i.kcal) != null);
+    if (!lies.length && !libres.length) return null;
     const portions = versNombre(r.portions) || 1;
     const somme = (cle) => lies.reduce((t, i) => t + ((i[cle] ?? 0) * enGrammes(i)) / 100, 0) / portions;
-    const total = lies.reduce((t, i) => t + (i.kcal_100g * enGrammes(i)) / 100, 0);
+    const total =
+      lies.reduce((t, i) => t + (i.kcal_100g * enGrammes(i)) / 100, 0) + libres.reduce((t, i) => t + versNombre(i.kcal), 0);
     return {
       total: Math.round(total),
       parPortion: Math.round(total / portions),
       proteines: Math.round(somme('proteines_100g') * 10) / 10,
       glucides: Math.round(somme('glucides_100g') * 10) / 10,
       lipides: Math.round(somme('lipides_100g') * 10) / 10,
-      lies: lies.length,
+      lies: lies.length + libres.length,
     };
   }, [r.ingredients, r.portions]);
 
@@ -206,7 +209,12 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
         nutrition_manuelle: r.nutrition_manuelle,
         ingredients: r.ingredients
           .filter((i) => i.texte.trim())
-          .map((i) => ({ texte: i.texte.trim(), aliment_id: i.aliment_id, grammes: enGrammes(i) })),
+          .map((i) => ({
+            texte: i.texte.trim(),
+            aliment_id: i.aliment_id,
+            grammes: i.aliment_id ? enGrammes(i) : null,
+            kcal: i.aliment_id ? null : versNombre(i.kcal),
+          })),
         etiquettes: r.etiquettes,
       };
       for (const cle of ['temps_preparation', 'temps_cuisson']) if (corps[cle] != null) corps[cle] = Math.round(corps[cle]);
@@ -295,7 +303,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
           </div>
           <div className="carte__corps">
             <p className="champ__aide">
-              Liez un ingrédient à un produit de votre banque et indiquez la quantité (en portions de l&apos;étiquette, ex. : 2 pour 2 x « 2 c. à soupe ») : les calories se calculent automatiquement.
+              Liez un ingrédient à un produit de votre banque et indiquez la quantité (en portions de l&apos;étiquette, ex. : 2 pour 2 x « 2 c. à soupe »). Pour un ingrédient libre, entrez directement ses calories (kcal) pour toute la recette.
             </p>
             <div className="editeur-lignes">
               {r.ingredients.map((ing, i) => (
@@ -353,6 +361,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                         }
                       />
                     )}
+                    {ing.aliment_id ? (
                     <input
                       className="champ__saisie champ__saisie--compact"
                       inputMode="decimal"
@@ -362,6 +371,17 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                       onChange={(e) => majIngredient(i, { grammes: e.target.value })}
                       aria-label={enPortions(ing) ? `Nombre de portions de l'ingrédient ${i + 1}` : `Quantité de l'ingrédient ${i + 1}`}
                     />
+                    ) : (
+                      <input
+                        className="champ__saisie champ__saisie--compact"
+                        inputMode="decimal"
+                        placeholder="kcal"
+                        title="Calories de cet ingrédient pour toute la recette"
+                        value={ing.kcal ?? ''}
+                        onChange={(e) => majIngredient(i, { kcal: e.target.value })}
+                        aria-label={`Calories de l'ingrédient ${i + 1}`}
+                      />
+                    )}
                   </div>
                   <button
                     type="button"
@@ -385,7 +405,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
               <button
                 type="button"
                 className="bouton bouton--secondaire bouton--petit"
-                onClick={() => setR((x) => ({ ...x, ingredients: [...x.ingredients, { texte: '', aliment_id: null, grammes: '' }] }))}
+                onClick={() => setR((x) => ({ ...x, ingredients: [...x.ingredients, { texte: '', aliment_id: null, grammes: '', kcal: '' }] }))}
               >
                 <Plus size={14} aria-hidden="true" />
                 Ajouter un ingrédient libre
@@ -393,7 +413,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
               {calcul && (
                 <span className="etiquette">
                   <Calculator size={12} aria-hidden="true" />
-                  {calcul.parPortion} kcal/portion ({calcul.lies} ingrédient{calcul.lies > 1 ? 's' : ''} lié{calcul.lies > 1 ? 's' : ''})
+                  {calcul.parPortion} kcal/portion ({calcul.lies} ingrédient{calcul.lies > 1 ? 's' : ''} compté{calcul.lies > 1 ? 's' : ''})
                 </span>
               )}
             </div>
@@ -466,7 +486,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
               {r.nutrition_manuelle
                 ? 'Saisie manuelle : vos valeurs ci-dessous sont utilisées partout, même si des ingrédients sont liés.'
                 : calcul
-                  ? `Calculé automatiquement à partir de ${calcul.lies} ingrédient${calcul.lies > 1 ? 's' : ''} lié${calcul.lies > 1 ? 's' : ''} à votre banque. Désactivez le calcul pour entrer vos propres valeurs.`
+                  ? `Calculé automatiquement à partir de ${calcul.lies} ingrédient${calcul.lies > 1 ? 's' : ''} (produits liés et calories saisies). Désactivez le calcul pour entrer vos propres valeurs.`
                   : 'Les valeurs se calculent seules quand vous liez des ingrédients à votre banque. En attendant, les valeurs ci-dessous (saisies ou importées) sont utilisées.'}
             </p>
             <div className="formulaire__ligne">

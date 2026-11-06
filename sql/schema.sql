@@ -214,3 +214,6 @@ ALTER TABLE aliments ADD COLUMN IF NOT EXISTS portion_texte text;
 
 -- Valeurs nutritives d'une recette : calcul automatique (défaut) ou saisie manuelle prioritaire
 ALTER TABLE recettes ADD COLUMN IF NOT EXISTS nutrition_manuelle boolean NOT NULL DEFAULT false;
+
+-- Calories d'un ingrédient libre (non lié à un produit), pour la quantité de la recette
+ALTER TABLE recette_ingredients ADD COLUMN IF NOT EXISTS kcal numeric(8,2);
