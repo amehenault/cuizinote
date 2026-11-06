@@ -7,6 +7,7 @@ import { api } from '@/lib/client';
 import { MOMENTS, formaterJour, nombreFr, versIso } from '@/lib/dates';
 import { Chargement, Message, Modale, versNombre } from './Elements';
 import FormulaireRepas from './FormulaireRepas';
+import { quantiteEnPortions } from '@/lib/portion';
 
 function ModifierEntree({ entree, onFait }) {
   const [kcal, setKcal] = useState(entree.kcal == null ? '' : String(entree.kcal));
@@ -117,8 +118,14 @@ export default function JournalJour({ jour, objectif }) {
                     <button type="button" className="journal__entree" onClick={() => setEdition(e)}>
                       <span className="journal__nom">
                         {e.libelle}
-                        {e.portions !== 1 && <span className="journal__detail"> x {nombreFr(e.portions, 2)}</span>}
-                        {e.grammes != null && <span className="journal__detail"> · {nombreFr(e.grammes)} {e.unite}</span>}
+                        {e.aliment_id && e.portion_g && (e.grammes == null || e.grammes === e.portion_g) ? (
+                          <span className="journal__detail"> · {quantiteEnPortions(e.portions, e)}</span>
+                        ) : (
+                          <>
+                            {e.portions !== 1 && <span className="journal__detail"> x {nombreFr(e.portions, 2)}</span>}
+                            {e.grammes != null && <span className="journal__detail"> · {nombreFr(e.grammes)} {e.unite}</span>}
+                          </>
+                        )}
                       </span>
                       <span className="journal__valeur">{e.kcal != null ? `${nombreFr(e.kcal)} kcal` : 'kcal ?'}</span>
                     </button>

@@ -10,6 +10,17 @@ import FormulaireAliment from './FormulaireAliment';
 import RechercheAliment from './RechercheAliment';
 import SaisieEtiquettes from './SaisieEtiquettes';
 import TeleversementImage from './TeleversementImage';
+import { resumeCalories } from '@/lib/portion';
+
+/** Produit lié avec une portion d'étiquette : la quantité est un nombre de portions. */
+const enPortions = (ing) => Boolean(ing.aliment_id && ing.portion_g);
+
+/** Quantité saisie -> grammes (ou ml) utilisés pour le calcul des calories. */
+function enGrammes(ing) {
+  const q = versNombre(ing.grammes);
+  if (q == null) return null;
+  return enPortions(ing) ? q * ing.portion_g : q;
+}
 
 const texte = (v) => (v == null ? '' : String(v));
 
@@ -29,13 +40,23 @@ function etatInitial(r = {}) {
     proteines_portion: texte(r.proteines_portion),
     glucides_portion: texte(r.glucides_portion),
     lipides_portion: texte(r.lipides_portion),
+    nutrition_manuelle: Boolean(r.nutrition_manuelle),
     ingredients: (r.ingredients?.length ? r.ingredients : [{ texte: '' }]).map((i) => ({
       texte: i.texte || '',
       aliment_id: i.aliment_id || null,
       aliment_nom: i.aliment_nom || null,
       kcal_100g: i.kcal_100g ?? null,
+      proteines_100g: i.proteines_100g ?? null,
+      glucides_100g: i.glucides_100g ?? null,
+      lipides_100g: i.lipides_100g ?? null,
       unite: i.unite || 'g',
-      grammes: texte(i.grammes),
+      portion_g: i.portion_g ?? null,
+      portion_texte: i.portion_texte || null,
+      // Affiché en nombre de portions de l'étiquette quand c'est possible
+      grammes:
+        i.aliment_id && i.portion_g && i.grammes != null
+          ? texte(Math.round((i.grammes / i.portion_g) * 100) / 100)
+          : texte(i.grammes),
     })),
     etiquettes: r.etiquettes || [],
   };
@@ -65,12 +86,17 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
   /** Ajoute une ligne d'ingrédient déjà liée à un produit de la banque. */
   function ajouterProduit(a) {
     const ligne = {
-      texte: a.marque ? `${a.nom} (${a.marque})` : a.nom,
+      texte: a.portion_texte ? `${a.portion_texte} ${a.nom}` : a.nom,
       aliment_id: a.id,
       aliment_nom: a.nom,
       kcal_100g: a.kcal_100g,
+      proteines_100g: a.proteines_100g ?? null,
+      glucides_100g: a.glucides_100g ?? null,
+      lipides_100g: a.lipides_100g ?? null,
       unite: a.unite || 'g',
-      grammes: texte(a.portion_g || 100),
+      portion_g: a.portion_g ?? null,
+      portion_texte: a.portion_texte || null,
+      grammes: a.portion_g ? '1' : '100',
     };
     setR((x) => {
       const liste = [...x.ingredients];
@@ -92,7 +118,11 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
   function produitModifie(a) {
     setR((x) => ({
       ...x,
-      ingredients: x.ingredients.map((i) => (i.aliment_id === a.id ? { ...i, aliment_nom: a.nom, kcal_100g: a.kcal_100g, unite: a.unite } : i)),
+      ingredients: x.ingredients.map((i) =>
+        i.aliment_id === a.id
+          ? { ...i, aliment_nom: a.nom, kcal_100g: a.kcal_100g, proteines_100g: a.proteines_100g, glucides_100g: a.glucides_100g, lipides_100g: a.lipides_100g, unite: a.unite, portion_g: a.portion_g ?? null, portion_texte: a.portion_texte || null }
+          : i
+      ),
     }));
     setAlimentEdite(null);
   }
@@ -103,12 +133,36 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
 
   // Calcul en direct des calories à partir des ingrédients liés à la banque d'aliments
   const calcul = useMemo(() => {
-    const lies = r.ingredients.filter((i) => i.aliment_id && versNombre(i.grammes) != null && i.kcal_100g != null);
+    const lies = r.ingredients.filter((i) => i.aliment_id && enGrammes(i) != null && i.kcal_100g != null);
     if (!lies.length) return null;
-    const total = lies.reduce((s, i) => s + (i.kcal_100g * versNombre(i.grammes)) / 100, 0);
     const portions = versNombre(r.portions) || 1;
-    return { total: Math.round(total), parPortion: Math.round(total / portions), lies: lies.length };
+    const somme = (cle) => lies.reduce((t, i) => t + ((i[cle] ?? 0) * enGrammes(i)) / 100, 0) / portions;
+    const total = lies.reduce((t, i) => t + (i.kcal_100g * enGrammes(i)) / 100, 0);
+    return {
+      total: Math.round(total),
+      parPortion: Math.round(total / portions),
+      proteines: Math.round(somme('proteines_100g') * 10) / 10,
+      glucides: Math.round(somme('glucides_100g') * 10) / 10,
+      lipides: Math.round(somme('lipides_100g') * 10) / 10,
+      lies: lies.length,
+    };
   }, [r.ingredients, r.portions]);
+
+  /** Passer en saisie manuelle part des valeurs calculées si les champs sont vides. */
+  function basculerNutrition(manuelle) {
+    setR((x) => ({
+      ...x,
+      nutrition_manuelle: manuelle,
+      ...(manuelle && calcul
+        ? {
+            kcal_portion: x.kcal_portion || texte(calcul.parPortion),
+            proteines_portion: x.proteines_portion || texte(calcul.proteines),
+            glucides_portion: x.glucides_portion || texte(calcul.glucides),
+            lipides_portion: x.lipides_portion || texte(calcul.lipides),
+          }
+        : {}),
+    }));
+  }
 
   async function importer(e) {
     e.preventDefault();
@@ -149,9 +203,10 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
         proteines_portion: versNombre(r.proteines_portion),
         glucides_portion: versNombre(r.glucides_portion),
         lipides_portion: versNombre(r.lipides_portion),
+        nutrition_manuelle: r.nutrition_manuelle,
         ingredients: r.ingredients
           .filter((i) => i.texte.trim())
-          .map((i) => ({ texte: i.texte.trim(), aliment_id: i.aliment_id, grammes: versNombre(i.grammes) })),
+          .map((i) => ({ texte: i.texte.trim(), aliment_id: i.aliment_id, grammes: enGrammes(i) })),
         etiquettes: r.etiquettes,
       };
       for (const cle of ['temps_preparation', 'temps_cuisson']) if (corps[cle] != null) corps[cle] = Math.round(corps[cle]);
@@ -240,7 +295,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
           </div>
           <div className="carte__corps">
             <p className="champ__aide">
-              Liez un ingrédient à un aliment de votre banque et indiquez les grammes pour calculer les calories automatiquement.
+              Liez un ingrédient à un produit de votre banque et indiquez la quantité (en portions de l&apos;étiquette, ex. : 2 pour 2 x « 2 c. à soupe ») : les calories se calculent automatiquement.
             </p>
             <div className="editeur-lignes">
               {r.ingredients.map((ing, i) => (
@@ -258,7 +313,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                       <div className="editeur-lignes__lie">
                         <span>
                           {ing.aliment_nom}
-                          {ing.kcal_100g != null && ` · ${Math.round(ing.kcal_100g)} kcal/100 ${ing.unite || 'g'}`}
+                          {resumeCalories(ing) && ` · ${resumeCalories(ing)}`}
                         </span>
                         <button
                           type="button"
@@ -271,7 +326,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                         <button
                           type="button"
                           className="etiquette__retirer"
-                          onClick={() => majIngredient(i, { aliment_id: null, aliment_nom: null, kcal_100g: null })}
+                          onClick={() => majIngredient(i, { aliment_id: null, aliment_nom: null, kcal_100g: null, proteines_100g: null, glucides_100g: null, lipides_100g: null, portion_g: null, portion_texte: null })}
                           aria-label="Délier l'aliment"
                         >
                           <Unlink size={14} aria-hidden="true" />
@@ -286,9 +341,14 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                             aliment_id: a.id,
                             aliment_nom: a.nom,
                             kcal_100g: a.kcal_100g,
+                            proteines_100g: a.proteines_100g ?? null,
+                            glucides_100g: a.glucides_100g ?? null,
+                            lipides_100g: a.lipides_100g ?? null,
                             unite: a.unite || 'g',
+                            portion_g: a.portion_g ?? null,
+                            portion_texte: a.portion_texte || null,
                             texte: ing.texte || a.nom,
-                            grammes: ing.grammes || texte(a.portion_g),
+                            grammes: a.portion_g ? '1' : ing.grammes || '100',
                           })
                         }
                       />
@@ -296,10 +356,11 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                     <input
                       className="champ__saisie champ__saisie--compact"
                       inputMode="decimal"
-                      placeholder={ing.unite || 'g / ml'}
+                      placeholder={enPortions(ing) ? 'portions' : ing.unite || 'g / ml'}
+                      title={enPortions(ing) ? `Nombre de portions (1 = ${ing.portion_texte || ing.portion_g + ' ' + (ing.unite || 'g')})` : 'Quantité en grammes ou ml'}
                       value={ing.grammes}
                       onChange={(e) => majIngredient(i, { grammes: e.target.value })}
-                      aria-label={`Grammes de l'ingrédient ${i + 1}`}
+                      aria-label={enPortions(ing) ? `Nombre de portions de l'ingrédient ${i + 1}` : `Quantité de l'ingrédient ${i + 1}`}
                     />
                   </div>
                   <button
@@ -391,26 +452,44 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
             <h2 className="carte__titre">Valeurs nutritives par portion</h2>
           </div>
           <div className="carte__corps">
+            <label className="interrupteur">
+              <input
+                type="checkbox"
+                className="interrupteur__case"
+                checked={!r.nutrition_manuelle}
+                onChange={(ev) => basculerNutrition(!ev.target.checked)}
+              />
+              <span className="interrupteur__piste" aria-hidden="true" />
+              <span className="interrupteur__texte">Calcul automatique</span>
+            </label>
             <p className="champ__aide">
-              Utilisées si aucun ingrédient n&apos;est lié à la banque d&apos;aliments. Remplies automatiquement lors d&apos;un import.
+              {r.nutrition_manuelle
+                ? 'Saisie manuelle : vos valeurs ci-dessous sont utilisées partout, même si des ingrédients sont liés.'
+                : calcul
+                  ? `Calculé automatiquement à partir de ${calcul.lies} ingrédient${calcul.lies > 1 ? 's' : ''} lié${calcul.lies > 1 ? 's' : ''} à votre banque. Désactivez le calcul pour entrer vos propres valeurs.`
+                  : 'Les valeurs se calculent seules quand vous liez des ingrédients à votre banque. En attendant, les valeurs ci-dessous (saisies ou importées) sont utilisées.'}
             </p>
             <div className="formulaire__ligne">
-              <label className="champ">
-                <span className="champ__libelle">Calories (kcal)</span>
-                <input className="champ__saisie" inputMode="decimal" {...champ('kcal_portion')} />
-              </label>
-              <label className="champ">
-                <span className="champ__libelle">Protéines (g)</span>
-                <input className="champ__saisie" inputMode="decimal" {...champ('proteines_portion')} />
-              </label>
-              <label className="champ">
-                <span className="champ__libelle">Glucides (g)</span>
-                <input className="champ__saisie" inputMode="decimal" {...champ('glucides_portion')} />
-              </label>
-              <label className="champ">
-                <span className="champ__libelle">Lipides (g)</span>
-                <input className="champ__saisie" inputMode="decimal" {...champ('lipides_portion')} />
-              </label>
+              {[
+                ['kcal_portion', 'Calories (kcal)', calcul?.parPortion],
+                ['proteines_portion', 'Protéines (g)', calcul?.proteines],
+                ['glucides_portion', 'Glucides (g)', calcul?.glucides],
+                ['lipides_portion', 'Lipides (g)', calcul?.lipides],
+              ].map(([cle, libelle, calcule]) => {
+                const automatique = !r.nutrition_manuelle && calcul;
+                return (
+                  <label key={cle} className="champ">
+                    <span className="champ__libelle">{libelle}</span>
+                    <input
+                      className="champ__saisie"
+                      inputMode="decimal"
+                      readOnly={Boolean(automatique)}
+                      value={automatique ? texte(calcule) : r[cle]}
+                      onChange={(ev) => maj(cle, ev.target.value)}
+                    />
+                  </label>
+                );
+              })}
             </div>
           </div>
         </section>

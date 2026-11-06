@@ -7,6 +7,7 @@ import { api } from '@/lib/client';
 import { MOMENTS, nombreFr } from '@/lib/dates';
 import { Message, versNombre } from './Elements';
 import AjoutParScan from './AjoutParScan';
+import { kcalParPortion, libellePortion, resumeCalories } from '@/lib/portion';
 import RechercheAliment from './RechercheAliment';
 
 const TYPES = [
@@ -45,7 +46,10 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
 
   let apercu = null;
   if (type === 'recette' && recette?.kcal != null) apercu = recette.kcal * nbPortions;
-  if (type === 'aliment' && aliment?.kcal_100g != null) apercu = (aliment.kcal_100g * (versNombre(grammes) ?? 100)) / 100 * nbPortions;
+  const parPortionEtiquette = type === 'aliment' && aliment?.portion_g;
+  if (type === 'aliment' && aliment?.kcal_100g != null) {
+    apercu = parPortionEtiquette ? kcalParPortion(aliment) * nbPortions : (aliment.kcal_100g * (versNombre(grammes) ?? 100)) / 100 * nbPortions;
+  }
   if (type === 'libre' && cible === 'journal') apercu = versNombre(kcalLibre);
 
   function choisirAliment(a) {
@@ -65,7 +69,7 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
     if (type === 'aliment') {
       if (!aliment) return setErreur('Choisissez un aliment.');
       corps.aliment_id = aliment.id;
-      corps.grammes = versNombre(grammes);
+      corps.grammes = aliment.portion_g ? null : versNombre(grammes);
     }
     if (type === 'libre') {
       corps.libelle = libelle;
@@ -118,16 +122,18 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
             <div className="pile pile--serre">
               {aliment ? (
                 <div className="editeur-lignes__lie">
-                  <span>{aliment.nom}{aliment.kcal_100g != null ? ` - ${Math.round(aliment.kcal_100g)} kcal/100 ${aliment.unite || 'g'}` : ''}</span>
+                  <span>{aliment.nom}{resumeCalories(aliment) ? ` - ${resumeCalories(aliment)}` : ''}</span>
                   <button type="button" className="etiquette__retirer" onClick={() => setAliment(null)}>Changer</button>
                 </div>
               ) : (
                 <RechercheAliment onChoisir={choisirAliment} />
               )}
-              <label className="champ">
-                <span className="champ__libelle">Quantité ({aliment?.unite || 'g'})</span>
-                <input className="champ__saisie" inputMode="decimal" value={grammes} onChange={(e) => setGrammes(e.target.value)} />
-              </label>
+              {!aliment?.portion_g && (
+                <label className="champ">
+                  <span className="champ__libelle">Quantité ({aliment?.unite || 'g'})</span>
+                  <input className="champ__saisie" inputMode="decimal" value={grammes} onChange={(e) => setGrammes(e.target.value)} />
+                </label>
+              )}
             </div>
           )}
 
@@ -148,7 +154,9 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
 
           {type !== 'libre' && (
             <label className="champ">
-              <span className="champ__libelle">Portions</span>
+              <span className="champ__libelle">
+                {parPortionEtiquette ? `Nombre de portions (1 portion = ${libellePortion(aliment)})` : 'Portions'}
+              </span>
               <input className="champ__saisie" inputMode="decimal" value={portions} onChange={(e) => setPortions(e.target.value)} />
             </label>
           )}

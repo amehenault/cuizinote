@@ -5,6 +5,7 @@ import { Pencil, Plus, ShoppingCart } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, nombreFr, nutriment } from '@/lib/dates';
 import { LIBELLES_EMPLACEMENT, trouverEnInventaire } from '@/lib/disponibilite';
+import { libellePortion } from '@/lib/portion';
 import { Message } from './Elements';
 
 /** Fiche d'un aliment : valeurs nutritives, présence dans l'inventaire, ajout à l'épicerie ou à l'inventaire. */
@@ -33,11 +34,14 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
   }
 
   const u = aliment.unite || 'g';
+  // Par portion quand elle est connue (comme sur l'étiquette), sinon pour 100 g/ml
+  const facteur = aliment.portion_g ? aliment.portion_g / 100 : 1;
+  const parPortion = (v) => (v == null ? null : v * facteur);
   const valeurs = [
-    ['kcal', nombreFr(aliment.kcal_100g)],
-    ['Protéines', nutriment(aliment.proteines_100g)],
-    ['Glucides', nutriment(aliment.glucides_100g)],
-    ['Lipides', nutriment(aliment.lipides_100g)],
+    ['kcal', nombreFr(parPortion(aliment.kcal_100g))],
+    ['Protéines', nutriment(parPortion(aliment.proteines_100g))],
+    ['Glucides', nutriment(parPortion(aliment.glucides_100g))],
+    ['Lipides', nutriment(parPortion(aliment.lipides_100g))],
   ];
 
   return (
@@ -62,7 +66,7 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
         ))}
       </div>
       <p className="nutrition__source">
-        Pour 100 {u}{aliment.portion_g ? ` · portion habituelle ${nombreFr(aliment.portion_g)} ${u} (${nombreFr((aliment.kcal_100g || 0) * aliment.portion_g / 100)} kcal)` : ''}
+        {aliment.portion_g ? `Pour 1 portion : ${libellePortion(aliment)}` : `Pour 100 ${u}`}
       </p>
 
       {dispo ? (

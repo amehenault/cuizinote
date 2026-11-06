@@ -31,10 +31,11 @@ function Nutrition({ recette }) {
       </div>
       <p className="nutrition__source">
         Par portion.{' '}
-        {recette.kcal_calcule != null
-          ? `Calculé à partir de ${recette.ingredients_lies} ingrédient${recette.ingredients_lies > 1 ? 's' : ''} lié${recette.ingredients_lies > 1 ? 's' : ''}.`
-          : 'Valeurs saisies ou importées.'}
-        {recette.kcal_calcule != null && recette.kcal_portion != null && ` Valeur importée : ${Math.round(recette.kcal_portion)} kcal.`}
+        {recette.nutrition_manuelle
+          ? 'Valeurs saisies manuellement.'
+          : recette.kcal_calcule != null
+            ? `Calculé automatiquement à partir de ${recette.ingredients_lies} ingrédient${recette.ingredients_lies > 1 ? 's' : ''} lié${recette.ingredients_lies > 1 ? 's' : ''}.`
+            : 'Valeurs saisies ou importées.'}
       </p>
     </div>
   );
@@ -188,7 +189,7 @@ export default function PageRecette({ params }) {
                           onChange={() => basculerAchat(n)}
                           aria-label={`Acheter : ${i.texte}`}
                         />
-                        <span>{i.texte}{i.grammes ? ` (${i.grammes} ${i.unite || 'g'})` : ''}</span>
+                        <span>{i.texte}</span>
                       </label>
                       <span className="recette__ingredient-etat">
                         {inventaire && (dispo ? (

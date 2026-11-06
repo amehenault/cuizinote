@@ -208,3 +208,9 @@ ALTER TABLE aliments ADD CONSTRAINT aliments_unite_check CHECK (unite IN ('g', '
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_widget text UNIQUE;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_widget_cree_le timestamptz;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS widget_vu_le timestamptz;
+
+-- Portion telle qu'écrite sur l'étiquette (ex. : « 2 c. à soupe », « 15 croustilles ») ; portion_g = son poids
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS portion_texte text;
+
+-- Valeurs nutritives d'une recette : calcul automatique (défaut) ou saisie manuelle prioritaire
+ALTER TABLE recettes ADD COLUMN IF NOT EXISTS nutrition_manuelle boolean NOT NULL DEFAULT false;

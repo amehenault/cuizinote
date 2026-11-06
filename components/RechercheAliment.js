@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { api } from '@/lib/client';
+import { resumeCalories } from '@/lib/portion';
 
 /** Champ de recherche dans la banque d'aliments. */
 export default function RechercheAliment({ onChoisir, placeholder = 'Rechercher un aliment', compact = false }) {
@@ -74,7 +75,7 @@ export default function RechercheAliment({ onChoisir, placeholder = 'Rechercher 
                   {a.nom}
                   {a.marque && <span className="recherche__option-detail"> - {a.marque}</span>}
                 </span>
-                <span className="recherche__option-detail">{a.kcal_100g != null ? `${Math.round(a.kcal_100g)} kcal/100 ${a.unite || 'g'}` : ''}</span>
+                <span className="recherche__option-detail">{resumeCalories(a) || ''}</span>
               </button>
             </li>
           ))}
