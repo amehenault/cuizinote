@@ -9,7 +9,7 @@ Application Web (ordinateur et mobile, installable sur l'écran d'accueil) pour 
 - suivre l'inventaire du frigo, du congélateur et du garde-manger (alertes d'expiration) ;
 - planifier les repas de la semaine avec objectif calorique ;
 - générer la liste d'épicerie à partir du planificateur (en ignorant ce qui est déjà en inventaire) ;
-- demander des idées de repas à une IA gratuite (Groq) et les ajouter en un clic ;
+- demander des idées de repas à une IA gratuite (Google Gemini) et les ajouter en un clic ;
 - suivre son poids (import CSV VeSync) et ses pas (import CSV Samsung Health).
 
 ## Pile technique
@@ -39,8 +39,8 @@ Voir `.env.example`.
 | --- | --- |
 | `DATABASE_URL` | Chaîne de connexion Neon |
 | `INSCRIPTIONS_AUTORISEES` | Courriels autorisés à créer un compte, séparés par des virgules |
-| `GROQ_API_KEY` | Clé gratuite Groq pour l'assistant (https://console.groq.com/keys) |
-| `GROQ_MODELE` | Facultatif, `llama-3.3-70b-versatile` par défaut |
+| `GEMINI_API_KEY` | Clé gratuite Gemini pour l'assistant (https://aistudio.google.com/apikey) |
+| `GEMINI_MODELE` | Facultatif, `gemini-flash-latest` par défaut |
 
 ## Démarrage local
 
