@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Pencil, Plus, ShoppingCart } from 'lucide-react';
 import { api } from '@/lib/client';
-import { EMPLACEMENTS, nombreFr } from '@/lib/dates';
+import { EMPLACEMENTS, nombreFr, nutriment } from '@/lib/dates';
 import { LIBELLES_EMPLACEMENT, trouverEnInventaire } from '@/lib/disponibilite';
 import { Message } from './Elements';
 
@@ -32,11 +32,12 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
     }
   }
 
+  const u = aliment.unite || 'g';
   const valeurs = [
-    ['kcal', aliment.kcal_100g, 0],
-    ['Protéines (g)', aliment.proteines_100g, 1],
-    ['Glucides (g)', aliment.glucides_100g, 1],
-    ['Lipides (g)', aliment.lipides_100g, 1],
+    ['kcal', nombreFr(aliment.kcal_100g)],
+    ['Protéines', nutriment(aliment.proteines_100g)],
+    ['Glucides', nutriment(aliment.glucides_100g)],
+    ['Lipides', nutriment(aliment.lipides_100g)],
   ];
 
   return (
@@ -53,15 +54,15 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
       </div>
 
       <div className="nutrition">
-        {valeurs.map(([libelle, v, d]) => (
+        {valeurs.map(([libelle, v]) => (
           <div key={libelle} className="nutrition__valeur">
-            <span className="nutrition__nombre">{nombreFr(v, d)}</span>
+            <span className="nutrition__nombre">{v}</span>
             <span className="nutrition__libelle">{libelle}</span>
           </div>
         ))}
       </div>
       <p className="nutrition__source">
-        Pour 100 g{aliment.portion_g ? ` · portion habituelle ${nombreFr(aliment.portion_g)} g (${nombreFr((aliment.kcal_100g || 0) * aliment.portion_g / 100)} kcal)` : ''}
+        Pour 100 {u}{aliment.portion_g ? ` · portion habituelle ${nombreFr(aliment.portion_g)} ${u} (${nombreFr((aliment.kcal_100g || 0) * aliment.portion_g / 100)} kcal)` : ''}
       </p>
 
       {dispo ? (

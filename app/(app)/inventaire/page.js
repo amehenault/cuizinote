@@ -183,6 +183,7 @@ export default function PageInventaire() {
               <li key={a.id} className="liste__element">
                 <div className="liste__principal">
                   <p className="liste__titre">{a.nom}</p>
+                  {a.marque && <p className="liste__marque-texte">{a.marque}</p>}
                   <p className="liste__detail">
                     {[a.quantite != null && `${nombreFr(a.quantite, 2)} ${a.unite || ''}`.trim(),
                       a.expire_le && `Expire le ${formaterJour(a.expire_le, { day: 'numeric', month: 'long', year: 'numeric' })}`]

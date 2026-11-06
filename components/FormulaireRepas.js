@@ -118,14 +118,14 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
             <div className="pile pile--serre">
               {aliment ? (
                 <div className="editeur-lignes__lie">
-                  <span>{aliment.nom}{aliment.kcal_100g != null ? ` - ${Math.round(aliment.kcal_100g)} kcal/100 g` : ''}</span>
+                  <span>{aliment.nom}{aliment.kcal_100g != null ? ` - ${Math.round(aliment.kcal_100g)} kcal/100 ${aliment.unite || 'g'}` : ''}</span>
                   <button type="button" className="etiquette__retirer" onClick={() => setAliment(null)}>Changer</button>
                 </div>
               ) : (
                 <RechercheAliment onChoisir={choisirAliment} />
               )}
               <label className="champ">
-                <span className="champ__libelle">Grammes</span>
+                <span className="champ__libelle">Quantité ({aliment?.unite || 'g'})</span>
                 <input className="champ__saisie" inputMode="decimal" value={grammes} onChange={(e) => setGrammes(e.target.value)} />
               </label>
             </div>

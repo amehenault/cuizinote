@@ -34,6 +34,7 @@ function etatInitial(r = {}) {
       aliment_id: i.aliment_id || null,
       aliment_nom: i.aliment_nom || null,
       kcal_100g: i.kcal_100g ?? null,
+      unite: i.unite || 'g',
       grammes: texte(i.grammes),
     })),
     etiquettes: r.etiquettes || [],
@@ -68,6 +69,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
       aliment_id: a.id,
       aliment_nom: a.nom,
       kcal_100g: a.kcal_100g,
+      unite: a.unite || 'g',
       grammes: texte(a.portion_g || 100),
     };
     setR((x) => {
@@ -90,7 +92,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
   function produitModifie(a) {
     setR((x) => ({
       ...x,
-      ingredients: x.ingredients.map((i) => (i.aliment_id === a.id ? { ...i, aliment_nom: a.nom, kcal_100g: a.kcal_100g } : i)),
+      ingredients: x.ingredients.map((i) => (i.aliment_id === a.id ? { ...i, aliment_nom: a.nom, kcal_100g: a.kcal_100g, unite: a.unite } : i)),
     }));
     setAlimentEdite(null);
   }
@@ -256,7 +258,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                       <div className="editeur-lignes__lie">
                         <span>
                           {ing.aliment_nom}
-                          {ing.kcal_100g != null && ` · ${Math.round(ing.kcal_100g)} kcal/100 g`}
+                          {ing.kcal_100g != null && ` · ${Math.round(ing.kcal_100g)} kcal/100 ${ing.unite || 'g'}`}
                         </span>
                         <button
                           type="button"
@@ -284,6 +286,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                             aliment_id: a.id,
                             aliment_nom: a.nom,
                             kcal_100g: a.kcal_100g,
+                            unite: a.unite || 'g',
                             texte: ing.texte || a.nom,
                             grammes: ing.grammes || texte(a.portion_g),
                           })
@@ -293,7 +296,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                     <input
                       className="champ__saisie champ__saisie--compact"
                       inputMode="decimal"
-                      placeholder="g"
+                      placeholder={ing.unite || 'g / ml'}
                       value={ing.grammes}
                       onChange={(e) => majIngredient(i, { grammes: e.target.value })}
                       aria-label={`Grammes de l'ingrédient ${i + 1}`}

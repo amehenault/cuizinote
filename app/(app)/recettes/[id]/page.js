@@ -188,7 +188,7 @@ export default function PageRecette({ params }) {
                           onChange={() => basculerAchat(n)}
                           aria-label={`Acheter : ${i.texte}`}
                         />
-                        <span>{i.texte}{i.grammes ? ` (${i.grammes} g)` : ''}</span>
+                        <span>{i.texte}{i.grammes ? ` (${i.grammes} ${i.unite || 'g'})` : ''}</span>
                       </label>
                       <span className="recette__ingredient-etat">
                         {inventaire && (dispo ? (

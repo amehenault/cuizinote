@@ -804,3 +804,16 @@ a.stat:hover {
   background: rgb(255 241 227 / 0.45);
   border-color: var(--couleur-surface);
 }
+
+.liste__marque-texte {
+  font-size: var(--taille-xs);
+  font-weight: 600;
+  color: var(--couleur-texte-attenue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.champ__saisie--unite {
+  flex: 0 0 76px;
+  width: 76px;
+}

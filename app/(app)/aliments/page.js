@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Apple, Check, Pencil, Plus, ScanBarcode, Search, Trash2 } from 'lucide-react';
 import { api } from '@/lib/client';
-import { nombreFr } from '@/lib/dates';
+import { nombreFr, nutriment } from '@/lib/dates';
 import { Chargement, EntetePage, EtatVide, Message, Modale } from '@/components/Elements';
 import AjoutParScan from '@/components/AjoutParScan';
 import FicheAliment from '@/components/FicheAliment';
@@ -94,10 +94,10 @@ export default function PageAliments() {
                     )}
                   </span>
                   <span className="liste__detail">
-                    {[a.marque, a.kcal_100g != null && `${nombreFr(a.kcal_100g)} kcal/100 g`,
-                      a.proteines_100g != null && `P ${nombreFr(a.proteines_100g, 1)} g`,
-                      a.glucides_100g != null && `G ${nombreFr(a.glucides_100g, 1)} g`,
-                      a.lipides_100g != null && `L ${nombreFr(a.lipides_100g, 1)} g`]
+                    {[a.marque, a.kcal_100g != null && `${nombreFr(a.kcal_100g)} kcal/100 ${a.unite || 'g'}`,
+                      a.proteines_100g != null && `P ${nutriment(a.proteines_100g)}`,
+                      a.glucides_100g != null && `G ${nutriment(a.glucides_100g)}`,
+                      a.lipides_100g != null && `L ${nutriment(a.lipides_100g)}`]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>

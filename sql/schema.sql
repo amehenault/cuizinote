@@ -198,3 +198,8 @@ CREATE TABLE IF NOT EXISTS journal (
   cree_le          timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS journal_utilisateur_idx ON journal(utilisateur_id, jour);
+
+-- Unité de base d'un aliment : valeurs pour 100 g ou pour 100 ml, portion dans la même unité
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS unite text NOT NULL DEFAULT 'g';
+ALTER TABLE aliments DROP CONSTRAINT IF EXISTS aliments_unite_check;
+ALTER TABLE aliments ADD CONSTRAINT aliments_unite_check CHECK (unite IN ('g', 'ml'));
