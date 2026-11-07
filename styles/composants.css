@@ -211,7 +211,6 @@
   background: var(--couleur-primaire-pale);
   border: 1px solid transparent;
   border-radius: var(--rayon-rond);
-  text-transform: capitalize;
 }
 
 .etiquette--bouton {

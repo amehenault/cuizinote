@@ -299,3 +299,18 @@ CREATE INDEX IF NOT EXISTS verres_utilisateur_idx ON verres(utilisateur_id);
 
 -- Diagnostic : résumé du dernier envoi reçu de la passerelle santé (clés, extraits, totaux retenus).
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS dernier_envoi_sante jsonb;
+
+-- Étiquettes : première lettre en majuscule (« haut en calories » -> « Haut en calories »).
+-- Doublons éventuels (même nom, casse différente) : fusionnés dans l'étiquette déjà bien écrite.
+INSERT INTO recette_etiquettes (recette_id, etiquette_id)
+SELECT re.recette_id, bonne.id
+  FROM etiquettes e
+  JOIN etiquettes bonne ON bonne.utilisateur_id = e.utilisateur_id AND bonne.id <> e.id
+   AND bonne.nom = upper(left(lower(e.nom), 1)) || substr(lower(e.nom), 2)
+  JOIN recette_etiquettes re ON re.etiquette_id = e.id
+ON CONFLICT DO NOTHING;
+DELETE FROM etiquettes e USING etiquettes bonne
+ WHERE bonne.utilisateur_id = e.utilisateur_id AND bonne.id <> e.id
+   AND bonne.nom = upper(left(lower(e.nom), 1)) || substr(lower(e.nom), 2);
+UPDATE etiquettes SET nom = upper(left(lower(nom), 1)) || substr(lower(nom), 2)
+ WHERE nom <> upper(left(lower(nom), 1)) || substr(lower(nom), 2);

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { q, q1, transaction } from '@/lib/db';
+import { formaterEtiquette } from '@/lib/etiquettes';
 import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 
 const schemaNom = z.object({ nom: z.string().trim().min(1).max(40) });
@@ -7,7 +8,7 @@ const schemaNom = z.object({ nom: z.string().trim().min(1).max(40) });
 /** Renomme une étiquette. Si le nouveau nom existe déjà, les deux étiquettes sont fusionnées. */
 export const PUT = route(async ({ requete, utilisateur, params }) => {
   const id = verifierUuid(params.id);
-  const nom = (await lireCorps(requete, schemaNom)).nom.toLowerCase();
+  const nom = formaterEtiquette((await lireCorps(requete, schemaNom)).nom);
   const actuelle = await q1('SELECT id, nom FROM etiquettes WHERE id = $1 AND utilisateur_id = $2', [id, utilisateur.id]);
   if (!actuelle) throw new ErreurHttp(404, 'Introuvable');
   if (actuelle.nom === nom) return ok({ ok: true });

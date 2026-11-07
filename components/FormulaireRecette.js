@@ -297,7 +297,20 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
 
         <div className="champ">
           <label className="champ__libelle" htmlFor="etiquettes">Étiquettes</label>
-          <SaisieEtiquettes valeur={r.etiquettes} onChange={(v) => maj('etiquettes', v)} />
+          <SaisieEtiquettes
+            valeur={r.etiquettes}
+            onChange={(v) => maj('etiquettes', v)}
+            contexte={() => ({
+              titre: r.titre.trim(),
+              description: r.description || null,
+              ingredients: r.ingredients.map((i) => i.texte.trim()).filter(Boolean),
+              kcal: versNombre(r.kcal_portion) ?? calcul?.parPortion ?? null,
+              proteines: versNombre(r.proteines_portion) ?? calcul?.proteines ?? null,
+              lipides: versNombre(r.lipides_portion) ?? calcul?.lipides ?? null,
+              temps_preparation: versNombre(r.temps_preparation),
+              temps_cuisson: versNombre(r.temps_cuisson),
+            })}
+          />
         </div>
 
         <section className="carte">

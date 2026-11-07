@@ -4,6 +4,7 @@ import { use, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, BookmarkPlus, CalendarPlus, Check, Clock, Flame, Send, Sparkles } from 'lucide-react';
 import { api } from '@/lib/client';
+import { formaterEtiquette } from '@/lib/etiquettes';
 import { EMPLACEMENTS, MOMENTS, ajouterJours, debutSemaine, formaterJour, versIso } from '@/lib/dates';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 
@@ -80,7 +81,7 @@ function Proposition({ recette, semaine }) {
         </div>
         {recette.etiquettes.length > 0 && (
           <div className="carte-recette__etiquettes">
-            {recette.etiquettes.map((e) => <span key={e} className="etiquette">{e}</span>)}
+            {recette.etiquettes.map((e) => <span key={e} className="etiquette">{formaterEtiquette(e)}</span>)}
           </div>
         )}
         <details>

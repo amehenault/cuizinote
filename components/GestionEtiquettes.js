@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Pencil, Save, Trash2, X } from 'lucide-react';
+import { Pencil, Save, Sparkles, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/client';
+import { formaterEtiquette } from '@/lib/etiquettes';
 import { Message } from './Elements';
 
 const recettes = (n) => `${n} recette${n > 1 ? 's' : ''}`;
@@ -13,6 +14,7 @@ export default function GestionEtiquettes() {
   const [edition, setEdition] = useState(null);
   const [nom, setNom] = useState('');
   const [erreur, setErreur] = useState('');
+  const [auto, setAuto] = useState({ enCours: false, message: '' });
 
   const charger = () => api('/api/etiquettes').then(setEtiquettes).catch((e) => setErreur(e.message));
   useEffect(() => {
@@ -30,11 +32,34 @@ export default function GestionEtiquettes() {
     }
   }
 
+  async function etiqueterTout(toutes) {
+    const question = toutes
+      ? 'Ajouter des étiquettes automatiques à toutes vos recettes ? Les étiquettes actuelles sont conservées.'
+      : "Ajouter des étiquettes automatiques aux recettes qui n'en ont pas ?";
+    if (!window.confirm(question)) return;
+    const libelle = (n) => `${n} recette${n > 1 ? 's' : ''} étiquetée${n > 1 ? 's' : ''}`;
+    setAuto({ enCours: true, message: 'Étiquetage en cours…' });
+    let apres = null;
+    let total = 0;
+    try {
+      do {
+        const r = await api('/api/etiquettes/automatique', { methode: 'POST', corps: { apres, toutes } });
+        total += r.etiquetees;
+        apres = r.suivant;
+        setAuto({ enCours: true, message: `Étiquetage en cours… ${libelle(total)}` });
+      } while (apres);
+      setAuto({ enCours: false, message: total ? `Terminé : ${libelle(total)}.` : 'Aucune recette à étiqueter.' });
+    } catch (err) {
+      setAuto({ enCours: false, message: `${total ? `${libelle(total)}, puis : ` : ''}${err.message}` });
+    }
+    charger();
+  }
+
   async function renommer(ev, e) {
     ev.preventDefault();
-    const nouveau = nom.trim().toLowerCase();
+    const nouveau = formaterEtiquette(nom);
     if (!nouveau) return;
-    const existe = etiquettes.some((x) => x.id !== e.id && x.nom === nouveau);
+    const existe = etiquettes.some((x) => x.id !== e.id && x.nom.toLocaleLowerCase('fr-CA') === nouveau.toLocaleLowerCase('fr-CA'));
     if (existe && !window.confirm(`« ${nouveau} » existe déjà. Fusionner les deux étiquettes ?`)) return;
     try {
       await api(`/api/etiquettes/${e.id}`, { methode: 'PUT', corps: { nom: nouveau } });
@@ -49,7 +74,18 @@ export default function GestionEtiquettes() {
     <div className="pile">
       <p className="champ__aide">
         Pour créer une étiquette, ajoutez-la dans une recette. Ici, vous pouvez les renommer ou les supprimer.
+        Les nouvelles recettes enregistrées sans étiquette sont étiquetées automatiquement.
       </p>
+      <div className="rangee">
+        <button type="button" className="bouton bouton--secondaire" disabled={auto.enCours} onClick={() => etiqueterTout(false)}>
+          <Sparkles size={16} aria-hidden="true" />
+          Étiqueter les recettes sans étiquette
+        </button>
+        <button type="button" className="bouton bouton--fantome" disabled={auto.enCours} onClick={() => etiqueterTout(true)}>
+          Compléter toutes mes recettes
+        </button>
+      </div>
+      {auto.message && <p className="champ__aide" role="status">{auto.message}</p>}
       <Message type="erreur">{erreur}</Message>
       {etiquettes && etiquettes.length === 0 && <p className="champ__aide">Aucune étiquette pour l&apos;instant.</p>}
       {etiquettes && etiquettes.length > 0 && (

@@ -134,7 +134,15 @@ export default function SynchroSante() {
       <p className="champ__aide">
         Balance VeSync : reliez l&apos;application VeSync à Samsung Health ou Health Connect, et vos pesées suivront.
       </p>
-      {etat?.dernier_envoi && <DernierEnvoi envoi={etat.dernier_envoi} />}
+      {etat?.active &&
+        (etat.dernier_envoi ? (
+          <DernierEnvoi envoi={etat.dernier_envoi} />
+        ) : (
+          <p className="champ__aide">
+            <strong>Détails du dernier envoi :</strong> rien de reçu depuis la mise à jour de Cuizinote. Dans Life Dashboard
+            Companion, lancez un envoi, puis rechargez cette page.
+          </p>
+        ))}
       <Message type="erreur">{erreur}</Message>
     </div>
   );
