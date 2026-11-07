@@ -36,7 +36,7 @@ export const POST = route(async ({ requete, utilisateur }) => {
   const reponse = await demanderIdees({ demande, inventaire, historique });
 
   // Le contenu de l'IA est traité comme non fiable : on le filtre avant de le renvoyer.
-  const recettes = (Array.isArray(reponse.recettes) ? reponse.recettes : []).slice(0, 3).map((r) => ({
+  const recettes = (Array.isArray(reponse.recettes) ? reponse.recettes : []).slice(0, 10).map((r) => ({
     titre: chaine(r?.titre, 200) || 'Idée de recette',
     description: chaine(r?.description, 1000) || null,
     portions: nombre(r?.portions, 50) || 2,
