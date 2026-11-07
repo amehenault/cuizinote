@@ -1049,3 +1049,24 @@ button.semaine__repas-nom:hover {
 .assistant__exemple {
   text-transform: none;
 }
+
+/* ==========================================================================
+   Bloc : choix du nombre de portions (page recette)
+   ========================================================================== */
+.portions-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-2);
+}
+
+.portions-choix {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-1);
+}
+
+.portions-choix__saisie {
+  width: 4.5rem;
+  text-align: center;
+}
