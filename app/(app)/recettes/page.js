@@ -1,17 +1,61 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Apple, BookOpen, Bot, Plus, Search, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, EtatVide, Message } from '@/components/Elements';
 import CarteRecette from '@/components/CarteRecette';
 
+const MEMOIRE = 'cuizinote:recettes';
+function lireMemoire() {
+  try {
+    return JSON.parse(sessionStorage.getItem(MEMOIRE)) || {};
+  } catch {
+    return {};
+  }
+}
+function ecrireMemoire(valeurs) {
+  try {
+    sessionStorage.setItem(MEMOIRE, JSON.stringify({ ...lireMemoire(), ...valeurs }));
+  } catch {
+    // stockage indisponible : on revient simplement en haut de la liste
+  }
+}
+
 export default function PageRecettes() {
   const [recettes, setRecettes] = useState(null);
   const [etiquettes, setEtiquettes] = useState([]);
   const [recherche, setRecherche] = useState('');
   const [filtre, setFiltre] = useState('');
+  const [pret, setPret] = useState(false);
+  const positionRestauree = useRef(false);
+
+  // Recherche et filtre de la dernière visite (lus après l'affichage, pour éviter un décalage avec le serveur).
+  useEffect(() => {
+    const m = lireMemoire();
+    setRecherche(m.recherche || '');
+    setFiltre(m.filtre || '');
+    setPret(true);
+  }, []);
+
+  // Position dans la page, gardée pour le retour depuis une recette.
+  useEffect(() => {
+    const noter = () => positionRestauree.current && ecrireMemoire({ y: window.scrollY });
+    window.addEventListener('scroll', noter, { passive: true });
+    return () => window.removeEventListener('scroll', noter);
+  }, []);
+  useEffect(() => {
+    if (pret) ecrireMemoire({ recherche, filtre });
+  }, [recherche, filtre, pret]);
+  useEffect(() => {
+    if (!recettes || positionRestauree.current) return;
+    const { y } = lireMemoire();
+    requestAnimationFrame(() => {
+      if (y) window.scrollTo(0, y);
+      positionRestauree.current = true;
+    });
+  }, [recettes]);
   const [erreur, setErreur] = useState('');
 
   useEffect(() => {
@@ -19,12 +63,13 @@ export default function PageRecettes() {
   }, []);
 
   useEffect(() => {
+    if (!pret) return undefined;
     const minuterie = setTimeout(() => {
       const p = new URLSearchParams({ q: recherche, etiquette: filtre });
       api(`/api/recettes?${p}`).then(setRecettes).catch((e) => setErreur(e.message));
     }, 200);
     return () => clearTimeout(minuterie);
-  }, [recherche, filtre]);
+  }, [recherche, filtre, pret]);
 
   return (
     <>

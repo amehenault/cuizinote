@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Coffee, CupSoda, GlassWater, Pencil, Plus, Tag, Wine } from 'lucide-react';
 import { api } from '@/lib/client';
+import { contient } from '@/lib/texte';
 import { MOMENTS, nombreFr } from '@/lib/dates';
 import { Message, versNombre } from './Elements';
 import AjoutParScan from './AjoutParScan';
@@ -23,6 +24,15 @@ const TYPES = [
  * cible = 'journal' : ce que je viens de manger (calories comptées)
  * cible = 'plan'    : repas prévu dans le menu de la semaine
  */
+/** Icône d'un verre d'après son nom (tasse, verre, coupe...). */
+function iconeVerre(nom) {
+  const n = String(nom).toLowerCase();
+  if (/tasse|mug|caf[ée]|th[ée]/.test(n)) return Coffee;
+  if (/vin|coupe|flûte|flute/.test(n)) return Wine;
+  if (/verre|eau/.test(n)) return GlassWater;
+  return CupSoda;
+}
+
 export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnregistre }) {
   const [type, setType] = useState('recette');
   const [recettes, setRecettes] = useState([]);
@@ -46,7 +56,7 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
     api('/api/verres').then(setVerres).catch(() => {});
   }, []);
 
-  const options = recettes.filter((r) => r.titre.toLowerCase().includes(filtre.toLowerCase())).slice(0, 60);
+  const options = recettes.filter((r) => contient(r.titre, filtre)).slice(0, 60);
   const recette = recettes.find((r) => r.id === recetteId);
   const nbPortions = versNombre(portions) || 1;
 
@@ -149,15 +159,29 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
               )}
               {boisson ? (
                 <>
-                  <label className="champ">
+                  <div className="champ">
                     <span className="champ__libelle">Dans quel verre ?</span>
-                    <select className="champ__saisie" required value={verre} onChange={(e) => setVerre(e.target.value)}>
-                      <option value="" disabled>Choisissez votre verre</option>
-                      {verres.map((v) => <option key={v.id} value={v.id}>{v.nom} - {libelleContenance(v.ml)}</option>)}
-                      {aliment.portion_g && <option value="etiquette">Portion de l&apos;étiquette ({libellePortion(aliment)})</option>}
-                      <option value="autre">Autre quantité (ml)</option>
-                    </select>
-                  </label>
+                    <div className="choix-verres" role="radiogroup" aria-label="Dans quel verre ?">
+                      {[
+                        ...verres.map((v) => ({ id: v.id, nom: v.nom, detail: libelleContenance(v.ml), Icone: iconeVerre(v.nom) })),
+                        ...(aliment.portion_g ? [{ id: 'etiquette', nom: 'Portion de l’étiquette', detail: libellePortion(aliment), Icone: Tag }] : []),
+                        { id: 'autre', nom: 'Autre quantité', detail: 'en ml', Icone: Pencil },
+                      ].map(({ id, nom, detail, Icone }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          role="radio"
+                          aria-checked={verre === id}
+                          className={`choix-verres__tuile${verre === id ? ' choix-verres__tuile--actif' : ''}`}
+                          onClick={() => setVerre(id)}
+                        >
+                          <Icone size={26} aria-hidden="true" />
+                          <span className="choix-verres__nom">{nom}</span>
+                          <span className="choix-verres__detail">{detail}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   {verre === 'autre' && (
                     <label className="champ">
                       <span className="champ__libelle">Quantité (ml)</span>

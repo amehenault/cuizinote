@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Tag, X } from 'lucide-react';
 import { api } from '@/lib/client';
+import { contient } from '@/lib/texte';
 import { ETIQUETTES_DE_BASE, formaterEtiquette } from '@/lib/etiquettes';
 
 const cle = (s) => s.toLocaleLowerCase('fr-CA');
@@ -32,7 +33,7 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
 
   const choisies = new Set(valeur.map(cle));
   const suggestions = [...new Map((existantes.length ? existantes : ETIQUETTES_DE_BASE).map((s) => [cle(s), formaterEtiquette(s)])).values()]
-    .filter((s) => !choisies.has(cle(s)) && (!texte || cle(s).includes(cle(texte.trim()))))
+    .filter((s) => !choisies.has(cle(s)) && (!texte || contient(s, texte.trim())))
     .slice(0, 14);
 
   return (

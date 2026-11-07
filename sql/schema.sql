@@ -364,3 +364,24 @@ CREATE TABLE IF NOT EXISTS aliments_propositions (
   acceptee        boolean
 );
 CREATE INDEX IF NOT EXISTS aliments_propositions_dest_idx ON aliments_propositions(destinataire_id, traitee_le);
+
+-- Rangement par défaut de chaque produit, par personne (frigo, congélateur, garde-manger).
+-- cle : « a:<aliment_id> » pour un produit de la banque, « n:<nom en minuscules> » sinon.
+CREATE TABLE IF NOT EXISTS rangements (
+  utilisateur_id uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  cle            text NOT NULL,
+  emplacement    text NOT NULL CHECK (emplacement IN ('frigo', 'congelateur', 'garde-manger')),
+  modifie_le     timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (utilisateur_id, cle)
+);
+-- Point de départ : l'emplacement actuel des articles de l'inventaire (le plus récent l'emporte).
+INSERT INTO rangements (utilisateur_id, cle, emplacement)
+SELECT DISTINCT ON (utilisateur_id, cle) utilisateur_id, cle, emplacement FROM (
+  SELECT utilisateur_id, 'a:' || aliment_id AS cle, emplacement, ajoute_le FROM inventaire WHERE aliment_id IS NOT NULL
+  UNION ALL
+  SELECT utilisateur_id, 'n:' || lower(trim(nom)), emplacement, ajoute_le FROM inventaire
+) t ORDER BY utilisateur_id, cle, ajoute_le DESC
+ON CONFLICT DO NOTHING;
+
+-- Recherche sans accents ni liaisons : « oeufs » trouve « Œufs », « creme » trouve « Crème ».
+CREATE OR REPLACE FUNCTION cz_norm(t text) RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT replace(replace(translate(lower(coalesce(t, '')), 'àâäáãåçéèêëíìîïñóòôöõúùûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy'), 'œ', 'oe'), 'æ', 'ae') $$;

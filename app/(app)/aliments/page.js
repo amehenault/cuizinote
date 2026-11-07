@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Apple, ArrowLeft, Bot, Check, Pencil, Plus, ScanBarcode, Search, ShoppingCart, Trash2, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
+import { contient } from '@/lib/texte';
 import { resumeCalories } from '@/lib/portion';
 import { Chargement, EntetePage, EtatVide, Message, Modale } from '@/components/Elements';
 import AjoutParScan from '@/components/AjoutParScan';
@@ -54,7 +55,7 @@ export default function PageAliments() {
   }
 
   const filtres = (aliments || []).filter((a) =>
-    `${a.nom} ${a.marque || ''} ${a.code_barre || ''}`.toLowerCase().includes(recherche.toLowerCase())
+    contient(`${a.nom} ${a.marque || ''} ${a.code_barre || ''}`, recherche)
   );
 
   return (

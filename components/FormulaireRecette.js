@@ -73,7 +73,7 @@ function deplacer(liste, index, direction) {
   return copie;
 }
 
-export default function FormulaireRecette({ initial, recetteId = null, permettreImport = false }) {
+export default function FormulaireRecette({ initial, recetteId = null, permettreImport = false, retourArriere = false }) {
   const routeur = useRouter();
   const [r, setR] = useState(() => etatInitial(initial));
   const [erreur, setErreur] = useState('');
@@ -224,7 +224,9 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
       const { id } = recetteId
         ? await api(`/api/recettes/${recetteId}`, { methode: 'PUT', corps })
         : await api('/api/recettes', { methode: 'POST', corps });
-      routeur.push(`/recettes/${id}`);
+      // Ouvert depuis la fiche : on y retourne (sans empiler l'historique), sinon on l'ouvre.
+      if (retourArriere) routeur.back();
+      else routeur.push(`/recettes/${id}`);
       routeur.refresh();
     } catch (err) {
       setErreur(err.message);

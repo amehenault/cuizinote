@@ -13,7 +13,7 @@ export const GET = route(async ({ requete, utilisateur }) => {
       `SELECT ${COLONNES_ALIMENT}, (utilisateur_id = $1) AS mien FROM aliments
         WHERE (NOT prive OR utilisateur_id = $1)
           AND NOT EXISTS (SELECT 1 FROM aliments v WHERE v.version_de = aliments.id AND v.utilisateur_id = $1)
-          AND ($2 = '' OR nom ILIKE '%' || $2 || '%' OR marque ILIKE '%' || $2 || '%' OR code_barre = $2)
+          AND ($2 = '' OR cz_norm(nom) LIKE '%' || cz_norm($2) || '%' OR cz_norm(marque) LIKE '%' || cz_norm($2) || '%' OR code_barre = $2)
         ORDER BY nom LIMIT ${recherche ? 30 : 2000}`,
       [utilisateur.id, recherche.replace(/[%_\\]/g, '\\$&')]
     )

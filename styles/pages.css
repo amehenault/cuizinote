@@ -1134,3 +1134,52 @@ details[open] > .parametres__repli {
 details[open] > .parametres__repli .parametres__chevron {
   transform: rotate(180deg);
 }
+
+/* Choix du verre (boissons) : tuiles illustrées */
+.choix-verres {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--espace-2);
+}
+
+.choix-verres__tuile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--espace-1);
+  padding: var(--espace-3) var(--espace-2);
+  font: inherit;
+  text-align: center;
+  color: var(--couleur-texte-attenue);
+  background: var(--couleur-champ);
+  border: 2px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.choix-verres__tuile:hover {
+  border-color: var(--couleur-bordure-forte);
+  transform: translateY(-1px);
+}
+
+.choix-verres__tuile:focus-visible {
+  outline: 3px solid var(--couleur-primaire-pale);
+  outline-offset: 2px;
+}
+
+.choix-verres__tuile--actif {
+  color: var(--couleur-primaire-fonce);
+  background: var(--couleur-primaire-pale);
+  border-color: var(--couleur-primaire);
+}
+
+.choix-verres__nom {
+  font-weight: 700;
+  color: var(--couleur-texte);
+  line-height: 1.2;
+}
+
+.choix-verres__detail {
+  font-size: var(--taille-xs);
+}

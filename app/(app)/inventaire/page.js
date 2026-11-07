@@ -9,6 +9,8 @@ import { Chargement, EntetePage, EtatVide, Message, Modale, versNombre } from '@
 import AjoutParScan from '@/components/AjoutParScan';
 import RechercheAliment from '@/components/RechercheAliment';
 import { quantiteParDefaut } from '@/lib/portion';
+import { rangementPour } from '@/lib/rangement';
+import QuestionRangement from '@/components/QuestionRangement';
 
 const ICONES = { frigo: Refrigerator, congelateur: Snowflake, 'garde-manger': Archive };
 
@@ -21,7 +23,8 @@ function BadgeExpiration({ date }) {
   return null;
 }
 
-function FormulaireArticle({ initial, onEnregistre }) {
+function FormulaireArticle({ initial, onEnregistre, rangements }) {
+  const [emplacementTouche, setEmplacementTouche] = useState(Boolean(initial.id));
   const [a, setA] = useState({
     emplacement: initial.emplacement || 'frigo',
     nom: initial.nom || '',
@@ -37,6 +40,11 @@ function FormulaireArticle({ initial, onEnregistre }) {
   });
   const [erreur, setErreur] = useState('');
   const champ = (cle) => ({ value: a[cle], onChange: (e) => setA({ ...a, [cle]: e.target.value }) });
+  /** Nouveau produit choisi ou nom tapé : son rangement habituel. */
+  const avecRangement = (suivant) => {
+    const defaut = !emplacementTouche && rangementPour(rangements, suivant);
+    return defaut ? { ...suivant, emplacement: defaut } : suivant;
+  };
 
   async function soumettre(e) {
     e.preventDefault();
@@ -52,7 +60,13 @@ function FormulaireArticle({ initial, onEnregistre }) {
     try {
       if (initial.id) await api(`/api/inventaire/${initial.id}`, { methode: 'PUT', corps });
       else await api('/api/inventaire', { methode: 'POST', corps });
-      onEnregistre();
+      // Rangé ailleurs que d'habitude : on proposera d'en faire le rangement par défaut.
+      const habituel = rangementPour(rangements, a);
+      onEnregistre(
+        habituel && habituel !== a.emplacement
+          ? { nom: a.nom, aliment_id: a.aliment_id, avant: habituel, apres: a.emplacement }
+          : null
+      );
     } catch (err) {
       setErreur(err.message);
     }
@@ -62,13 +76,20 @@ function FormulaireArticle({ initial, onEnregistre }) {
     <form className="formulaire" onSubmit={soumettre}>
       <label className="champ">
         <span className="champ__libelle">Emplacement</span>
-        <select className="champ__saisie" {...champ('emplacement')}>
+        <select
+          className="champ__saisie"
+          value={a.emplacement}
+          onChange={(e) => {
+            setEmplacementTouche(true);
+            setA({ ...a, emplacement: e.target.value });
+          }}
+        >
           {EMPLACEMENTS.map((e) => <option key={e.valeur} value={e.valeur}>{e.libelle}</option>)}
         </select>
       </label>
       <label className="champ">
         <span className="champ__libelle">Nom</span>
-        <input className="champ__saisie" required maxLength={200} {...champ('nom')} />
+        <input className="champ__saisie" required maxLength={200} {...champ('nom')} onBlur={() => setA((x) => avecRangement(x))} />
       </label>
       <div className="champ">
         <span className="champ__libelle">Aliment lié (facultatif)</span>
@@ -83,14 +104,14 @@ function FormulaireArticle({ initial, onEnregistre }) {
           <RechercheAliment
             onChoisir={(al) => {
               const defaut = quantiteParDefaut(al);
-              setA({
+              setA(avecRangement({
                 ...a,
                 aliment_id: al.id,
                 aliment_nom: al.nom,
                 nom: a.nom || al.nom,
                 // Quantité encore vide ou par défaut : on met un contenant complet de cet aliment
                 ...(!a.unite && (a.quantite === '' || a.quantite === '1') ? defaut : {}),
-              });
+              }));
             }}
           />
         )}
@@ -122,6 +143,9 @@ export default function PageInventaire() {
   const [onglet, setOnglet] = useState('frigo');
   const [modale, setModale] = useState(null); // { type: 'scan' | 'formulaire', article }
   const [erreur, setErreur] = useState('');
+  const [rangements, setRangements] = useState({});
+  const [question, setQuestion] = useState(null);
+  const chargerRangements = () => api('/api/inventaire/rangements').then(setRangements).catch(() => {});
 
   const charger = () => api('/api/inventaire').then(setArticles).catch((e) => setErreur(e.message));
   const [completion, setCompletion] = useState('');
@@ -154,6 +178,7 @@ export default function PageInventaire() {
 
   useEffect(() => {
     charger();
+    chargerRangements();
     completer();
   }, []);
 
@@ -163,9 +188,11 @@ export default function PageInventaire() {
     charger();
   }
 
-  function enregistre() {
+  function enregistre(questionRangement) {
     setModale(null);
     charger();
+    chargerRangements(); // un premier rangement devient le rangement par défaut
+    if (questionRangement) setQuestion(questionRangement);
   }
 
   const visibles = (articles || []).filter((a) => a.emplacement === onglet);
@@ -257,7 +284,7 @@ export default function PageInventaire() {
       <Modale titre="Scanner un produit" ouverte={modale?.type === 'scan'} onFermer={() => setModale(null)}>
         <AjoutParScan
           onEnregistre={(aliment) =>
-            setModale({ type: 'formulaire', article: { emplacement: onglet, nom: aliment.nom, aliment_id: aliment.id, aliment_nom: aliment.nom, ...quantiteParDefaut(aliment) } })
+            setModale({ type: 'formulaire', article: { emplacement: rangementPour(rangements, { aliment_id: aliment.id, nom: aliment.nom }) || onglet, nom: aliment.nom, aliment_id: aliment.id, aliment_nom: aliment.nom, ...quantiteParDefaut(aliment) } })
           }
         />
       </Modale>
@@ -266,8 +293,15 @@ export default function PageInventaire() {
         ouverte={modale?.type === 'formulaire'}
         onFermer={() => setModale(null)}
       >
-        {modale?.type === 'formulaire' && <FormulaireArticle key={modale.article.id || 'nouveau'} initial={modale.article} onEnregistre={enregistre} />}
+        {modale?.type === 'formulaire' && <FormulaireArticle key={modale.article.id || 'nouveau'} initial={modale.article} onEnregistre={enregistre} rangements={rangements} />}
       </Modale>
+      <QuestionRangement
+        question={question}
+        onFin={(enregistre) => {
+          setQuestion(null);
+          if (enregistre) chargerRangements();
+        }}
+      />
     </>
   );
 }

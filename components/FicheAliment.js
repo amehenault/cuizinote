@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pencil, Plus, ShoppingCart } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, nombreFr, nutriment } from '@/lib/dates';
@@ -8,10 +8,24 @@ import { LIBELLES_EMPLACEMENT, trouverEnInventaire } from '@/lib/disponibilite';
 import { libelleContenant, libellePortion, quantiteParDefaut } from '@/lib/portion';
 import { Message } from './Elements';
 import VignetteAliment from './VignetteAliment';
+import QuestionRangement from './QuestionRangement';
+import { rangementPour } from '@/lib/rangement';
 
 /** Fiche d'un aliment : valeurs nutritives, présence dans l'inventaire, ajout à l'épicerie ou à l'inventaire. */
 export default function FicheAliment({ aliment, inventaire, onModifier, onInventaireChange }) {
   const [emplacement, setEmplacement] = useState('frigo');
+  const [habituel, setHabituel] = useState(null);
+  const [question, setQuestion] = useState(null);
+  // Rangement habituel de ce produit, proposé par défaut.
+  useEffect(() => {
+    api('/api/inventaire/rangements')
+      .then((carte) => {
+        const r = rangementPour(carte, { aliment_id: aliment.id, nom: aliment.nom });
+        setHabituel(r);
+        if (r) setEmplacement(r);
+      })
+      .catch(() => {});
+  }, [aliment.id, aliment.nom]);
   const [message, setMessage] = useState({ type: 'info', texte: '' });
   const dispo = trouverEnInventaire({ aliment_id: aliment.id, nom: aliment.nom }, inventaire);
 
@@ -33,6 +47,9 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
       });
       setMessage({ type: 'succes', texte: `Ajouté au ${LIBELLES_EMPLACEMENT[emplacement]}.` });
       onInventaireChange();
+      if (habituel && habituel !== emplacement) {
+        setQuestion({ nom: aliment.nom, aliment_id: aliment.id, avant: habituel, apres: emplacement });
+      } else if (!habituel) setHabituel(emplacement); // premier rangement = rangement par défaut
     } catch (e) {
       setMessage({ type: 'erreur', texte: e.message });
     }
@@ -99,6 +116,13 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
         </button>
       </div>
       <Message type={message.type}>{message.texte}</Message>
+      <QuestionRangement
+        question={question}
+        onFin={(enregistre) => {
+          if (enregistre) setHabituel(question.apres);
+          setQuestion(null);
+        }}
+      />
     </div>
   );
 }

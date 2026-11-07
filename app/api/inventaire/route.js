@@ -2,6 +2,7 @@ import { COLONNES_INVENTAIRE } from '@/lib/colonnes';
 import { q, q1 } from '@/lib/db';
 import { lireCorps, ok, route } from '@/lib/http';
 import { schemaInventaire } from '@/lib/schemas';
+import { clesRangement } from '@/lib/rangement';
 
 export const GET = route(async ({ utilisateur }) =>
   ok(
@@ -26,6 +27,11 @@ export const POST = route(async ({ requete, utilisateur }) => {
              $5, $6, $7)
      RETURNING ${COLONNES_INVENTAIRE}`,
     [utilisateur.id, i.emplacement, i.nom, i.aliment_id, i.quantite, i.unite, i.expire_le]
+  );
+  // Premier rangement d'un produit : il devient son rangement par défaut.
+  await q(
+    `INSERT INTO rangements (utilisateur_id, cle, emplacement) SELECT $1, unnest($2::text[]), $3 ON CONFLICT DO NOTHING`,
+    [utilisateur.id, clesRangement({ aliment_id: ligne.aliment_id, nom: ligne.nom }), ligne.emplacement]
   );
   return ok(ligne, 201);
 });

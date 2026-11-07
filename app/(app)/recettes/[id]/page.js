@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarPlus, Check, CircleAlert, Clock, ExternalLink, Flame, Minus, Pencil, Plus, ShoppingCart, Trash2, Users, Utensils } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, Check, CircleAlert, Clock, ExternalLink, Flame, Minus, Pencil, Plus, ShoppingCart, Trash2, Users, Utensils } from 'lucide-react';
 import { api, urlImage } from '@/lib/client';
 import { MOMENTS, nombreFr, versIso } from '@/lib/dates';
 import { ajusterIngredient, ecrireQuantite } from '@/lib/quantites';
@@ -166,6 +166,10 @@ export default function PageRecette({ params }) {
         </div>
       )}
 
+      <Link href="/recettes" className="bouton bouton--fantome" style={{ alignSelf: 'flex-start' }}>
+        <ArrowLeft size={16} aria-hidden="true" />
+        Mes recettes
+      </Link>
       <EntetePage titre={recette.titre} sousTitre={recette.description}>
         <button type="button" className="bouton bouton--principal" onClick={() => setPlanif({ jour: versIso(), moment: 'souper', portions: portionsChoisies })}>
           <CalendarPlus size={16} aria-hidden="true" />
@@ -175,7 +179,7 @@ export default function PageRecette({ params }) {
           <ShoppingCart size={16} aria-hidden="true" />
           Ajouter les manquants
         </button>
-        <Link href={`/recettes/${id}/modifier`} className="bouton bouton--secondaire">
+        <Link href={`/recettes/${id}/modifier?de=fiche`} className="bouton bouton--secondaire">
           <Pencil size={16} aria-hidden="true" />
           Modifier
         </Link>
