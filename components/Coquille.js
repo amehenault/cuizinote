@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Bot,
   BookOpen,
@@ -21,7 +21,7 @@ import { api } from '@/lib/client';
 // sont accessibles par des boutons dans les pages (Inventaire, Recettes, Accueil).
 const LIENS = [
   { href: '/', libelle: 'Accueil', Icone: LayoutDashboard },
-  { href: '/recettes', libelle: 'Recettes', Icone: BookOpen, section: ['/assistant', '/communaute', '/aliments'] },
+  { href: '/recettes', libelle: 'Recettes', Icone: BookOpen },
   { href: '/communaute', libelle: 'Communauté', Icone: UsersRound, bureau: true },
   { href: '/planificateur', libelle: 'Semaine', Icone: CalendarDays },
   { href: '/inventaire', libelle: 'Inventaire', Icone: Refrigerator },
@@ -33,6 +33,8 @@ const LIENS = [
 
 export default function Coquille({ nom, children }) {
   const chemin = usePathname();
+  // Page Aliments ouverte depuis Recettes ou Inventaire : cette section reste surlignée sur téléphone.
+  const de = useSearchParams().get('de');
 
   async function deconnecter() {
     await api('/api/auth/deconnexion', { methode: 'POST' }).catch(() => {});
@@ -47,10 +49,9 @@ export default function Coquille({ nom, children }) {
           Cuizinote
         </Link>
         <ul className="nav__liste">
-          {LIENS.map(({ href, libelle, Icone, bureau, section }) => {
+          {LIENS.map(({ href, libelle, Icone, bureau }) => {
             const actif = href === '/' ? chemin === '/' : chemin.startsWith(href);
-            // Sur téléphone, « Recettes » reste surligné dans ses sous-pages (Assistant, Communauté, Aliments).
-            const dansSection = !actif && section?.some((s) => chemin.startsWith(s));
+            const dansSection = !actif && chemin.startsWith('/aliments') && href === `/${de}`;
             return (
               <li key={href} className={`nav__element${bureau ? ' nav__element--bureau' : ''}`}>
                 <Link

@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Plus, Search } from 'lucide-react';
+import { Apple, BookOpen, Bot, Plus, Search, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, EtatVide, Message } from '@/components/Elements';
 import CarteRecette from '@/components/CarteRecette';
-import OngletsRecettes from '@/components/OngletsRecettes';
 
 export default function PageRecettes() {
   const [recettes, setRecettes] = useState(null);
@@ -29,8 +28,19 @@ export default function PageRecettes() {
 
   return (
     <>
-      <OngletsRecettes />
       <EntetePage titre="Mes recettes" sousTitre="Votre banque de recettes et de plats">
+        <Link href="/assistant" className="bouton bouton--secondaire">
+          <Bot size={16} aria-hidden="true" />
+          Assistant culinaire
+        </Link>
+        <Link href="/communaute" className="bouton bouton--secondaire">
+          <UsersRound size={16} aria-hidden="true" />
+          Communauté
+        </Link>
+        <Link href="/aliments?de=recettes" className="bouton bouton--secondaire">
+          <Apple size={16} aria-hidden="true" />
+          Aliments
+        </Link>
         <Link href="/recettes/nouvelle" className="bouton bouton--principal">
           <Plus size={16} aria-hidden="true" />
           Nouvelle recette
