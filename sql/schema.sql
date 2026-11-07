@@ -329,3 +329,13 @@ CREATE TABLE IF NOT EXISTS etiquettes_refusees (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS etiquettes_refusees_idx
   ON etiquettes_refusees (utilisateur_id, coalesce(recette_id, '00000000-0000-0000-0000-000000000000'::uuid), nom);
+
+-- Appels à Google Gemini (toute l'application) : jauge du quota gratuit quotidien dans Paramètres.
+-- statut : code HTTP de la réponse (200 = demande comptée par Google, 429 = quota épuisé).
+CREATE TABLE IF NOT EXISTS ia_appels (
+  id      bigserial PRIMARY KEY,
+  cree_le timestamptz NOT NULL DEFAULT now(),
+  modele  text,
+  statut  smallint NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ia_appels_cree_le_idx ON ia_appels(cree_le);
