@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Apple, Bot, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
+import { Apple, Bot, ChevronDown, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 import CleWidget from '@/components/CleWidget';
@@ -28,8 +28,19 @@ const SECTIONS = [
   { id: 'suppression', titre: 'Suppression du compte', Icone: Trash2 },
 ];
 
-function Section({ id, children, danger = false, aide }) {
+function Section({ id, children, danger = false, aide, repliable = false }) {
   const { titre, Icone } = SECTIONS.find((s) => s.id === id);
+  if (repliable) {
+    return (
+      <details id={id} className="carte parametres__section">
+        <summary className="carte__entete parametres__repli">
+          <h2 className="carte__titre"><Icone size={18} aria-hidden="true" />{titre}</h2>
+          <ChevronDown size={18} className="parametres__chevron" aria-hidden="true" />
+        </summary>
+        <div className="carte__corps">{children}</div>
+      </details>
+    );
+  }
   return (
     <section id={id} className={`carte parametres__section${danger ? ' parametres__section--danger' : ''}`}>
       <div className="carte__entete">
@@ -48,6 +59,13 @@ export default function PageParametres() {
   const charger = () => api('/api/compte').then(setCompte).catch((e) => setErreur(e.message));
   useEffect(() => {
     charger();
+    const ouvrir = () => {
+      const cible = window.location.hash && document.getElementById(window.location.hash.slice(1));
+      if (cible?.tagName === 'DETAILS') cible.open = true;
+    };
+    ouvrir();
+    window.addEventListener('hashchange', ouvrir);
+    return () => window.removeEventListener('hashchange', ouvrir);
   }, []);
 
   async function deconnecter() {
@@ -100,11 +118,11 @@ export default function PageParametres() {
         <GestionEtiquettes />
       </Section>
 
-      <Section id="samsung">
+      <Section id="samsung" repliable>
         <SynchroSante />
       </Section>
 
-      <Section id="widget">
+      <Section id="widget" repliable>
         <CleWidget />
       </Section>
 

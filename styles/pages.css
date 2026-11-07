@@ -1109,3 +1109,28 @@ button.semaine__repas-nom:hover {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Section repliable des paramètres (Samsung Health, widget) : fermée par défaut */
+.parametres__repli {
+  list-style: none;
+  cursor: pointer;
+  padding-bottom: var(--espace-4);
+}
+
+.parametres__repli::-webkit-details-marker {
+  display: none;
+}
+
+.parametres__chevron {
+  flex-shrink: 0;
+  color: var(--couleur-texte-attenue);
+  transition: transform 0.2s;
+}
+
+details[open] > .parametres__repli {
+  padding-bottom: 0;
+}
+
+details[open] > .parametres__repli .parametres__chevron {
+  transform: rotate(180deg);
+}
