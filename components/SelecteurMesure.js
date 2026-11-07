@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Pencil } from 'lucide-react';
+import { Check, ChevronDown, Pencil, X } from 'lucide-react';
 import { GROUPES_MESURES, libelleMesure, mlDeMesure } from '@/lib/mesures';
 
 const mlFr = (ml) => `${String(Math.round(ml * 10) / 10).replace('.', ',')} ml`;
@@ -52,8 +52,15 @@ export default function SelecteurMesure({ valeur, onChange, detailManuel, equiva
         <ChevronDown size={16} aria-hidden="true" className="mesure__chevron" />
       </button>
 
+      {ouvert && <div className="mesure__voile" aria-hidden="true" onClick={() => setOuvert(false)} />}
       {ouvert && (
         <div className="mesure__panneau" role="listbox" aria-label={libelle}>
+          <div className="mesure__entete">
+            <span>Choisir la mesure</span>
+            <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => setOuvert(false)} aria-label="Fermer">
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
           {horsListe && (
             <div className="mesure__groupe">
               <div className="mesure__grille">

@@ -159,6 +159,9 @@ export default function PageRecette({ params }) {
 
   return (
     <article className="recette">
+      <Link href="/recettes" className={`retour${recette.image_id ? ' retour--superpose' : ''}`} aria-label="Retour à mes recettes">
+        <ArrowLeft size={22} aria-hidden="true" />
+      </Link>
       {recette.image_id && (
         <div className="recette__couverture">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -166,10 +169,6 @@ export default function PageRecette({ params }) {
         </div>
       )}
 
-      <Link href="/recettes" className="bouton bouton--fantome" style={{ alignSelf: 'flex-start' }}>
-        <ArrowLeft size={16} aria-hidden="true" />
-        Mes recettes
-      </Link>
       <EntetePage titre={recette.titre} sousTitre={recette.description}>
         <button type="button" className="bouton bouton--principal" onClick={() => setPlanif({ jour: versIso(), moment: 'souper', portions: portionsChoisies })}>
           <CalendarPlus size={16} aria-hidden="true" />

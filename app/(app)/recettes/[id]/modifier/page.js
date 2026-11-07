@@ -22,14 +22,12 @@ export default function PageModifierRecette({ params }) {
   return (
     <>
       {depuisFiche ? (
-        <button type="button" className="bouton bouton--fantome" style={{ alignSelf: 'flex-start' }} onClick={() => routeur.back()}>
-          <ArrowLeft size={16} aria-hidden="true" />
-          Retour
+        <button type="button" className="retour" onClick={() => routeur.back()} aria-label="Retour à la recette">
+          <ArrowLeft size={22} aria-hidden="true" />
         </button>
       ) : (
-        <Link href={`/recettes/${id}`} className="bouton bouton--fantome" style={{ alignSelf: 'flex-start' }}>
-          <ArrowLeft size={16} aria-hidden="true" />
-          Retour
+        <Link href={`/recettes/${id}`} className="retour" aria-label="Retour à la recette">
+          <ArrowLeft size={22} aria-hidden="true" />
         </Link>
       )}
       <EntetePage titre="Modifier la recette" sousTitre={recette?.titre} />
