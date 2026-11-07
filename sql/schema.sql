@@ -265,3 +265,6 @@ ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_qte numeric(10,2);
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_unite text;
 ALTER TABLE aliments DROP CONSTRAINT IF EXISTS aliments_contenant_unite_check;
 ALTER TABLE aliments ADD CONSTRAINT aliments_contenant_unite_check CHECK (contenant_unite IN ('g', 'ml'));
+
+-- Format du contenant cherché automatiquement dans Open Food Facts (null = pas encore cherché)
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_verifie_le timestamptz;
