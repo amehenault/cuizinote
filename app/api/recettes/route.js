@@ -1,13 +1,15 @@
 import { after } from 'next/server';
 import { lireCorps, ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
-import { enregistrerRecette, etiqueterAutomatiquement, etiqueterRecette, listerRecettes, recettesAEtiqueter } from '@/lib/recettes';
+import { convertirMesures, enregistrerRecette, etiqueterAutomatiquement, etiqueterRecette, listerRecettes, recettesAEtiqueter } from '@/lib/recettes';
 import { schemaRecette } from '@/lib/schemas';
 
 export const maxDuration = 60;
 
 export const GET = route(async ({ requete, utilisateur }) => {
   const p = requete.nextUrl.searchParams;
+  // Une seule fois : les ingrédients liés des recettes existantes reçoivent leur mesure (tasse, c. à soupe...).
+  await convertirMesures(utilisateur.id).catch((e) => console.error('Conversion des mesures :', e.message));
   const recettes = await listerRecettes(utilisateur.id, {
     recherche: (p.get('q') || '').slice(0, 100),
     etiquette: (p.get('etiquette') || '').slice(0, 40),

@@ -385,3 +385,8 @@ ON CONFLICT DO NOTHING;
 
 -- Recherche sans accents ni liaisons : « oeufs » trouve « Œufs », « creme » trouve « Crème ».
 CREATE OR REPLACE FUNCTION cz_norm(t text) RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT replace(replace(translate(lower(coalesce(t, '')), 'àâäáãåçéèêëíìîïñóòôöõúùûüýÿ', 'aaaaaaceeeeiiiinooooouuuuyy'), 'œ', 'oe'), 'æ', 'ae') $$;
+
+-- Mesure de cuisine d'un ingrédient lié (« tasse:1/3 », « the:1 1/2 ») : grammes calculés d'après la portion de l'étiquette.
+ALTER TABLE recette_ingredients ADD COLUMN IF NOT EXISTS mesure text;
+-- Conversion unique des recettes existantes (texte « 1 tasse de farine » -> mesure) : date du passage.
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS mesures_converties_le timestamptz;

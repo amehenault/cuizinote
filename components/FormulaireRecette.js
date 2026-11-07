@@ -11,12 +11,14 @@ import RechercheAliment from './RechercheAliment';
 import SaisieEtiquettes from './SaisieEtiquettes';
 import TeleversementImage from './TeleversementImage';
 import { resumeCalories } from '@/lib/portion';
+import { GROUPES_MESURES, grammesDeMesure, grammesParMl, libelleMesure, mesureDepuisTexte } from '@/lib/mesures';
 
 /** Produit lié avec une portion d'étiquette : la quantité est un nombre de portions. */
 const enPortions = (ing) => Boolean(ing.aliment_id && ing.portion_g);
 
 /** Quantité saisie -> grammes (ou ml) utilisés pour le calcul des calories. */
 function enGrammes(ing) {
+  if (ing.aliment_id && ing.mesure) return grammesDeMesure(ing.mesure, ing);
   const q = versNombre(ing.grammes);
   if (q == null) return null;
   return enPortions(ing) ? q * ing.portion_g : q;
@@ -55,6 +57,7 @@ function etatInitial(r = {}) {
       portion_g: i.portion_g ?? null,
       portion_texte: i.portion_texte || null,
       kcal: texte(i.kcal_libre),
+      mesure: i.mesure || (i.aliment_id && grammesParMl(i) ? mesureDepuisTexte(i.texte) || '' : ''),
       // Affiché en nombre de portions de l'étiquette quand c'est possible
       grammes:
         i.aliment_id && i.portion_g && i.grammes != null
@@ -217,6 +220,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
             aliment_id: i.aliment_id,
             grammes: i.aliment_id ? enGrammes(i) : null,
             kcal: i.aliment_id ? null : versNombre(i.kcal),
+            mesure: i.aliment_id && i.mesure ? i.mesure : null,
           })),
         etiquettes: r.etiquettes,
       };
@@ -340,7 +344,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                         <button
                           type="button"
                           className="etiquette__retirer"
-                          onClick={() => majIngredient(i, { aliment_id: null, aliment_nom: null, kcal_100g: null, proteines_100g: null, glucides_100g: null, lipides_100g: null, portion_g: null, portion_texte: null })}
+                          onClick={() => majIngredient(i, { aliment_id: null, aliment_nom: null, kcal_100g: null, proteines_100g: null, glucides_100g: null, lipides_100g: null, portion_g: null, portion_texte: null, mesure: '' })}
                           aria-label="Délier l'aliment"
                         >
                           <Unlink size={14} aria-hidden="true" />
@@ -363,11 +367,43 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                             portion_texte: a.portion_texte || null,
                             texte: ing.texte || a.nom,
                             grammes: a.portion_g ? '1' : ing.grammes || '100',
+                            mesure: grammesParMl(a) ? mesureDepuisTexte(ing.texte) || '' : '',
                           })
                         }
                       />
                     )}
-                    {ing.aliment_id ? (
+                    {ing.aliment_id && grammesParMl(ing) ? (
+                      <div className="rangee" style={{ flexWrap: 'nowrap', gap: 'var(--espace-1)' }}>
+                        <select
+                          className="champ__saisie champ__saisie--compact"
+                          value={ing.mesure || ''}
+                          onChange={(e) => majIngredient(i, { mesure: e.target.value })}
+                          aria-label={`Mesure de l'ingrédient ${i + 1}`}
+                          title={ing.mesure && enGrammes(ing) != null ? `= ${Math.round(enGrammes(ing))} ${ing.unite || 'g'}` : undefined}
+                        >
+                          <option value="">{enPortions(ing) ? 'Portions de l’étiquette' : `Quantité en ${ing.unite || 'g'}`}</option>
+                          {ing.mesure && !GROUPES_MESURES.some((g) => g.options.includes(ing.mesure)) && (
+                            <option value={ing.mesure}>{libelleMesure(ing.mesure)}</option>
+                          )}
+                          {GROUPES_MESURES.map((g) => (
+                            <optgroup key={g.titre} label={g.titre}>
+                              {g.options.map((cle) => <option key={cle} value={cle}>{libelleMesure(cle)}</option>)}
+                            </optgroup>
+                          ))}
+                        </select>
+                        {!ing.mesure && (
+                          <input
+                            className="champ__saisie champ__saisie--compact"
+                            style={{ maxWidth: '6rem' }}
+                            inputMode="decimal"
+                            placeholder={enPortions(ing) ? 'portions' : ing.unite || 'g'}
+                            value={ing.grammes}
+                            onChange={(e) => majIngredient(i, { grammes: e.target.value })}
+                            aria-label={enPortions(ing) ? `Nombre de portions de l'ingrédient ${i + 1}` : `Quantité de l'ingrédient ${i + 1}`}
+                          />
+                        )}
+                      </div>
+                    ) : ing.aliment_id ? (
                     <input
                       className="champ__saisie champ__saisie--compact"
                       inputMode="decimal"
