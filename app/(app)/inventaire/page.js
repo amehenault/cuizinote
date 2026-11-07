@@ -145,7 +145,7 @@ export default function PageInventaire() {
           <ShoppingCart size={16} aria-hidden="true" />
           Épicerie
         </Link>
-        <Link href="/aliments" className="bouton bouton--secondaire">
+        <Link href="/aliments?de=inventaire" className="bouton bouton--secondaire">
           <Apple size={16} aria-hidden="true" />
           Aliments
         </Link>

@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Apple, Check, Pencil, Plus, ScanBarcode, Search, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Apple, ArrowLeft, Bot, Check, Pencil, Plus, ScanBarcode, Search, ShoppingCart, Trash2, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { resumeCalories } from '@/lib/portion';
 import { Chargement, EntetePage, EtatVide, Message, Modale } from '@/components/Elements';
@@ -9,10 +11,24 @@ import AjoutParScan from '@/components/AjoutParScan';
 import FicheAliment from '@/components/FicheAliment';
 import FormulaireAliment from '@/components/FormulaireAliment';
 import VignetteAliment from '@/components/VignetteAliment';
-import OngletsRecettes from '@/components/OngletsRecettes';
 import { trouverEnInventaire } from '@/lib/disponibilite';
 
+// Boutons de la section d'où l'on vient (Recettes ou Inventaire) : ils restent affichés ici.
+const BOUTONS_SECTION = {
+  recettes: [
+    { href: '/recettes', libelle: 'Mes recettes', Icone: ArrowLeft },
+    { href: '/assistant', libelle: 'Assistant culinaire', Icone: Bot },
+    { href: '/communaute', libelle: 'Communauté', Icone: UsersRound },
+  ],
+  inventaire: [
+    { href: '/inventaire', libelle: 'Inventaire', Icone: ArrowLeft },
+    { href: '/epicerie', libelle: 'Épicerie', Icone: ShoppingCart },
+    { href: '/assistant', libelle: 'Idées de repas', Icone: Bot },
+  ],
+};
+
 export default function PageAliments() {
+  const section = BOUTONS_SECTION[useSearchParams().get('de')] || [];
   const [aliments, setAliments] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [modale, setModale] = useState(null); // { type: 'scan' | 'formulaire', aliment? }
@@ -72,7 +88,6 @@ export default function PageAliments() {
 
   return (
     <>
-      <OngletsRecettes />
       <EntetePage titre="Banque d'aliments" sousTitre="Banque commune à tous les membres : ce que vous ajoutez ou corrigez sert à tout le monde">
         <button type="button" className="bouton bouton--principal" onClick={() => setModale({ type: 'scan' })}>
           <ScanBarcode size={16} aria-hidden="true" />
@@ -82,6 +97,12 @@ export default function PageAliments() {
           <Plus size={16} aria-hidden="true" />
           Ajouter
         </button>
+        {section.map(({ href, libelle, Icone }) => (
+          <Link key={href} href={href} className="bouton bouton--secondaire">
+            <Icone size={16} aria-hidden="true" />
+            {libelle}
+          </Link>
+        ))}
       </EntetePage>
 
       <div className="filtres">

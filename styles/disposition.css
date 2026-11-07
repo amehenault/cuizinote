@@ -198,10 +198,27 @@
   font-size: var(--taille-s);
 }
 
+/* Boutons d'en-tête en colonnes (2 au maximum), sans défilement horizontal */
 .entete__actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--espace-2);
+  width: 100%;
+}
+
+.entete__actions > :only-child {
+  grid-column: 1 / -1;
+}
+
+.entete__actions > .bouton {
+  white-space: normal;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .entete__actions {
+    width: auto;
+  }
 }
 
 /* ==========================================================================
