@@ -268,3 +268,7 @@ ALTER TABLE aliments ADD CONSTRAINT aliments_contenant_unite_check CHECK (conten
 
 -- Format du contenant cherché automatiquement dans Open Food Facts (null = pas encore cherché)
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_verifie_le timestamptz;
+
+-- Format estimé par l'IA quand Open Food Facts ne le donne pas (null = pas encore estimé)
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_estime_le timestamptz;
+ALTER TABLE inventaire ADD COLUMN IF NOT EXISTS format_estime_le timestamptz;
