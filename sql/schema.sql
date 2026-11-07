@@ -314,3 +314,8 @@ DELETE FROM etiquettes e USING etiquettes bonne
    AND bonne.nom = upper(left(lower(e.nom), 1)) || substr(lower(e.nom), 2);
 UPDATE etiquettes SET nom = upper(left(lower(nom), 1)) || substr(lower(nom), 2)
  WHERE nom <> upper(left(lower(nom), 1)) || substr(lower(nom), 2);
+
+-- Étiquetage automatique : liens ajoutés par l'IA (remplacés quand les ingrédients changent)
+-- et empreinte du titre + ingrédients au moment du dernier étiquetage (null = à étiqueter).
+ALTER TABLE recette_etiquettes ADD COLUMN IF NOT EXISTS auto boolean NOT NULL DEFAULT false;
+ALTER TABLE recettes ADD COLUMN IF NOT EXISTS etiquettes_auto_empreinte text;

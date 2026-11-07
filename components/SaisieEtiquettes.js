@@ -1,21 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Sparkles, Tag, X } from 'lucide-react';
+import { Plus, Tag, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { ETIQUETTES_DE_BASE, formaterEtiquette } from '@/lib/etiquettes';
-import { Message } from './Elements';
 
 const cle = (s) => s.toLocaleLowerCase('fr-CA');
 
-/**
- * Saisie des étiquettes d'une recette.
- * `contexte` (facultatif) : fonction qui renvoie la recette en cours, pour les suggestions automatiques.
- */
-export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes', contexte }) {
+/** Saisie des étiquettes d'une recette. */
+export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }) {
   const [texte, setTexte] = useState('');
   const [existantes, setExistantes] = useState([]);
-  const [suggestion, setSuggestion] = useState({ enCours: false, message: '' });
 
   useEffect(() => {
     api('/api/etiquettes').then((l) => setExistantes(l.map((e) => e.nom))).catch(() => {});
@@ -28,25 +23,11 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes', 
       if (nom && !nouveaux.some((x) => cle(x) === cle(nom)) && nouveaux.length < 30) nouveaux.push(nom);
     }
     if (nouveaux.length !== valeur.length) onChange(nouveaux);
-    return nouveaux.length - valeur.length;
   }
 
   function ajouter(brut) {
     ajouterPlusieurs([brut]);
     setTexte('');
-  }
-
-  async function suggerer() {
-    const recette = contexte();
-    if (!recette.titre) return setSuggestion({ enCours: false, message: 'Entrez d\'abord le titre de la recette.' });
-    setSuggestion({ enCours: true, message: '' });
-    try {
-      const { etiquettes } = await api('/api/etiquettes/automatique', { methode: 'POST', corps: { recette } });
-      const ajoutees = ajouterPlusieurs(etiquettes);
-      setSuggestion({ enCours: false, message: ajoutees ? '' : 'Aucune nouvelle étiquette trouvée.' });
-    } catch (e) {
-      setSuggestion({ enCours: false, message: e.message });
-    }
   }
 
   const choisies = new Set(valeur.map(cle));
@@ -105,12 +86,6 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes', 
         )}
       </div>
       <div className="saisie-etiquettes__suggestions">
-        {contexte && (
-          <button type="button" className="etiquette etiquette--bouton etiquette--active" onClick={suggerer} disabled={suggestion.enCours}>
-            <Sparkles size={12} aria-hidden="true" />
-            {suggestion.enCours ? 'Recherche…' : 'Étiqueter automatiquement'}
-          </button>
-        )}
         {suggestions.map((s) => (
           <button
             key={s}
@@ -124,7 +99,6 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes', 
           </button>
         ))}
       </div>
-      <Message type="erreur">{suggestion.message}</Message>
     </div>
   );
 }

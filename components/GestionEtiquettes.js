@@ -32,18 +32,15 @@ export default function GestionEtiquettes() {
     }
   }
 
-  async function etiqueterTout(toutes) {
-    const question = toutes
-      ? 'Ajouter des étiquettes automatiques à toutes vos recettes ? Les étiquettes actuelles sont conservées.'
-      : "Ajouter des étiquettes automatiques aux recettes qui n'en ont pas ?";
-    if (!window.confirm(question)) return;
+  async function etiqueterTout() {
+    if (!window.confirm('Recalculer les étiquettes automatiques de toutes vos recettes ? Celles ajoutées à la main sont gardées.')) return;
     const libelle = (n) => `${n} recette${n > 1 ? 's' : ''} étiquetée${n > 1 ? 's' : ''}`;
     setAuto({ enCours: true, message: 'Étiquetage en cours…' });
     let apres = null;
     let total = 0;
     try {
       do {
-        const r = await api('/api/etiquettes/automatique', { methode: 'POST', corps: { apres, toutes } });
+        const r = await api('/api/etiquettes/automatique', { methode: 'POST', corps: { apres } });
         total += r.etiquetees;
         apres = r.suivant;
         setAuto({ enCours: true, message: `Étiquetage en cours… ${libelle(total)}` });
@@ -74,15 +71,13 @@ export default function GestionEtiquettes() {
     <div className="pile">
       <p className="champ__aide">
         Pour créer une étiquette, ajoutez-la dans une recette. Ici, vous pouvez les renommer ou les supprimer.
-        Les nouvelles recettes enregistrées sans étiquette sont étiquetées automatiquement.
+        Les recettes sont étiquetées automatiquement selon leurs ingrédients, et mises à jour quand vous les modifiez.
+        Les étiquettes ajoutées à la main sont toujours gardées.
       </p>
       <div className="rangee">
-        <button type="button" className="bouton bouton--secondaire" disabled={auto.enCours} onClick={() => etiqueterTout(false)}>
+        <button type="button" className="bouton bouton--secondaire" disabled={auto.enCours} onClick={etiqueterTout}>
           <Sparkles size={16} aria-hidden="true" />
-          Étiqueter les recettes sans étiquette
-        </button>
-        <button type="button" className="bouton bouton--fantome" disabled={auto.enCours} onClick={() => etiqueterTout(true)}>
-          Compléter toutes mes recettes
+          Recalculer toutes mes recettes
         </button>
       </div>
       {auto.message && <p className="champ__aide" role="status">{auto.message}</p>}
