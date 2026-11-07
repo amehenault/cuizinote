@@ -27,9 +27,12 @@ function FormulaireArticle({ initial, onEnregistre }) {
     nom: initial.nom || '',
     aliment_id: initial.aliment_id || null,
     aliment_nom: initial.aliment_nom || null,
-    // Nouvel article : un contenant complet par défaut (ex. : 1 × 893 ml)
-    quantite: initial.id ? (initial.quantite == null ? '' : String(initial.quantite)) : initial.quantite ?? '1',
-    unite: initial.id ? initial.unite || '' : initial.unite ?? '',
+    // Nouvel article, ou article sans quantité : un contenant complet par défaut (ex. : 1 × 893 ml)
+    ...(initial.id && initial.quantite != null
+      ? { quantite: String(initial.quantite), unite: initial.unite || '' }
+      : initial.id
+        ? quantiteParDefaut({ contenant_qte: initial.contenant_qte, contenant_unite: initial.contenant_unite, unite: initial.aliment_unite })
+        : { quantite: initial.quantite ?? '1', unite: initial.unite ?? '' }),
     expire_le: initial.expire_le || '',
   });
   const [erreur, setErreur] = useState('');
@@ -121,8 +124,31 @@ export default function PageInventaire() {
   const [erreur, setErreur] = useState('');
 
   const charger = () => api('/api/inventaire').then(setArticles).catch((e) => setErreur(e.message));
+  const [completion, setCompletion] = useState('');
+
+  /** Formats de contenant (Open Food Facts) et quantités vides : complétés automatiquement. */
+  async function completer() {
+    try {
+      let total = 0;
+      let precedent = Infinity;
+      for (let tour = 0; tour < 40; tour += 1) {
+        if (tour === 1) setCompletion('Recherche des formats de vos produits dans Open Food Facts...');
+        const r = await api('/api/inventaire/completer', { methode: 'POST' });
+        total += r.quantites;
+        if (r.quantites) charger();
+        // Fini, ou plus de progrès (Open Food Facts indisponible) : on réessaiera à la prochaine visite.
+        if (!r.restant || r.restant >= precedent) break;
+        precedent = r.restant;
+      }
+      setCompletion(total ? `Quantités complétées pour ${total} article${total > 1 ? 's' : ''}.` : '');
+    } catch {
+      setCompletion('');
+    }
+  }
+
   useEffect(() => {
     charger();
+    completer();
   }, []);
 
   async function supprimer(a) {
@@ -185,6 +211,7 @@ export default function PageInventaire() {
       </div>
 
       <Message type="erreur">{erreur}</Message>
+      <Message type="info">{completion}</Message>
       {!articles && !erreur && <Chargement />}
       {articles && visibles.length === 0 && (
         <EtatVide Icone={ICONES[onglet]} titre="Rien ici pour le moment">
