@@ -125,6 +125,7 @@ export default function PageInventaire() {
 
   const charger = () => api('/api/inventaire').then(setArticles).catch((e) => setErreur(e.message));
   const [completion, setCompletion] = useState('');
+  const [sansFormat, setSansFormat] = useState([]);
 
   /** Formats de contenant (Open Food Facts) et quantités vides : complétés automatiquement. */
   async function completer() {
@@ -136,8 +137,9 @@ export default function PageInventaire() {
       for (let tour = 0; tour < 40; tour += 1) {
         const r = await api('/api/inventaire/completer', { methode: 'POST' });
         total += r.quantites;
-        formats += r.trouves + r.estimes;
+        formats += r.trouves;
         derniereErreur = r.erreur;
+        setSansFormat(r.sansFormat || []);
         if (r.quantites) charger();
         if (r.restant) setCompletion(`Recherche du format de vos produits... (${r.restant} restant${r.restant > 1 ? 's' : ''})`);
         // Fini, ou plus de progrès (service indisponible) : on réessaiera à la prochaine visite.
@@ -221,6 +223,13 @@ export default function PageInventaire() {
 
       <Message type="erreur">{erreur}</Message>
       <Message type="info">{completion}</Message>
+      {sansFormat.length > 0 && (
+        <Message type="alerte">
+          Format du contenant introuvable pour :{' '}
+          {sansFormat.map((a) => `${a.nom} (${a.raison})`).join(', ')}. Ajoutez le code-barres du produit dans sa fiche (Aliments) :
+          la vraie mesure sera alors prise dans Open Food Facts.
+        </Message>
+      )}
       {!articles && !erreur && <Chargement />}
       {articles && visibles.length === 0 && (
         <EtatVide Icone={ICONES[onglet]} titre="Rien ici pour le moment">
