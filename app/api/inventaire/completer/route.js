@@ -2,16 +2,22 @@ import { LIBELLE_CONTENANT_SQL as LIBELLE_SQL } from '@/lib/colonnes';
 import { q } from '@/lib/db';
 import { ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
-import { produitParCodeBarre } from '@/lib/openfoodfacts';
+import { chercherFormatWeb } from '@/lib/ia';
+import { contenantDepuis, produitParCodeBarre } from '@/lib/openfoodfacts';
 
 export const maxDuration = 60;
 
 const LOT_OFF = 12;
 const EN_PARALLELE = 4;
+const LOT_WEB = 6;
+const WEB_EN_PARALLELE = 3;
 
 // Produits de la personne : ceux qu'elle a ajoutés à la banque et ceux de son inventaire.
 const MES_PRODUITS = `(a.utilisateur_id = $1 OR a.id IN (SELECT aliment_id FROM inventaire WHERE utilisateur_id = $1))`;
 const A_CHERCHER_OFF = `${MES_PRODUITS} AND a.code_barre IS NOT NULL AND a.contenant_qte IS NULL AND a.contenant_verifie_le IS NULL`;
+// Inconnus d'Open Food Facts : cherchés sur Google par code-barres, une fois
+const A_CHERCHER_WEB = `${MES_PRODUITS} AND a.code_barre IS NOT NULL AND a.contenant_qte IS NULL
+  AND a.contenant_verifie_le IS NOT NULL AND a.contenant_web_le IS NULL`;
 
 
 /**
@@ -82,7 +88,37 @@ export const POST = route(async ({ utilisateur }) => {
     }
   }
 
-  // Format trouvé dans Open Food Facts : appliqué à ses articles liés (1 contenant)
+  // Pas dans Open Food Facts : recherche Google par code-barres (seulement si rien d'autre à faire dans cet appel)
+  if (!parCode.length) {
+    const parWeb = await q(
+      `SELECT a.id, a.code_barre, a.nom, a.marque FROM aliments a WHERE ${A_CHERCHER_WEB} ORDER BY a.cree_le LIMIT ${LOT_WEB}`,
+      [u]
+    );
+    for (let i = 0; i < parWeb.length; i += WEB_EN_PARALLELE) {
+      const resultats = await Promise.all(
+        parWeb.slice(i, i + WEB_EN_PARALLELE).map((a) =>
+          chercherFormatWeb(a)
+            .then((texte) => ({ a, contenant: contenantDepuis({ quantity: texte }), reussi: true }))
+            .catch(() => ({ a, reussi: false }))
+        )
+      );
+      for (const { a, contenant, reussi } of resultats) {
+        // Limite de l'IA atteinte : on réessaiera plus tard.
+        if (!reussi) continue;
+        if (contenant?.contenant_qte) {
+          trouves += 1;
+          nouveaux.push(a.id);
+        }
+        await q(
+          `UPDATE aliments SET contenant_qte = coalesce(contenant_qte, $2), contenant_unite = coalesce(contenant_unite, $3),
+                  contenant_web_le = now() WHERE id = $1`,
+          [a.id, contenant?.contenant_qte ?? null, contenant?.contenant_qte ? contenant.contenant_unite : null]
+        );
+      }
+    }
+  }
+
+  // Format trouvé (Open Food Facts ou Google) : appliqué à ses articles liés (1 contenant)
   const appliques = nouveaux.length
     ? await q(
         `UPDATE inventaire i SET quantite = 1, unite = ${LIBELLE_SQL}
@@ -104,7 +140,11 @@ export const POST = route(async ({ utilisateur }) => {
   );
   const uns = await q('UPDATE inventaire SET quantite = 1 WHERE utilisateur_id = $1 AND quantite IS NULL RETURNING id', [u]);
 
-  const [{ restant }] = await q(`SELECT count(*)::int AS restant FROM aliments a WHERE ${A_CHERCHER_OFF}`, [u]);
+  const [{ restant }] = await q(
+    `SELECT (SELECT count(*) FROM aliments a WHERE ${A_CHERCHER_OFF})::int
+          + (SELECT count(*) FROM aliments a WHERE ${A_CHERCHER_WEB})::int AS restant`,
+    [u]
+  );
 
   // Passage unique : chaque article lié à un produit de format connu devient « 1 × format »
   // (la personne ajuste ensuite la quantité). Les formats trouvés plus tard sont appliqués plus haut.
@@ -122,18 +162,5 @@ export const POST = route(async ({ utilisateur }) => {
     completes.push(...tous);
   }
 
-  // Articles dont le format reste inconnu, et pourquoi
-  const sansFormat = restant
-    ? []
-    : await q(
-        `SELECT DISTINCT i.nom,
-                CASE WHEN i.aliment_id IS NULL THEN 'non lié à un produit'
-                     WHEN a.code_barre IS NULL THEN 'pas de code-barres'
-                     ELSE 'format absent d''Open Food Facts' END AS raison
-           FROM inventaire i LEFT JOIN aliments a ON a.id = i.aliment_id
-          WHERE i.utilisateur_id = $1 AND coalesce(i.unite, '') = '' AND (a.id IS NULL OR a.contenant_qte IS NULL)
-          ORDER BY raison, i.nom LIMIT 100`,
-        [u]
-      );
-  return ok({ trouves, erreur, quantites: completes.length + uns.length + appliques.length, restant, sansFormat });
+  return ok({ trouves, erreur, quantites: completes.length + uns.length + appliques.length, restant });
 });
