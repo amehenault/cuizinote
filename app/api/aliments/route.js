@@ -9,7 +9,7 @@ export const GET = route(async ({ requete, utilisateur }) => {
   const recherche = (requete.nextUrl.searchParams.get('q') || '').slice(0, 100);
   return ok(
     await q(
-      `SELECT ${COLONNES_ALIMENT}, (utilisateur_id = $1) AS mien, (traduit_le IS NULL) AS a_traduire FROM aliments
+      `SELECT ${COLONNES_ALIMENT}, (utilisateur_id = $1) AS mien FROM aliments
         WHERE ($2 = '' OR nom ILIKE '%' || $2 || '%' OR marque ILIKE '%' || $2 || '%' OR code_barre = $2)
         ORDER BY nom LIMIT ${recherche ? 30 : 2000}`,
       [utilisateur.id, recherche.replace(/[%_\\]/g, '\\$&')]

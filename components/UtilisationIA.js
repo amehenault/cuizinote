@@ -61,11 +61,6 @@ export default function UtilisationIA() {
           ))}
         </ul>
       )}
-      <p className="champ__aide">
-        Ce quota gratuit de Google (environ 20 demandes par jour pour chacun des 3 modèles) est partagé par tous les comptes
-        Cuizinote : assistant, traduction des aliments et étiquetage des recettes. C&apos;est une estimation ; Google
-        n&apos;affiche pas le restant du jour.
-      </p>
     </div>
   );
 }

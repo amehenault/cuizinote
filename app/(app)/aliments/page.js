@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Apple, ArrowLeft, Bot, Check, Pencil, Plus, ScanBarcode, Search, ShoppingCart, Trash2, UsersRound } from 'lucide-react';
@@ -35,36 +35,7 @@ export default function PageAliments() {
   const [erreur, setErreur] = useState('');
   const [inventaire, setInventaire] = useState([]);
 
-  const [traduction, setTraduction] = useState('');
-  const traductionLancee = useRef(false);
-
-  const charger = () =>
-    api('/api/aliments')
-      .then((liste) => {
-        setAliments(liste);
-        // Noms pas encore vérifiés (souvent en anglais) : traduction automatique en français, une fois.
-        if (!traductionLancee.current && liste.some((a) => a.a_traduire)) {
-          traductionLancee.current = true;
-          traduire();
-        }
-      })
-      .catch((e) => setErreur(e.message));
-
-  async function traduire() {
-    setTraduction('Traduction des noms en français...');
-    try {
-      let total = 0;
-      for (let tour = 0; tour < 20; tour += 1) {
-        const r = await api('/api/aliments/traduire', { methode: 'POST' });
-        total += r.traduits;
-        if (!r.restant || (!r.traduits && tour > 0)) break;
-      }
-      setTraduction(total ? `${total} nom${total > 1 ? 's' : ''} traduit${total > 1 ? 's' : ''} en français.` : '');
-      if (total) api('/api/aliments').then(setAliments).catch(() => {});
-    } catch {
-      setTraduction('');
-    }
-  }
+  const charger = () => api('/api/aliments').then(setAliments).catch((e) => setErreur(e.message));
   const chargerInventaire = () => api('/api/inventaire').then(setInventaire).catch(() => {});
   useEffect(() => {
     charger();
@@ -119,7 +90,6 @@ export default function PageAliments() {
       </div>
 
       <Message type="erreur">{erreur}</Message>
-      <Message type="info">{traduction}</Message>
       {!aliments && !erreur && <Chargement />}
       {aliments?.length === 0 && (
         <EtatVide Icone={Apple} titre="Votre banque est vide">
