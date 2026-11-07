@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Pencil, Save, Sparkles, Trash2, X } from 'lucide-react';
+import { Pencil, Save, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { formaterEtiquette } from '@/lib/etiquettes';
 import { Message } from './Elements';
@@ -14,7 +14,6 @@ export default function GestionEtiquettes() {
   const [edition, setEdition] = useState(null);
   const [nom, setNom] = useState('');
   const [erreur, setErreur] = useState('');
-  const [auto, setAuto] = useState({ enCours: false, message: '' });
 
   const charger = () => api('/api/etiquettes').then(setEtiquettes).catch((e) => setErreur(e.message));
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function GestionEtiquettes() {
   }, []);
 
   async function supprimer(e) {
-    const detail = e.total ? ` Elle sera retirée de ${recettes(e.total)} (les recettes ne sont pas supprimées).` : '';
+    const detail = `${e.total ? ` Elle sera retirée de ${recettes(e.total)} (les recettes ne sont pas supprimées).` : ''} Elle ne sera plus ajoutée automatiquement.`;
     if (!window.confirm(`Supprimer l'étiquette « ${e.nom} » ?${detail}`)) return;
     try {
       await api(`/api/etiquettes/${e.id}`, { methode: 'DELETE' });
@@ -30,26 +29,6 @@ export default function GestionEtiquettes() {
     } catch (err) {
       setErreur(err.message);
     }
-  }
-
-  async function etiqueterTout() {
-    if (!window.confirm('Recalculer les étiquettes automatiques de toutes vos recettes ? Celles ajoutées à la main sont gardées.')) return;
-    const libelle = (n) => `${n} recette${n > 1 ? 's' : ''} étiquetée${n > 1 ? 's' : ''}`;
-    setAuto({ enCours: true, message: 'Étiquetage en cours…' });
-    let apres = null;
-    let total = 0;
-    try {
-      do {
-        const r = await api('/api/etiquettes/automatique', { methode: 'POST', corps: { apres } });
-        total += r.etiquetees;
-        apres = r.suivant;
-        setAuto({ enCours: true, message: `Étiquetage en cours… ${libelle(total)}` });
-      } while (apres);
-      setAuto({ enCours: false, message: total ? `Terminé : ${libelle(total)}.` : 'Aucune recette à étiqueter.' });
-    } catch (err) {
-      setAuto({ enCours: false, message: `${total ? `${libelle(total)}, puis : ` : ''}${err.message}` });
-    }
-    charger();
   }
 
   async function renommer(ev, e) {
@@ -72,15 +51,8 @@ export default function GestionEtiquettes() {
       <p className="champ__aide">
         Pour créer une étiquette, ajoutez-la dans une recette. Ici, vous pouvez les renommer ou les supprimer.
         Les recettes sont étiquetées automatiquement selon leurs ingrédients, et mises à jour quand vous les modifiez.
-        Les étiquettes ajoutées à la main sont toujours gardées.
+        Les étiquettes ajoutées à la main sont toujours gardées, et celles que vous supprimez ne reviennent pas.
       </p>
-      <div className="rangee">
-        <button type="button" className="bouton bouton--secondaire" disabled={auto.enCours} onClick={etiqueterTout}>
-          <Sparkles size={16} aria-hidden="true" />
-          Recalculer toutes mes recettes
-        </button>
-      </div>
-      {auto.message && <p className="champ__aide" role="status">{auto.message}</p>}
       <Message type="erreur">{erreur}</Message>
       {etiquettes && etiquettes.length === 0 && <p className="champ__aide">Aucune étiquette pour l&apos;instant.</p>}
       {etiquettes && etiquettes.length > 0 && (

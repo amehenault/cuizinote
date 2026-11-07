@@ -319,3 +319,13 @@ UPDATE etiquettes SET nom = upper(left(lower(nom), 1)) || substr(lower(nom), 2)
 -- et empreinte du titre + ingrédients au moment du dernier étiquetage (null = à étiqueter).
 ALTER TABLE recette_etiquettes ADD COLUMN IF NOT EXISTS auto boolean NOT NULL DEFAULT false;
 ALTER TABLE recettes ADD COLUMN IF NOT EXISTS etiquettes_auto_empreinte text;
+
+-- Étiquettes refusées : jamais remises par l'étiquetage automatique.
+-- recette_id null = supprimée ou renommée dans Paramètres (toutes les recettes) ; sinon retirée d'une seule recette.
+CREATE TABLE IF NOT EXISTS etiquettes_refusees (
+  utilisateur_id uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  recette_id     uuid REFERENCES recettes(id) ON DELETE CASCADE,
+  nom            text NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS etiquettes_refusees_idx
+  ON etiquettes_refusees (utilisateur_id, coalesce(recette_id, '00000000-0000-0000-0000-000000000000'::uuid), nom);

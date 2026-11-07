@@ -31,7 +31,7 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
   }
 
   const choisies = new Set(valeur.map(cle));
-  const suggestions = [...new Map([...existantes, ...ETIQUETTES_DE_BASE].map((s) => [cle(s), formaterEtiquette(s)])).values()]
+  const suggestions = [...new Map((existantes.length ? existantes : ETIQUETTES_DE_BASE).map((s) => [cle(s), formaterEtiquette(s)])).values()]
     .filter((s) => !choisies.has(cle(s)) && (!texte || cle(s).includes(cle(texte.trim()))))
     .slice(0, 14);
 

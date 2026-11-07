@@ -4,19 +4,27 @@ import { limiter } from '@/lib/limite';
 import { enregistrerRecette, etiqueterAutomatiquement, etiqueterRecette, listerRecettes, recettesAEtiqueter } from '@/lib/recettes';
 import { schemaRecette } from '@/lib/schemas';
 
+export const maxDuration = 60;
+
 export const GET = route(async ({ requete, utilisateur }) => {
   const p = requete.nextUrl.searchParams;
   const recettes = await listerRecettes(utilisateur.id, {
     recherche: (p.get('q') || '').slice(0, 100),
     etiquette: (p.get('etiquette') || '').slice(0, 40),
   });
-  // Recettes jamais étiquetées (ex. : importées) : un lot de 10 est étiqueté en arrière-plan à chaque visite.
+  // Recettes pas encore étiquetées (anciennes, importées, copiées) : rattrapage automatique en arrière-plan,
+  // par lots de 10, tant qu'il reste du temps.
   after(async () => {
+    const debut = Date.now();
+    let apres = null;
     try {
-      const lot = await recettesAEtiqueter(utilisateur.id, { limite: 10 });
-      if (!lot.length) return;
-      await limiter(`ia-auto:${utilisateur.id}`, 20, 3600);
-      await etiqueterAutomatiquement(utilisateur.id, lot);
+      while (Date.now() - debut < 40000) {
+        const lot = await recettesAEtiqueter(utilisateur.id, { limite: 10, apres });
+        if (!lot.length) return;
+        await limiter(`ia-auto:${utilisateur.id}`, 30, 3600);
+        await etiqueterAutomatiquement(utilisateur.id, lot);
+        apres = lot.at(-1).id;
+      }
     } catch (e) {
       if (e?.statut !== 429) console.error('Étiquetage automatique :', e.message);
     }
