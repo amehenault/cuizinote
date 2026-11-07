@@ -52,13 +52,16 @@ export const POST = route(async ({ requete }) => {
   ]);
   if (donnees.test) return ok({ ok: true, message: 'Connexion à Cuizinote réussie' });
 
+  // Un total saisi à la main n'est remplacé que lorsque la passerelle envoie un nombre plus grand.
   // 1. Totaux quotidiens : remplacent la valeur du jour (le total du jour en cours augmente au fil des envois)
   const jours = [...donnees.pasJours];
   if (jours.length) {
     await q(
       `INSERT INTO pas (utilisateur_id, jour, nombre, source)
        SELECT $1, t.j, t.n, 'health-connect' FROM unnest($2::date[], $3::int[]) AS t(j, n)
-       ON CONFLICT (utilisateur_id, jour) DO UPDATE SET nombre = EXCLUDED.nombre, source = EXCLUDED.source`,
+       ON CONFLICT (utilisateur_id, jour) DO UPDATE
+         SET nombre = CASE WHEN pas.source = 'manuel' AND pas.nombre > EXCLUDED.nombre THEN pas.nombre ELSE EXCLUDED.nombre END,
+             source = CASE WHEN pas.source = 'manuel' AND pas.nombre > EXCLUDED.nombre THEN pas.source ELSE EXCLUDED.source END`,
       [id, jours.map(([j]) => j), jours.map(([, n]) => n)]
     );
   }
@@ -77,7 +80,9 @@ export const POST = route(async ({ requete }) => {
       `INSERT INTO pas (utilisateur_id, jour, nombre, source)
        SELECT $1, j, least((SELECT coalesce(sum(nombre), 0) FROM pas_intervalles WHERE utilisateur_id = $1 AND jour = j), 200000), 'health-connect'
          FROM unnest($2::date[]) AS j
-       ON CONFLICT (utilisateur_id, jour) DO UPDATE SET nombre = EXCLUDED.nombre, source = EXCLUDED.source`,
+       ON CONFLICT (utilisateur_id, jour) DO UPDATE
+         SET nombre = CASE WHEN pas.source = 'manuel' AND pas.nombre > EXCLUDED.nombre THEN pas.nombre ELSE EXCLUDED.nombre END,
+             source = CASE WHEN pas.source = 'manuel' AND pas.nombre > EXCLUDED.nombre THEN pas.source ELSE EXCLUDED.source END`,
       [id, touches]
     );
   }
