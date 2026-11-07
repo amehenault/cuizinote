@@ -35,7 +35,10 @@ function Section({ id, children, danger = false, aide, repliable = false }) {
       <details id={id} className="carte parametres__section">
         <summary className="carte__entete parametres__repli">
           <h2 className="carte__titre"><Icone size={18} aria-hidden="true" />{titre}</h2>
-          <ChevronDown size={18} className="parametres__chevron" aria-hidden="true" />
+          <span className="rangee" style={{ flexWrap: 'nowrap' }}>
+            {aide}
+            <ChevronDown size={18} className="parametres__chevron" aria-hidden="true" />
+          </span>
         </summary>
         <div className="carte__corps">{children}</div>
       </details>
@@ -91,12 +94,13 @@ export default function PageParametres() {
 
       {compte && (
         <>
-          <Section id="compte">
+          <Section id="compte" repliable>
             <GestionCompte compte={compte} onChange={charger} />
           </Section>
 
           <Section
             id="objectif"
+            repliable
             aide={compte.objectif_kcal ? <span className="etiquette">{compte.objectif_kcal} kcal / jour</span> : null}
           >
             <ObjectifCalorique key={`${compte.objectif_mode}-${compte.objectif_manuel}`} compte={compte} onChange={charger} />
@@ -105,16 +109,16 @@ export default function PageParametres() {
       )}
 
       {compte?.admin && (
-        <Section id="ia">
+        <Section id="ia" repliable>
           <UtilisationIA />
         </Section>
       )}
 
-      <Section id="verres">
+      <Section id="verres" repliable>
         <GestionVerres />
       </Section>
 
-      <Section id="etiquettes">
+      <Section id="etiquettes" repliable>
         <GestionEtiquettes />
       </Section>
 
@@ -126,7 +130,7 @@ export default function PageParametres() {
         <CleWidget />
       </Section>
 
-      <Section id="importation">
+      <Section id="importation" repliable>
         <ImportCookmate />
         <div className="pile pile--serre">
           <p className="liste__titre">Pas et poids (fichiers CSV)</p>
