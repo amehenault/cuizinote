@@ -2,22 +2,21 @@ import { LIBELLE_CONTENANT_SQL as LIBELLE_SQL } from '@/lib/colonnes';
 import { q } from '@/lib/db';
 import { ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
-import { chercherFormatWeb } from '@/lib/ia';
-import { contenantDepuis, produitParCodeBarre } from '@/lib/openfoodfacts';
+import { produitParCodeBarre } from '@/lib/openfoodfacts';
+import { formatParUpcitemdb } from '@/lib/upcitemdb';
 
 export const maxDuration = 60;
 
 const LOT_OFF = 12;
 const EN_PARALLELE = 4;
-const LOT_WEB = 6;
-const WEB_EN_PARALLELE = 3;
+const LOT_UPC = 5;
 
 // Produits de la personne : ceux qu'elle a ajoutés à la banque et ceux de son inventaire.
 const MES_PRODUITS = `(a.utilisateur_id = $1 OR a.id IN (SELECT aliment_id FROM inventaire WHERE utilisateur_id = $1))`;
 const A_CHERCHER_OFF = `${MES_PRODUITS} AND a.code_barre IS NOT NULL AND a.contenant_qte IS NULL AND a.contenant_verifie_le IS NULL`;
-// Inconnus d'Open Food Facts : cherchés sur Google par code-barres, une fois
-const A_CHERCHER_WEB = `${MES_PRODUITS} AND a.code_barre IS NOT NULL AND a.contenant_qte IS NULL
-  AND a.contenant_verifie_le IS NOT NULL AND a.contenant_web_le IS NULL`;
+// Inconnus d'Open Food Facts : cherchés dans UPCitemdb (autre base publique de codes-barres), une fois
+const A_CHERCHER_UPC = `${MES_PRODUITS} AND a.code_barre IS NOT NULL AND a.contenant_qte IS NULL
+  AND a.contenant_verifie_le IS NOT NULL AND a.contenant_upc_le IS NULL`;
 
 
 /**
@@ -38,6 +37,16 @@ async function retirerEstimations(u) {
     [u]
   );
   await q('UPDATE aliments a SET contenant_estime_le = NULL WHERE contenant_estime_le IS NOT NULL AND ' + MES_PRODUITS, [u]);
+  // Formats trouvés par l'ancienne recherche Google de l'IA : retirés aussi (sauf corrigés à la main)
+  const parIa = `a.contenant_web_le IS NOT NULL AND (a.traduit_le IS NULL OR a.traduit_le < a.contenant_web_le)`;
+  await q(
+    `UPDATE inventaire i SET unite = NULL FROM aliments a
+      WHERE a.id = i.aliment_id AND i.utilisateur_id = $1 AND ${parIa} AND a.contenant_qte > 0
+        AND i.quantite = 1 AND i.unite = ${LIBELLE_SQL}`,
+    [u]
+  );
+  await q(`UPDATE aliments a SET contenant_qte = NULL, contenant_unite = NULL WHERE ${MES_PRODUITS} AND ${parIa}`, [u]);
+  await q('UPDATE aliments a SET contenant_web_le = NULL WHERE contenant_web_le IS NOT NULL AND ' + MES_PRODUITS, [u]);
   await q(
     `UPDATE inventaire SET unite = NULL, format_estime_le = NULL
       WHERE utilisateur_id = $1 AND format_estime_le IS NOT NULL AND quantite = 1 AND unite LIKE '× %'`,
@@ -88,37 +97,32 @@ export const POST = route(async ({ utilisateur }) => {
     }
   }
 
-  // Pas dans Open Food Facts : recherche Google par code-barres (seulement si rien d'autre à faire dans cet appel)
+  // Pas dans Open Food Facts : UPCitemdb (seulement si rien d'autre à faire dans cet appel ; ~100 recherches par jour)
   if (!parCode.length) {
-    const parWeb = await q(
-      `SELECT a.id, a.code_barre, a.nom, a.marque FROM aliments a WHERE ${A_CHERCHER_WEB} ORDER BY a.cree_le LIMIT ${LOT_WEB}`,
+    const parUpc = await q(
+      `SELECT a.id, a.code_barre FROM aliments a WHERE ${A_CHERCHER_UPC} ORDER BY a.cree_le LIMIT ${LOT_UPC}`,
       [u]
     );
-    for (let i = 0; i < parWeb.length; i += WEB_EN_PARALLELE) {
-      const resultats = await Promise.all(
-        parWeb.slice(i, i + WEB_EN_PARALLELE).map((a) =>
-          chercherFormatWeb(a)
-            .then((texte) => ({ a, contenant: contenantDepuis({ quantity: texte }), reussi: true }))
-            .catch(() => ({ a, reussi: false }))
-        )
-      );
-      for (const { a, contenant, reussi } of resultats) {
-        // Limite de l'IA atteinte : on réessaiera plus tard.
-        if (!reussi) continue;
-        if (contenant?.contenant_qte) {
-          trouves += 1;
-          nouveaux.push(a.id);
-        }
-        await q(
-          `UPDATE aliments SET contenant_qte = coalesce(contenant_qte, $2), contenant_unite = coalesce(contenant_unite, $3),
-                  contenant_web_le = now() WHERE id = $1`,
-          [a.id, contenant?.contenant_qte ?? null, contenant?.contenant_qte ? contenant.contenant_unite : null]
-        );
+    for (const a of parUpc) {
+      let contenant;
+      try {
+        contenant = await formatParUpcitemdb(a.code_barre);
+      } catch {
+        break; // Service indisponible ou limite du jour atteinte : on réessaiera plus tard.
       }
+      if (contenant?.contenant_qte) {
+        trouves += 1;
+        nouveaux.push(a.id);
+      }
+      await q(
+        `UPDATE aliments SET contenant_qte = coalesce(contenant_qte, $2), contenant_unite = coalesce(contenant_unite, $3),
+                contenant_upc_le = now() WHERE id = $1`,
+        [a.id, contenant?.contenant_qte ?? null, contenant?.contenant_qte ? contenant.contenant_unite : null]
+      );
     }
   }
 
-  // Format trouvé (Open Food Facts ou Google) : appliqué à ses articles liés (1 contenant)
+  // Format trouvé (Open Food Facts ou UPCitemdb) : appliqué à ses articles liés (1 contenant)
   const appliques = nouveaux.length
     ? await q(
         `UPDATE inventaire i SET quantite = 1, unite = ${LIBELLE_SQL}
@@ -142,7 +146,7 @@ export const POST = route(async ({ utilisateur }) => {
 
   const [{ restant }] = await q(
     `SELECT (SELECT count(*) FROM aliments a WHERE ${A_CHERCHER_OFF})::int
-          + (SELECT count(*) FROM aliments a WHERE ${A_CHERCHER_WEB})::int AS restant`,
+          + (SELECT count(*) FROM aliments a WHERE ${A_CHERCHER_UPC})::int AS restant`,
     [u]
   );
 

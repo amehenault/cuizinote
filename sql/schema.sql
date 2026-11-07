@@ -278,3 +278,7 @@ ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS formats_inventaire_le timestam
 
 -- Format cherché sur Google (par code-barres) quand Open Food Facts ne le donne pas (null = pas encore cherché)
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_web_le timestamptz;
+
+-- Format cherché dans UPCitemdb (base de codes-barres) quand Open Food Facts ne le donne pas (null = pas encore cherché).
+-- contenant_web_le (ancienne recherche par l'IA) n'est plus utilisé : ses formats sont retirés.
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_upc_le timestamptz;
