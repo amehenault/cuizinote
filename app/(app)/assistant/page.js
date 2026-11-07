@@ -6,6 +6,7 @@ import { ArrowLeft, BookmarkPlus, CalendarPlus, Check, Clock, Flame, Send, Spark
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, MOMENTS, ajouterJours, debutSemaine, formaterJour, versIso } from '@/lib/dates';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
+import OngletsRecettes from '@/components/OngletsRecettes';
 
 const EXEMPLES = [
   'Que puis-je cuisiner ce soir avec ce que j\'ai ?',
@@ -161,6 +162,7 @@ export default function PageAssistant({ searchParams }) {
 
   return (
     <div className="assistant">
+      <OngletsRecettes />
       <EntetePage
         titre="Assistant culinaire"
         sousTitre={

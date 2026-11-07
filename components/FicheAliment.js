@@ -5,7 +5,7 @@ import { Pencil, Plus, ShoppingCart } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, nombreFr, nutriment } from '@/lib/dates';
 import { LIBELLES_EMPLACEMENT, trouverEnInventaire } from '@/lib/disponibilite';
-import { libellePortion } from '@/lib/portion';
+import { libelleContenant, libellePortion, quantiteParDefaut } from '@/lib/portion';
 import { Message } from './Elements';
 import VignetteAliment from './VignetteAliment';
 
@@ -26,7 +26,11 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
 
   async function versInventaire() {
     try {
-      await api('/api/inventaire', { methode: 'POST', corps: { emplacement, nom: aliment.nom, aliment_id: aliment.id } });
+      await api('/api/inventaire', {
+        methode: 'POST',
+        // Un contenant complet par défaut (ex. : 1 × 893 ml)
+        corps: { emplacement, nom: aliment.nom, aliment_id: aliment.id, quantite: 1, unite: quantiteParDefaut(aliment).unite || null },
+      });
       setMessage({ type: 'succes', texte: `Ajouté au ${LIBELLES_EMPLACEMENT[emplacement]}.` });
       onInventaireChange();
     } catch (e) {
@@ -65,6 +69,7 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
       </div>
       <p className="nutrition__source">
         {aliment.portion_g ? `Pour 1 portion : ${libellePortion(aliment)}` : `Pour 100 ${u}`}
+        {libelleContenant(aliment) ? ` · Contenant : ${libelleContenant(aliment)}` : ''}
       </p>
 
       {dispo ? (

@@ -8,6 +8,7 @@ import { EMPLACEMENTS, formaterJour, joursRestants, nombreFr } from '@/lib/dates
 import { Chargement, EntetePage, EtatVide, Message, Modale, versNombre } from '@/components/Elements';
 import AjoutParScan from '@/components/AjoutParScan';
 import RechercheAliment from '@/components/RechercheAliment';
+import { quantiteParDefaut } from '@/lib/portion';
 
 const ICONES = { frigo: Refrigerator, congelateur: Snowflake, 'garde-manger': Archive };
 
@@ -26,8 +27,9 @@ function FormulaireArticle({ initial, onEnregistre }) {
     nom: initial.nom || '',
     aliment_id: initial.aliment_id || null,
     aliment_nom: initial.aliment_nom || null,
-    quantite: initial.quantite == null ? '' : String(initial.quantite),
-    unite: initial.unite || '',
+    // Nouvel article : un contenant complet par défaut (ex. : 1 × 893 ml)
+    quantite: initial.id ? (initial.quantite == null ? '' : String(initial.quantite)) : initial.quantite ?? '1',
+    unite: initial.id ? initial.unite || '' : initial.unite ?? '',
     expire_le: initial.expire_le || '',
   });
   const [erreur, setErreur] = useState('');
@@ -75,7 +77,19 @@ function FormulaireArticle({ initial, onEnregistre }) {
             </button>
           </div>
         ) : (
-          <RechercheAliment onChoisir={(al) => setA({ ...a, aliment_id: al.id, aliment_nom: al.nom, nom: a.nom || al.nom })} />
+          <RechercheAliment
+            onChoisir={(al) => {
+              const defaut = quantiteParDefaut(al);
+              setA({
+                ...a,
+                aliment_id: al.id,
+                aliment_nom: al.nom,
+                nom: a.nom || al.nom,
+                // Quantité encore vide ou par défaut : on met un contenant complet de cet aliment
+                ...(!a.unite && (a.quantite === '' || a.quantite === '1') ? defaut : {}),
+              });
+            }}
+          />
         )}
       </div>
       <div className="formulaire__ligne">
@@ -112,6 +126,7 @@ export default function PageInventaire() {
   }, []);
 
   async function supprimer(a) {
+    if (!window.confirm(`Retirer « ${a.nom} » de l'inventaire ?`)) return;
     await api(`/api/inventaire/${a.id}`, { methode: 'DELETE' }).catch((e) => setErreur(e.message));
     charger();
   }
@@ -209,7 +224,7 @@ export default function PageInventaire() {
       <Modale titre="Scanner un produit" ouverte={modale?.type === 'scan'} onFermer={() => setModale(null)}>
         <AjoutParScan
           onEnregistre={(aliment) =>
-            setModale({ type: 'formulaire', article: { emplacement: onglet, nom: aliment.nom, aliment_id: aliment.id, aliment_nom: aliment.nom } })
+            setModale({ type: 'formulaire', article: { emplacement: onglet, nom: aliment.nom, aliment_id: aliment.id, aliment_nom: aliment.nom, ...quantiteParDefaut(aliment) } })
           }
         />
       </Modale>
