@@ -1044,3 +1044,8 @@ button.semaine__repas-nom:hover {
 .carte-recette--compacte .etoiles {
   display: none;
 }
+
+/* Exemples de questions de l'assistant : majuscule en début de phrase seulement */
+.assistant__exemple {
+  text-transform: none;
+}

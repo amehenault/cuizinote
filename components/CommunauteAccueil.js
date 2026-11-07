@@ -12,7 +12,11 @@ export default function CommunauteAccueil() {
 
   useEffect(() => {
     api('/api/communaute?limite=30')
-      .then((liste) => setRecettes(liste.filter((r) => !r.mienne).slice(0, 12)))
+      // Recettes des autres en premier ; s'il n'y en a pas encore, les miennes publiées.
+      .then((liste) => {
+        const autres = liste.filter((r) => !r.mienne);
+        setRecettes((autres.length ? autres : liste).slice(0, 12));
+      })
       .catch(() => setRecettes([]));
   }, []);
 
@@ -31,14 +35,12 @@ export default function CommunauteAccueil() {
         </Link>
       </div>
       <p className="stat__note">Recettes partagées avec toute la communauté</p>
-      {recettes.length ? (
+      {recettes.length > 0 && (
         <div className="communaute__bande">
           {recettes.map((r) => (
-            <CarteRecette key={r.id} recette={r} href={`/communaute/${r.id}`} compacte />
+            <CarteRecette key={r.id} recette={r} href={r.mienne ? `/recettes/${r.id}` : `/communaute/${r.id}`} compacte />
           ))}
         </div>
-      ) : (
-        <p className="stat__note">Aucune recette pour l&apos;instant.</p>
       )}
     </section>
   );

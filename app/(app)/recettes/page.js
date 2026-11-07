@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Apple, BookOpen, Plus, Search, Sparkles, UsersRound } from 'lucide-react';
+import { Apple, BookOpen, Bot, Plus, Search, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, EtatVide, Message } from '@/components/Elements';
 import CarteRecette from '@/components/CarteRecette';
@@ -30,8 +30,8 @@ export default function PageRecettes() {
     <>
       <EntetePage titre="Mes recettes" sousTitre="Votre banque de recettes et de plats">
         <Link href="/assistant" className="bouton bouton--secondaire">
-          <Sparkles size={16} aria-hidden="true" />
-          Idées IA
+          <Bot size={16} aria-hidden="true" />
+          Assistant culinaire
         </Link>
         <Link href="/communaute" className="bouton bouton--secondaire">
           <UsersRound size={16} aria-hidden="true" />

@@ -162,7 +162,7 @@ export default function PageAssistant({ searchParams }) {
   return (
     <div className="assistant">
       <EntetePage
-        titre="Idées de repas (IA)"
+        titre="Assistant culinaire"
         sousTitre={
           semaine
             ? `Semaine du ${formaterJour(semaine, { day: 'numeric', month: 'long' })} : touchez « Planifier » sous une idée pour l'ajouter.`
@@ -183,7 +183,7 @@ export default function PageAssistant({ searchParams }) {
             <h2 className="carte__titre"><Sparkles size={18} aria-hidden="true" />Par où commencer ?</h2>
             <div className="filtres__etiquettes">
               {EXEMPLES.map((e) => (
-                <button key={e} type="button" className="etiquette etiquette--bouton" onClick={() => envoyer(e)}>{e}</button>
+                <button key={e} type="button" className="etiquette etiquette--bouton assistant__exemple" onClick={() => envoyer(e)}>{e}</button>
               ))}
             </div>
           </div>
