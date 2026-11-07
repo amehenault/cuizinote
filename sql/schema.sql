@@ -275,3 +275,6 @@ ALTER TABLE inventaire ADD COLUMN IF NOT EXISTS format_estime_le timestamptz;
 
 -- Passage unique : chaque article de l'inventaire lié à un produit de format connu devient « 1 × format »
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS formats_inventaire_le timestamptz;
+
+-- Format cherché sur Google (par code-barres) quand Open Food Facts ne le donne pas (null = pas encore cherché)
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_web_le timestamptz;
