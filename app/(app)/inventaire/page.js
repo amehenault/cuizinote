@@ -128,23 +128,32 @@ export default function PageInventaire() {
 
   /** Formats de contenant (Open Food Facts) et quantités vides : complétés automatiquement. */
   async function completer() {
+    let total = 0;
+    let formats = 0;
+    let derniereErreur = null;
     try {
-      let total = 0;
       let precedent = Infinity;
       for (let tour = 0; tour < 40; tour += 1) {
-        if (tour === 1) setCompletion('Recherche des formats de vos produits dans Open Food Facts...');
         const r = await api('/api/inventaire/completer', { methode: 'POST' });
         total += r.quantites;
+        formats += r.trouves + r.estimes;
+        derniereErreur = r.erreur;
         if (r.quantites) charger();
-        // Fini, ou plus de progrès (Open Food Facts indisponible) : on réessaiera à la prochaine visite.
+        if (r.restant) setCompletion(`Recherche du format de vos produits... (${r.restant} restant${r.restant > 1 ? 's' : ''})`);
+        // Fini, ou plus de progrès (service indisponible) : on réessaiera à la prochaine visite.
         if (!r.restant || r.restant >= precedent) break;
         precedent = r.restant;
       }
-      setCompletion(total ? `Quantités complétées pour ${total} article${total > 1 ? 's' : ''}.` : '');
-    } catch {
-      setCompletion('');
+    } catch (e) {
+      derniereErreur = e.message;
     }
+    const morceaux = [];
+    if (formats) morceaux.push(`${formats} format${formats > 1 ? 's' : ''} de contenant trouvé${formats > 1 ? 's' : ''}`);
+    if (total) morceaux.push(`${total} quantité${total > 1 ? 's' : ''} complétée${total > 1 ? 's' : ''}`);
+    if (derniereErreur) morceaux.push(`certains formats n'ont pas pu être cherchés (${derniereErreur}) : réessai à la prochaine visite`);
+    setCompletion(morceaux.length ? `${morceaux.join(' ; ')}.`.replace(/^./, (c) => c.toUpperCase()) : '');
   }
+
 
   useEffect(() => {
     charger();
