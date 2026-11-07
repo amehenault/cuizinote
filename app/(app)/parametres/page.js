@@ -80,6 +80,17 @@ export default function PageParametres() {
     <div className="pile pile--large">
       <EntetePage titre="Paramètres" sousTitre="Votre compte, votre objectif et vos appareils" />
 
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--espace-2)' }}>
+        <Link href="/aliments" className="bouton bouton--secondaire">
+          <Apple size={16} aria-hidden="true" />
+          Banque d&apos;aliments
+        </Link>
+        <Link href="/assistant" className="bouton bouton--secondaire">
+          <Bot size={16} aria-hidden="true" />
+          Assistant culinaire
+        </Link>
+      </div>
+
       <nav className="parametres__sommaire" aria-label="Sections des paramètres">
         {SECTIONS.filter((s) => s.id !== 'ia' || compte?.admin).map(({ id, titre, Icone }) => (
           <a key={id} href={`#${id}`} className="etiquette etiquette--bouton etiquette--neutre">
@@ -145,21 +156,6 @@ export default function PageParametres() {
           </div>
         </div>
       </Section>
-
-      <section className="carte">
-        <div className="carte__corps">
-          <div className="rangee">
-            <Link href="/aliments" className="bouton bouton--secondaire">
-              <Apple size={16} aria-hidden="true" />
-              Banque d&apos;aliments
-            </Link>
-            <Link href="/assistant" className="bouton bouton--secondaire">
-              <Bot size={16} aria-hidden="true" />
-              Assistant culinaire
-            </Link>
-          </div>
-        </div>
-      </section>
 
       <Section id="deconnexion">
         <p className="champ__aide">Seul cet appareil est déconnecté ; vos autres appareils restent connectés.</p>
