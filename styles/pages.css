@@ -960,3 +960,31 @@ button.semaine__repas-nom:hover {
   max-width: 260px;
   aspect-ratio: 4 / 3;
 }
+
+/* Accueil : communauté encadrée comme les tuiles Pas et Poids */
+.stat.communaute {
+  gap: var(--espace-3);
+  border-color: var(--palette-5);
+}
+
+.communaute__titre {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Tuiles de chiffres : la note tient toujours sur une seule ligne */
+.stat {
+  min-width: 0;
+}
+
+.stat__note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .grille--stats {
+    grid-template-columns: 1fr;
+  }
+}

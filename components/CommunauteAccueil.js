@@ -19,9 +19,9 @@ export default function CommunauteAccueil() {
   if (!recettes) return null;
 
   return (
-    <section className="communaute" aria-labelledby="titre-communaute">
+    <section className="stat communaute" aria-labelledby="titre-communaute">
       <div className="rangee rangee--espacee">
-        <h2 id="titre-communaute" className="carte__titre">
+        <h2 id="titre-communaute" className="stat__libelle communaute__titre">
           <UsersRound size={18} aria-hidden="true" />
           Communauté
         </h2>

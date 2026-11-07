@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { AlertTriangle, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Flame, Footprints, Scale } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, ajouterJours, debutSemaine, enLb, formaterJour, joursRestants, nombreFr, versIso } from '@/lib/dates';
-import { Chargement, EntetePage, Message } from '@/components/Elements';
+import { Chargement, Message } from '@/components/Elements';
 import JournalJour from '@/components/JournalJour';
 import MenuSemaine from '@/components/MenuSemaine';
 import CommunauteAccueil from '@/components/CommunauteAccueil';
@@ -21,25 +21,29 @@ function Sante({ poids, pas, jour }) {
   const pasDuJour = pas.find((p) => p.jour === jour);
   const moyenne = pas.length ? pas.reduce((s, p) => s + p.nombre, 0) / pas.length : null;
   const dernier = poids[0];
+  const ecart = dernier && poids[1] ? dernier.poids_kg - poids[1].poids_kg : null;
+  const notePas = [
+    pasDuJour ? SOURCES[pasDuJour.source] || pasDuJour.source : 'Aucune donnée',
+    moyenne != null ? `moyenne : ${nombreFr(moyenne)}` : null,
+  ];
+  const notePoids = dernier
+    ? [
+        new Date(dernier.mesure_le).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' }),
+        SOURCES[dernier.source] || dernier.source,
+        ecart != null ? `${ecart > 0 ? '+' : ''}${nombreFr(enLb(ecart), 1)} lb` : null,
+      ]
+    : ['Aucune pesée'];
   return (
     <div className="grille grille--stats">
       <Link href="/sante" className="stat">
         <span className="stat__libelle"><Footprints size={16} aria-hidden="true" />Pas</span>
         <span className="stat__valeur">{pasDuJour ? nombreFr(pasDuJour.nombre) : '-'}</span>
-        <span className="stat__note">
-          {pasDuJour ? `Source : ${SOURCES[pasDuJour.source] || pasDuJour.source}` : 'Aucune donnée pour ce jour'}
-          {moyenne != null && ` · moyenne 7 jours ${nombreFr(moyenne)}`}
-        </span>
+        <span className="stat__note">{notePas.filter(Boolean).join(' · ')}</span>
       </Link>
       <Link href="/sante" className="stat">
         <span className="stat__libelle"><Scale size={16} aria-hidden="true" />Poids</span>
         <span className="stat__valeur">{dernier ? `${nombreFr(enLb(dernier.poids_kg), 1)} lb` : '-'}</span>
-        <span className="stat__note">
-          {dernier
-            ? `${new Date(dernier.mesure_le).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' })} · ${SOURCES[dernier.source] || dernier.source}`
-            : 'Connectez Samsung Health dans Paramètres'}
-          {poids[1] && ` · ${dernier.poids_kg - poids[1].poids_kg > 0 ? '+' : ''}${nombreFr(enLb(dernier.poids_kg - poids[1].poids_kg), 1)} lb`}
-        </span>
+        <span className="stat__note">{notePoids.filter(Boolean).join(' · ')}</span>
       </Link>
     </div>
   );
@@ -65,12 +69,7 @@ export default function PageAccueil() {
 
   return (
     <div className="pile pile--large">
-      <EntetePage titre={`Bonjour ${utilisateur.nom}`} sousTitre={formaterJour(aujourdhui)}>
-        <Link href={`/planificateur?semaine=${semaineProchaine}`} className="bouton bouton--principal">
-          <CalendarRange size={16} aria-hidden="true" />
-          Planifier les repas
-        </Link>
-      </EntetePage>
+      <Sante poids={poids} pas={pas} jour={jour} />
 
       <CommunauteAccueil />
 
@@ -104,8 +103,6 @@ export default function PageAccueil() {
 
           <JournalJour key={jour} jour={jour} objectif={utilisateur.objectif_kcal} />
 
-          <Sante poids={poids} pas={pas} jour={jour} />
-
           {expirent.length > 0 && (
             <section className="carte">
               <div className="carte__entete">
@@ -133,7 +130,17 @@ export default function PageAccueil() {
         </div>
       )}
 
-      {onglet === 'menu' && <MenuSemaine />}
+      {onglet === 'menu' && (
+        <div className="pile">
+          <div>
+            <Link href={`/planificateur?semaine=${semaineProchaine}`} className="bouton bouton--principal">
+              <CalendarRange size={16} aria-hidden="true" />
+              Planifier les repas
+            </Link>
+          </div>
+          <MenuSemaine />
+        </div>
+      )}
     </div>
   );
 }
