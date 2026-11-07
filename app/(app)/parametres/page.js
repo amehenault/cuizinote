@@ -60,7 +60,7 @@ export default function PageParametres() {
       <EntetePage titre="Paramètres" sousTitre="Votre compte, votre objectif et vos appareils" />
 
       <nav className="parametres__sommaire" aria-label="Sections des paramètres">
-        {SECTIONS.map(({ id, titre, Icone }) => (
+        {SECTIONS.filter((s) => s.id !== 'ia' || compte?.admin).map(({ id, titre, Icone }) => (
           <a key={id} href={`#${id}`} className="etiquette etiquette--bouton etiquette--neutre">
             <Icone size={14} aria-hidden="true" />
             {titre}
@@ -86,9 +86,11 @@ export default function PageParametres() {
         </>
       )}
 
-      <Section id="ia">
-        <UtilisationIA />
-      </Section>
+      {compte?.admin && (
+        <Section id="ia">
+          <UtilisationIA />
+        </Section>
+      )}
 
       <Section id="verres">
         <GestionVerres />

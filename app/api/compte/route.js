@@ -1,10 +1,14 @@
 import { q, q1 } from '@/lib/db';
+import { estAdmin } from '@/lib/admin';
 import { detruireSession, verifierMotDePasse } from '@/lib/auth';
 import { ErreurHttp, lireCorps, ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
 import { schemaCompte, schemaSuppressionCompte } from '@/lib/schemas';
 
-export const GET = route(async ({ utilisateur }) => ok(utilisateur));
+export const GET = route(async ({ utilisateur }) => {
+  const { premier_compte, ...profil } = utilisateur;
+  return ok({ ...profil, admin: estAdmin(utilisateur) });
+});
 
 // Liste fermée : seuls ces noms de colonnes peuvent entrer dans la requête.
 const CHAMPS = ['nom', 'objectif_mode', 'objectif_kcal', 'sexe', 'date_naissance', 'taille_cm', 'activite', 'but'];

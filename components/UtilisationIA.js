@@ -11,6 +11,8 @@ function delai(ms) {
   return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`;
 }
 
+const NOMS_SOURCES = { assistant: 'Assistant culinaire', etiquetage: 'Étiquetage des recettes', traduction: 'Traduction des aliments', autre: 'Autre' };
+
 /** Paramètres : quota gratuit de l'IA (Google Gemini) restant aujourd'hui, pour toute l'application. */
 export default function UtilisationIA() {
   const [etat, setEtat] = useState(null);
@@ -50,6 +52,15 @@ export default function UtilisationIA() {
         Remise à zéro le {fin.toLocaleString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}{' '}
         (dans {delai(fin.getTime() - Date.now())}).
       </p>
+      {etat.sources?.length > 0 && (
+        <ul className="champ__aide" style={{ margin: 0, paddingLeft: '1.2em' }}>
+          {etat.sources.map((s) => (
+            <li key={s.source}>
+              {NOMS_SOURCES[s.source] || s.source} : {s.total} demande{s.total > 1 ? 's' : ''}
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="champ__aide">
         Ce quota gratuit de Google (environ 20 demandes par jour pour chacun des 3 modèles) est partagé par tous les comptes
         Cuizinote : assistant, traduction des aliments et étiquetage des recettes. C&apos;est une estimation ; Google

@@ -339,3 +339,9 @@ CREATE TABLE IF NOT EXISTS ia_appels (
   statut  smallint NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ia_appels_cree_le_idx ON ia_appels(cree_le);
+
+-- Jauge de l'IA : d'où vient chaque appel (assistant, etiquetage, traduction).
+ALTER TABLE ia_appels ADD COLUMN IF NOT EXISTS source text;
+
+-- Traduction des noms d'aliments : dernier essai raté (on ne réessaie qu'après 24 h, pour ménager le quota de l'IA).
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS traduction_essai_le timestamptz;

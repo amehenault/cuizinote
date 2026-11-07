@@ -14,14 +14,21 @@ const LOT = 40;
 export const POST = route(async ({ utilisateur }) => {
   if (!process.env.GEMINI_API_KEY) throw new ErreurHttp(503, 'Traduction indisponible (GEMINI_API_KEY manquant)');
   await limiter(`traduction:${utilisateur.id}`, 60, 3600);
-  const aliments = await q('SELECT id, nom FROM aliments WHERE traduit_le IS NULL ORDER BY cree_le LIMIT 120');
+  const aliments = await q(
+    `SELECT id, nom FROM aliments
+      WHERE traduit_le IS NULL AND (traduction_essai_le IS NULL OR traduction_essai_le < now() - interval '1 day')
+      ORDER BY cree_le LIMIT 120`
+  );
   let traduits = 0;
   for (let i = 0; i < aliments.length; i += LOT) {
     const lot = aliments.slice(i, i + LOT);
     const entree = lot.map((a) => a.nom);
     const noms = await traduireNoms(entree);
-    // Échec de l'IA (même tableau rendu) : ce lot sera réessayé plus tard.
-    if (noms === entree) continue;
+    // Échec de l'IA (même tableau rendu) : ce lot sera réessayé dans 24 h, et on n'insiste pas aujourd'hui.
+    if (noms === entree) {
+      await q('UPDATE aliments SET traduction_essai_le = now() WHERE id = ANY($1::uuid[])', [lot.map((a) => a.id)]);
+      break;
+    }
     const changes = lot.filter((a, n) => noms[n] !== a.nom);
     traduits += changes.length;
     await q(
@@ -39,6 +46,9 @@ export const POST = route(async ({ utilisateur }) => {
       );
     }
   }
-  const [{ restant }] = await q('SELECT count(*)::int AS restant FROM aliments WHERE traduit_le IS NULL');
+  const [{ restant }] = await q(
+    `SELECT count(*)::int AS restant FROM aliments
+      WHERE traduit_le IS NULL AND (traduction_essai_le IS NULL OR traduction_essai_le < now() - interval '1 day')`
+  );
   return ok({ traduits, restant });
 });
