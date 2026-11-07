@@ -65,7 +65,11 @@ export default function FormulaireAuth({ mode }) {
               maxLength={200}
               {...champ('motDePasse')}
             />
-            {inscription && <span className="champ__aide">12 caractères minimum.</span>}
+            {inscription ? (
+              <span className="champ__aide">12 caractères minimum.</span>
+            ) : (
+              <Link href="/mot-de-passe-oublie" className="champ__aide auth__oubli">Mot de passe oublié ?</Link>
+            )}
           </label>
           {inscription && (
             <label className="champ">

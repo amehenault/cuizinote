@@ -815,3 +815,148 @@ button.semaine__repas-nom:hover {
 .import__doublon {
   color: var(--couleur-texte-attenue);
 }
+
+/* ==========================================================================
+   Bloc : communaute (bandeau de l'accueil)
+   ========================================================================== */
+.communaute {
+  display: grid;
+  gap: var(--espace-3);
+  min-width: 0;
+}
+
+.communaute__bande {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 220px);
+  gap: var(--espace-3);
+  padding-bottom: var(--espace-2);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+
+.communaute__bande > * {
+  scroll-snap-align: start;
+}
+
+.carte-recette--compacte .carte-recette__titre {
+  font-size: var(--taille-s);
+}
+
+.carte-recette__auteur {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+/* ==========================================================================
+   Bloc : parametres
+   ========================================================================== */
+.parametres__sommaire {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-2);
+}
+
+.parametres__sommaire .etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-1);
+  text-decoration: none;
+}
+
+.parametres__section {
+  scroll-margin-top: var(--espace-5);
+}
+
+.parametres__section--danger {
+  border-color: var(--couleur-danger);
+}
+
+.parametres__section--danger .carte__titre {
+  color: var(--couleur-danger);
+}
+
+/* Étapes numérotées des tutoriels (Samsung Health, widget) */
+.etapes {
+  display: grid;
+  gap: var(--espace-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  counter-reset: etape;
+}
+
+.etapes__element {
+  position: relative;
+  display: grid;
+  gap: var(--espace-2);
+  padding: var(--espace-3) var(--espace-3) var(--espace-3) calc(var(--espace-3) + 36px);
+  background: var(--couleur-surface-2);
+  border-radius: var(--rayon-m, 10px);
+  counter-increment: etape;
+}
+
+.etapes__element::before {
+  content: counter(etape);
+  position: absolute;
+  top: var(--espace-3);
+  left: var(--espace-3);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-weight: 700;
+  font-size: var(--taille-s);
+  color: var(--couleur-texte-inverse);
+  background: var(--couleur-primaire);
+  border-radius: 50%;
+}
+
+.etapes__titre {
+  font-weight: 700;
+}
+
+.etapes__element .bouton {
+  justify-self: start;
+}
+
+.objectif__resultat {
+  display: grid;
+  gap: var(--espace-1);
+  padding: var(--espace-3);
+  background: var(--couleur-accent-pale);
+  border-radius: var(--rayon-m, 10px);
+}
+
+.objectif__nombre {
+  font-size: var(--taille-xl, 1.6rem);
+  font-weight: 700;
+  color: var(--couleur-accent);
+}
+
+.publication {
+  align-items: flex-start;
+  padding: var(--espace-3);
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+}
+
+.publication input {
+  margin-top: 4px;
+}
+
+.auth__oubli {
+  justify-self: end;
+}
+
+.aliment__vignette--grande {
+  width: 96px;
+  height: 96px;
+}
+
+.televersement__zone--compact {
+  max-width: 260px;
+  aspect-ratio: 4 / 3;
+}

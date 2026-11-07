@@ -27,8 +27,8 @@ export const POST = route(async ({ requete, utilisateur }) => {
     if (kcal == null && r.kcal_portion != null) kcal = r.kcal_portion * d.portions;
   } else if (d.aliment_id) {
     const a = await q1(
-      'SELECT nom, kcal_100g::float, portion_g::float FROM aliments WHERE id = $1 AND utilisateur_id = $2',
-      [d.aliment_id, utilisateur.id]
+      'SELECT nom, kcal_100g::float, portion_g::float FROM aliments WHERE id = $1',
+      [d.aliment_id]
     );
     if (!a) throw new ErreurHttp(400, 'Aliment invalide');
     libelle = libelle || a.nom;

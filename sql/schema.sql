@@ -220,3 +220,41 @@ ALTER TABLE recette_ingredients ADD COLUMN IF NOT EXISTS kcal numeric(8,2);
 
 -- Sodium (comme sur les étiquettes canadiennes), en grammes pour 100 g ; affiché en mg
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS sodium_100g numeric(10,4);
+
+-- Mot de passe oublié : liens à usage unique (empreinte SHA-256 du jeton seulement), valides 1 heure
+CREATE TABLE IF NOT EXISTS reinitialisations (
+  empreinte      text PRIMARY KEY,
+  utilisateur_id uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  expire_le      timestamptz NOT NULL,
+  cree_le        timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS reinitialisations_utilisateur_idx ON reinitialisations(utilisateur_id);
+
+-- Objectif calorique : calcul automatique (profil + dernier poids) ou saisie manuelle
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS objectif_mode text NOT NULL DEFAULT 'manuel';
+ALTER TABLE utilisateurs DROP CONSTRAINT IF EXISTS utilisateurs_objectif_mode_check;
+ALTER TABLE utilisateurs ADD CONSTRAINT utilisateurs_objectif_mode_check CHECK (objectif_mode IN ('auto', 'manuel'));
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS sexe text CHECK (sexe IN ('femme', 'homme'));
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS date_naissance date;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS taille_cm numeric(5,1);
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS activite text CHECK (activite IN ('sedentaire', 'leger', 'modere', 'actif', 'tres-actif'));
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS but text CHECK (but IN ('perte', 'perte-douce', 'maintien', 'prise'));
+
+-- Communauté : les recettes sont publiées par défaut (les recettes existantes deviennent publiées)
+ALTER TABLE recettes ADD COLUMN IF NOT EXISTS publiee boolean NOT NULL DEFAULT true;
+CREATE INDEX IF NOT EXISTS recettes_publiees_idx ON recettes(publiee, modifie_le DESC);
+
+-- Banque d'aliments commune à tous les utilisateurs.
+-- utilisateur_id = personne qui l'a ajouté ; si son compte est supprimé, l'aliment reste dans la banque.
+ALTER TABLE aliments ALTER COLUMN utilisateur_id DROP NOT NULL;
+ALTER TABLE aliments DROP CONSTRAINT IF EXISTS aliments_utilisateur_id_fkey;
+ALTER TABLE aliments ADD CONSTRAINT aliments_utilisateur_id_fkey
+  FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS aliments_code_barre_unique ON aliments(code_barre);
+CREATE INDEX IF NOT EXISTS aliments_nom_idx ON aliments(nom);
+
+-- Photo d'un aliment téléversée par un utilisateur (prioritaire sur l'image Open Food Facts)
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS image_id uuid REFERENCES images(id) ON DELETE SET NULL;
+
+-- Traduction automatique des noms en français : date du dernier passage (null = à vérifier)
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS traduit_le timestamptz;

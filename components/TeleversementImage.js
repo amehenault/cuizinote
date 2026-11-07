@@ -19,7 +19,7 @@ export async function reduire(fichier) {
   );
 }
 
-export default function TeleversementImage({ imageId, onChange }) {
+export default function TeleversementImage({ imageId, onChange, alt = 'Photo de la recette', compact = false }) {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
 
@@ -32,7 +32,7 @@ export default function TeleversementImage({ imageId, onChange }) {
     try {
       const blob = await reduire(fichier);
       const formulaire = new FormData();
-      formulaire.append('image', blob, 'recette.webp');
+      formulaire.append('image', blob, 'photo.webp');
       const { id } = await api('/api/images', { methode: 'POST', formulaire });
       onChange(id);
     } catch (err) {
@@ -44,10 +44,10 @@ export default function TeleversementImage({ imageId, onChange }) {
 
   return (
     <div className="televersement">
-      <label className="televersement__zone">
+      <label className={`televersement__zone${compact ? ' televersement__zone--compact' : ''}`}>
         {imageId ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="televersement__image" src={urlImage(imageId)} alt="Photo de la recette" />
+          <img className="televersement__image" src={urlImage(imageId)} alt={alt} />
         ) : (
           <span className="televersement__invite">
             {envoi ? <Loader2 className="chargement__icone" size={32} aria-hidden="true" /> : <ImagePlus size={32} aria-hidden="true" />}

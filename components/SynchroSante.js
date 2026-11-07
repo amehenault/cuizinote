@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Copy, KeyRound, RefreshCw, Smartphone, XCircle } from 'lucide-react';
+import { Copy, Download, KeyRound, RefreshCw, XCircle } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Message } from './Elements';
 
@@ -25,7 +25,7 @@ function Copiable({ libelle, valeur }) {
   );
 }
 
-/** Connexion d'une application passerelle Android (Samsung Health / Health Connect) à Cuizinote. */
+/** Samsung Health -> Health Connect -> Life Dashboard Companion -> Cuizinote (pas et poids). */
 export default function SynchroSante() {
   const [etat, setEtat] = useState(null);
   const [cle, setCle] = useState('');
@@ -39,10 +39,9 @@ export default function SynchroSante() {
   }, []);
 
   async function generer() {
-    if (etat?.active && !window.confirm('Générer une nouvelle clé ? L\'ancienne cessera de fonctionner.')) return;
+    if (etat?.active && !window.confirm('Créer une nouvelle clé ? L\'ancienne cessera de fonctionner.')) return;
     try {
-      const r = await api('/api/sante/cle', { methode: 'POST' });
-      setCle(r.cle);
+      setCle((await api('/api/sante/cle', { methode: 'POST' })).cle);
       charger();
     } catch (e) {
       setErreur(e.message);
@@ -50,93 +49,92 @@ export default function SynchroSante() {
   }
 
   async function revoquer() {
-    if (!window.confirm('Révoquer la clé ? La synchronisation s\'arrêtera.')) return;
+    if (!window.confirm('Arrêter la réception des données de Samsung Health ?')) return;
     await api('/api/sante/cle', { methode: 'DELETE' }).catch((e) => setErreur(e.message));
     setCle('');
     charger();
   }
 
   return (
-    <section className="carte">
-      <div className="carte__entete">
-        <h2 className="carte__titre"><Smartphone size={18} aria-hidden="true" />Synchronisation automatique</h2>
-        {etat?.active && <span className="etiquette">Active</span>}
-      </div>
-      <div className="carte__corps">
-        <p className="champ__aide">
-          Samsung Health ne peut pas envoyer ses données directement à un site Web. Une petite application gratuite
-          installée sur votre téléphone Android (Life Dashboard Companion) lit vos pas et votre poids, puis les envoie
-          à Cuizinote plusieurs fois par jour, sans que vous ayez rien à faire.
-        </p>
-        {adresse.includes('localhost') && (
-          <Message type="alerte">
-            Vous êtes sur la version locale : votre téléphone ne pourra pas joindre cette adresse. Faites cette étape
-            sur le site en ligne (cuizinote.vercel.app).
-          </Message>
-        )}
-        {etat?.active && (
+    <div className="pile">
+      <p className="champ__aide">
+        Vos pas et votre poids arrivent tout seuls dans Cuizinote. Samsung Health ne parle pas directement aux sites Web :
+        une petite application gratuite fait le pont. <strong>Faites ces étapes sur le téléphone</strong> (environ 10
+        minutes, une seule fois).
+      </p>
+      {adresse.includes('localhost') && (
+        <Message type="alerte">Version locale : faites cette étape sur le site en ligne (cuizinote.vercel.app).</Message>
+      )}
+      {etat?.active && (
+        <Message type={etat.derniere_synchro ? 'succes' : 'alerte'}>
+          {etat.derniere_synchro
+            ? `Connecté. Dernière réception : ${new Date(etat.derniere_synchro).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })}.`
+            : 'Clé créée, mais aucune donnée reçue pour l\'instant. Terminez les étapes 4 et 5.'}
+        </Message>
+      )}
+
+      <ol className="etapes">
+        <li className="etapes__element">
+          <p className="etapes__titre">Autorisez Samsung Health à partager</p>
           <p className="champ__aide">
-            {etat.derniere_synchro
-              ? `Dernière réception : ${new Date(etat.derniere_synchro).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })}`
-              : 'Aucune donnée reçue pour le moment.'}
+            Samsung Health, menu <strong>≡</strong> (ou <strong>⋮</strong>), Paramètres, <strong>Health Connect</strong>.
+            Activez le partage des <strong>Pas</strong> et du <strong>Poids</strong>.
           </p>
-        )}
-
-        {cle && (
-          <div className="pile">
-            <Message type="alerte">Copiez la clé maintenant : elle ne sera plus jamais affichée.</Message>
-            <Copiable libelle="Adresse (Webhook URL)" valeur={adresse} />
-            <Copiable libelle="En-tête : nom" valeur="Authorization" />
-            <Copiable libelle="En-tête : valeur" valeur={`Bearer ${cle}`} />
-          </div>
-        )}
-
-        <div className="rangee">
-          <button type="button" className="bouton bouton--principal" onClick={generer}>
-            {etat?.active ? <RefreshCw size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
-            {etat?.active ? 'Générer une nouvelle clé' : 'Activer la synchronisation'}
-          </button>
-          {etat?.active && (
-            <button type="button" className="bouton bouton--fantome" onClick={revoquer}>
-              <XCircle size={16} aria-hidden="true" />
-              Révoquer
-            </button>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Installez « Life Dashboard Companion »</p>
+          <p className="champ__aide">
+            Elle n&apos;est pas sur le Play Store : installez d&apos;abord F-Droid, puis cherchez « Life Dashboard
+            Companion » dans F-Droid et installez-la.
+          </p>
+          <a className="bouton bouton--secondaire" href="https://f-droid.org/fr/" target="_blank" rel="noopener noreferrer">
+            <Download size={16} aria-hidden="true" />
+            Télécharger F-Droid
+          </a>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Créez votre clé</p>
+          {cle ? (
+            <div className="pile">
+              <Message type="alerte">Gardez cette page ouverte : la clé ne sera plus affichée.</Message>
+              <Copiable libelle="Adresse (Webhook URL)" valeur={adresse} />
+              <Copiable libelle="Nom de l'en-tête (Header name)" valeur="Authorization" />
+              <Copiable libelle="Valeur de l'en-tête (Header value)" valeur={`Bearer ${cle}`} />
+            </div>
+          ) : (
+            <div className="rangee">
+              <button type="button" className="bouton bouton--principal" onClick={generer}>
+                {etat?.active ? <RefreshCw size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
+                {etat?.active ? 'Créer une nouvelle clé' : 'Créer ma clé'}
+              </button>
+              {etat?.active && (
+                <button type="button" className="bouton bouton--fantome" onClick={revoquer}>
+                  <XCircle size={16} aria-hidden="true" />
+                  Arrêter
+                </button>
+              )}
+            </div>
           )}
-        </div>
-        <Message type="erreur">{erreur}</Message>
-
-        <details open={!etat?.derniere_synchro}>
-          <summary className="liste__titre">Marche à suivre (une seule fois, environ 10 minutes)</summary>
-          <ol className="assistant__liste synchro__etapes">
-            <li>
-              <strong>Ici, dans Cuizinote :</strong> cliquez sur « Activer la synchronisation ». Copiez l&apos;adresse et la
-              valeur de l&apos;en-tête, puis envoyez-les-vous (courriel ou notes) pour les avoir sur votre téléphone.
-            </li>
-            <li>
-              <strong>Dans Samsung Health :</strong> menu, Paramètres, Health Connect. Autorisez le partage des pas et du
-              poids. Sur Android 14 et plus, Health Connect se trouve aussi dans les paramètres du téléphone.
-            </li>
-            <li>
-              <strong>Installez l&apos;application :</strong> elle n&apos;est pas sur le Play Store. Installez d&apos;abord
-              F-Droid (f-droid.org), puis cherchez « Life Dashboard Companion » et installez-la.
-            </li>
-            <li>
-              <strong>Dans Life Dashboard Companion :</strong> onglet Santé, autorisez la lecture des pas et du poids. Ajoutez
-              un webhook avec l&apos;adresse copiée. Dans « Headers » (en-têtes), ajoutez le nom <strong>Authorization</strong> et
-              la valeur qui commence par <strong>Bearer czs_</strong>.
-            </li>
-            <li>
-              <strong>Testez :</strong> appuyez sur « Send test » (Envoyer un test). En rechargeant cette page, la ligne
-              « Dernière réception » doit afficher l&apos;heure du test. C&apos;est terminé : vos pas et votre poids
-              arriveront ensuite automatiquement.
-            </li>
-          </ol>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Collez-la dans Life Dashboard Companion</p>
           <p className="champ__aide">
-            Les pesées de votre balance VeSync arrivent aussi, si l&apos;application VeSync est reliée à Samsung Health ou
-            Health Connect. Clé perdue ? Générez-en une nouvelle et remplacez-la dans l&apos;application.
+            Onglet Santé : autorisez la lecture des pas et du poids. Ajoutez un <strong>webhook</strong> : collez
+            l&apos;adresse. Dans <strong>Headers</strong>, ajoutez le nom <strong>Authorization</strong> et la valeur qui
+            commence par <strong>Bearer czs_</strong>.
           </p>
-        </details>
-      </div>
-    </section>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Testez</p>
+          <p className="champ__aide">
+            Touchez « Send test ». Rechargez cette page : le message vert « Connecté » doit apparaître. C&apos;est fini.
+          </p>
+        </li>
+      </ol>
+      <p className="champ__aide">
+        Balance VeSync : reliez l&apos;application VeSync à Samsung Health ou Health Connect, et vos pesées suivront.
+      </p>
+      <Message type="erreur">{erreur}</Message>
+    </div>
   );
 }

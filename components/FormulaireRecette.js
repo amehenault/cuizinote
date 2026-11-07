@@ -41,6 +41,8 @@ function etatInitial(r = {}) {
     glucides_portion: texte(r.glucides_portion),
     lipides_portion: texte(r.lipides_portion),
     nutrition_manuelle: Boolean(r.nutrition_manuelle),
+    // Publiée dans la communauté par défaut
+    publiee: r.publiee ?? true,
     ingredients: (r.ingredients?.length ? r.ingredients : [{ texte: '' }]).map((i) => ({
       texte: i.texte || '',
       aliment_id: i.aliment_id || null,
@@ -207,6 +209,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
         glucides_portion: versNombre(r.glucides_portion),
         lipides_portion: versNombre(r.lipides_portion),
         nutrition_manuelle: r.nutrition_manuelle,
+        publiee: r.publiee,
         ingredients: r.ingredients
           .filter((i) => i.texte.trim())
           .map((i) => ({
@@ -533,6 +536,14 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
             </label>
           </div>
         </section>
+
+        <label className="champ--case publication">
+          <input type="checkbox" checked={r.publiee} onChange={(e) => maj('publiee', e.target.checked)} />
+          <span>
+            <strong>Publier dans la communauté</strong>
+            <span className="champ__aide"> : les autres membres pourront voir cette recette et l&apos;ajouter à leurs recettes.</span>
+          </span>
+        </label>
 
         <Message type="erreur">{erreur}</Message>
         <div className="formulaire__actions">

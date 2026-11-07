@@ -2,37 +2,47 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Apple, Bot, LogOut, Target, UserRound } from 'lucide-react';
+import { Apple, Bot, HeartPulse, LogOut, Smartphone, Target, Trash2, Upload, UserRound } from 'lucide-react';
 import { api } from '@/lib/client';
-import { EntetePage, Message, versNombre } from '@/components/Elements';
+import { Chargement, EntetePage, Message } from '@/components/Elements';
 import CleWidget from '@/components/CleWidget';
+import GestionCompte from '@/components/GestionCompte';
 import ImportCookmate from '@/components/ImportCookmate';
+import ObjectifCalorique from '@/components/ObjectifCalorique';
+import SuppressionCompte from '@/components/SuppressionCompte';
 import SynchroSante from '@/components/SynchroSante';
+
+const SECTIONS = [
+  { id: 'compte', titre: 'Gestion du compte', Icone: UserRound },
+  { id: 'objectif', titre: 'Objectif calorique', Icone: Target },
+  { id: 'samsung', titre: 'Samsung Health', Icone: HeartPulse },
+  { id: 'widget', titre: 'Widget Android', Icone: Smartphone },
+  { id: 'importation', titre: 'Importation', Icone: Upload },
+  { id: 'deconnexion', titre: 'Déconnexion', Icone: LogOut },
+  { id: 'suppression', titre: 'Suppression du compte', Icone: Trash2 },
+];
+
+function Section({ id, children, danger = false, aide }) {
+  const { titre, Icone } = SECTIONS.find((s) => s.id === id);
+  return (
+    <section id={id} className={`carte parametres__section${danger ? ' parametres__section--danger' : ''}`}>
+      <div className="carte__entete">
+        <h2 className="carte__titre"><Icone size={18} aria-hidden="true" />{titre}</h2>
+        {aide}
+      </div>
+      <div className="carte__corps">{children}</div>
+    </section>
+  );
+}
 
 export default function PageParametres() {
   const [compte, setCompte] = useState(null);
-  const [objectif, setObjectif] = useState('');
-  const [message, setMessage] = useState({ type: 'info', texte: '' });
+  const [erreur, setErreur] = useState('');
 
+  const charger = () => api('/api/compte').then(setCompte).catch((e) => setErreur(e.message));
   useEffect(() => {
-    api('/api/compte')
-      .then((u) => {
-        setCompte(u);
-        setObjectif(u.objectif_kcal ? String(u.objectif_kcal) : '');
-      })
-      .catch((e) => setMessage({ type: 'erreur', texte: e.message }));
+    charger();
   }, []);
-
-  async function enregistrerObjectif(e) {
-    e.preventDefault();
-    const n = versNombre(objectif);
-    try {
-      await api('/api/compte', { methode: 'PATCH', corps: { objectif_kcal: n ? Math.round(n) : null } });
-      setMessage({ type: 'succes', texte: 'Objectif calorique enregistré.' });
-    } catch (err) {
-      setMessage({ type: 'erreur', texte: err.message });
-    }
-  }
 
   async function deconnecter() {
     await api('/api/auth/deconnexion', { methode: 'POST' }).catch(() => {});
@@ -41,60 +51,60 @@ export default function PageParametres() {
 
   return (
     <div className="pile pile--large">
-      <EntetePage titre="Paramètres" sousTitre="Votre compte, vos objectifs et vos appareils connectés" />
-      <Message type={message.type}>{message.texte}</Message>
+      <EntetePage titre="Paramètres" sousTitre="Votre compte, votre objectif et vos appareils" />
 
-      <section className="carte">
-        <div className="carte__entete">
-          <h2 className="carte__titre"><UserRound size={18} aria-hidden="true" />Mon compte</h2>
-        </div>
-        <div className="carte__corps">
-          {compte && (
-            <div>
-              <p className="liste__titre">{compte.nom}</p>
-              <p className="liste__detail">{compte.courriel}</p>
-            </div>
-          )}
-          <div>
-            <button type="button" className="bouton bouton--secondaire" onClick={deconnecter}>
-              <LogOut size={16} aria-hidden="true" />
-              Se déconnecter
-            </button>
-          </div>
-        </div>
-      </section>
+      <nav className="parametres__sommaire" aria-label="Sections des paramètres">
+        {SECTIONS.map(({ id, titre, Icone }) => (
+          <a key={id} href={`#${id}`} className="etiquette etiquette--bouton etiquette--neutre">
+            <Icone size={14} aria-hidden="true" />
+            {titre}
+          </a>
+        ))}
+      </nav>
 
-      <section className="carte">
-        <div className="carte__entete">
-          <h2 className="carte__titre"><Target size={18} aria-hidden="true" />Objectif calorique quotidien</h2>
-        </div>
-        <form className="carte__corps" onSubmit={enregistrerObjectif}>
-          <p className="champ__aide">Utilisé dans le planificateur et l&apos;accueil pour comparer vos repas à votre objectif.</p>
+      <Message type="erreur">{erreur}</Message>
+      {!compte && !erreur && <Chargement />}
+
+      {compte && (
+        <>
+          <Section id="compte">
+            <GestionCompte compte={compte} onChange={charger} />
+          </Section>
+
+          <Section
+            id="objectif"
+            aide={compte.objectif_kcal ? <span className="etiquette">{compte.objectif_kcal} kcal / jour</span> : null}
+          >
+            <ObjectifCalorique key={`${compte.objectif_mode}-${compte.objectif_manuel}`} compte={compte} onChange={charger} />
+          </Section>
+        </>
+      )}
+
+      <Section id="samsung">
+        <SynchroSante />
+      </Section>
+
+      <Section id="widget">
+        <CleWidget />
+      </Section>
+
+      <Section id="importation">
+        <ImportCookmate />
+        <div className="pile pile--serre">
+          <p className="liste__titre">Pas et poids (fichiers CSV)</p>
+          <p className="champ__aide">
+            Export Samsung Health ou VeSync : importez le fichier dans la page Santé.
+          </p>
           <div className="rangee">
-            <input
-              className="champ__saisie champ__saisie--court"
-              inputMode="numeric"
-              placeholder="Ex. : 1800"
-              value={objectif}
-              onChange={(e) => setObjectif(e.target.value)}
-              aria-label="Objectif en kcal"
-            />
-            <span className="champ__aide">kcal par jour</span>
-            <button type="submit" className="bouton bouton--principal">Enregistrer</button>
+            <Link href="/sante" className="bouton bouton--secondaire">
+              <HeartPulse size={16} aria-hidden="true" />
+              Aller à Santé
+            </Link>
           </div>
-        </form>
-      </section>
-
-      <SynchroSante />
-
-      <CleWidget />
-
-      <ImportCookmate />
+        </div>
+      </Section>
 
       <section className="carte">
-        <div className="carte__entete">
-          <h2 className="carte__titre">Autres outils</h2>
-        </div>
         <div className="carte__corps">
           <div className="rangee">
             <Link href="/aliments" className="bouton bouton--secondaire">
@@ -108,6 +118,20 @@ export default function PageParametres() {
           </div>
         </div>
       </section>
+
+      <Section id="deconnexion">
+        <p className="champ__aide">Seul cet appareil est déconnecté ; vos autres appareils restent connectés.</p>
+        <div>
+          <button type="button" className="bouton bouton--secondaire" onClick={deconnecter}>
+            <LogOut size={16} aria-hidden="true" />
+            Se déconnecter
+          </button>
+        </div>
+      </Section>
+
+      <Section id="suppression" danger>
+        <SuppressionCompte />
+      </Section>
     </div>
   );
 }

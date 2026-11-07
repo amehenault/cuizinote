@@ -13,6 +13,7 @@ import {
   Refrigerator,
   Settings,
   Apple,
+  UsersRound,
 } from 'lucide-react';
 import { api } from '@/lib/client';
 
@@ -21,6 +22,7 @@ import { api } from '@/lib/client';
 const LIENS = [
   { href: '/', libelle: 'Accueil', Icone: LayoutDashboard },
   { href: '/recettes', libelle: 'Recettes', Icone: BookOpen },
+  { href: '/communaute', libelle: 'Communauté', Icone: UsersRound, bureau: true },
   { href: '/planificateur', libelle: 'Semaine', Icone: CalendarDays },
   { href: '/inventaire', libelle: 'Inventaire', Icone: Refrigerator },
   { href: '/aliments', libelle: 'Aliments', Icone: Apple, bureau: true },

@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Copy, KeyRound, RefreshCw, Smartphone, XCircle } from 'lucide-react';
+import { Copy, Download, KeyRound, RefreshCw, XCircle } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Message } from './Elements';
+
+const APK = 'https://github.com/amehenault/widget-cuizinote/releases/latest/download/widget-cuizinote.apk';
 
 /** Clé à coller dans l'application Android « Widget Cuizinote ». */
 export default function CleWidget() {
@@ -18,7 +20,7 @@ export default function CleWidget() {
   }, []);
 
   async function generer() {
-    if (etat?.active && !window.confirm('Générer une nouvelle clé ? Le widget devra recevoir la nouvelle.')) return;
+    if (etat?.active && !window.confirm('Créer une nouvelle clé ? Il faudra la recoller dans le widget.')) return;
     try {
       setCle((await api('/api/widget/cle', { methode: 'POST' })).cle);
       setCopie(false);
@@ -29,63 +31,85 @@ export default function CleWidget() {
   }
 
   async function revoquer() {
-    if (!window.confirm('Révoquer la clé ? Le widget cessera de s\'afficher.')) return;
+    if (!window.confirm('Désactiver le widget ? Il cessera de se mettre à jour.')) return;
     await api('/api/widget/cle', { methode: 'DELETE' }).catch((e) => setErreur(e.message));
     setCle('');
     charger();
   }
 
   return (
-    <section className="carte">
-      <div className="carte__entete">
-        <h2 className="carte__titre"><Smartphone size={18} aria-hidden="true" />Widget Android</h2>
-        {etat?.active && <span className="etiquette">Actif</span>}
-      </div>
-      <div className="carte__corps">
-        <p className="champ__aide">
-          Affichez vos calories mangées aujourd&apos;hui sur l&apos;écran d&apos;accueil de votre téléphone. Le widget ne peut
-          que lire ce total : il ne modifie rien.
-        </p>
-        {etat?.dernier_acces && (
+    <div className="pile">
+      <p className="champ__aide">
+        Vos calories du jour sur l&apos;écran d&apos;accueil de votre téléphone Android. <strong>Faites ces étapes sur le
+        téléphone</strong>, dans Cuizinote ouvert dans le navigateur.
+      </p>
+      {etat?.active && (
+        <Message type="succes">
+          Widget actif.
+          {etat.dernier_acces
+            ? ` Dernière mise à jour : ${new Date(etat.dernier_acces).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })}.`
+            : ' Il ne s\'est pas encore connecté.'}
+        </Message>
+      )}
+
+      <ol className="etapes">
+        <li className="etapes__element">
+          <p className="etapes__titre">Téléchargez l&apos;application</p>
+          <a className="bouton bouton--secondaire" href={APK} rel="noopener noreferrer">
+            <Download size={16} aria-hidden="true" />
+            Télécharger le widget (APK)
+          </a>
           <p className="champ__aide">
-            Dernière mise à jour du widget : {new Date(etat.dernier_acces).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })}
+            Ouvrez le fichier téléchargé et touchez « Installer ». Si Android bloque : « Paramètres », puis autorisez
+            l&apos;installation depuis ce navigateur.
           </p>
-        )}
-        {cle && (
-          <div className="pile pile--serre">
-            <Message type="alerte">Copiez la clé maintenant : elle ne sera plus affichée.</Message>
-            <div className="champ__groupe">
-              <input className="champ__saisie" readOnly value={cle} onFocus={(e) => e.target.select()} aria-label="Clé du widget" />
-              <button type="button" className="bouton bouton--secondaire" onClick={() => navigator.clipboard.writeText(cle).then(() => setCopie(true)).catch(() => {})}>
-                <Copy size={16} aria-hidden="true" />
-                {copie ? 'Copié' : 'Copier'}
-              </button>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Copiez votre clé</p>
+          {cle ? (
+            <div className="pile pile--serre">
+              <div className="champ__groupe">
+                <input className="champ__saisie" readOnly value={cle} onFocus={(e) => e.target.select()} aria-label="Clé du widget" />
+                <button type="button" className="bouton bouton--principal" onClick={() => navigator.clipboard.writeText(cle).then(() => setCopie(true)).catch(() => {})}>
+                  <Copy size={16} aria-hidden="true" />
+                  {copie ? 'Copiée' : 'Copier'}
+                </button>
+              </div>
+              <p className="champ__aide">Elle ne sera plus affichée : collez-la tout de suite (étape 3).</p>
             </div>
-          </div>
-        )}
-        <div className="rangee">
-          <button type="button" className="bouton bouton--principal" onClick={generer}>
-            {etat?.active ? <RefreshCw size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
-            {etat?.active ? 'Nouvelle clé' : 'Créer la clé du widget'}
-          </button>
-          {etat?.active && (
-            <button type="button" className="bouton bouton--fantome" onClick={revoquer}>
-              <XCircle size={16} aria-hidden="true" />
-              Révoquer
-            </button>
+          ) : (
+            <div className="rangee">
+              <button type="button" className="bouton bouton--principal" onClick={generer}>
+                {etat?.active ? <RefreshCw size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
+                {etat?.active ? 'Créer une nouvelle clé' : 'Créer ma clé'}
+              </button>
+              {etat?.active && (
+                <button type="button" className="bouton bouton--fantome" onClick={revoquer}>
+                  <XCircle size={16} aria-hidden="true" />
+                  Désactiver
+                </button>
+              )}
+            </div>
           )}
-        </div>
-        <details>
-          <summary className="champ__aide">Comment installer le widget ?</summary>
-          <ol className="assistant__liste synchro__etapes">
-            <li>Sur votre téléphone, installez l&apos;application « Widget Cuizinote » (fichier APK fourni).</li>
-            <li>Ici, touchez « Créer la clé du widget » et copiez la clé.</li>
-            <li>Ouvrez l&apos;application Widget Cuizinote, collez la clé et touchez « Enregistrer ».</li>
-            <li>Sur l&apos;écran d&apos;accueil : appui long, Widgets, Cuizinote, puis glissez le widget où vous voulez.</li>
-          </ol>
-        </details>
-        <Message type="erreur">{erreur}</Message>
-      </div>
-    </section>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Collez la clé dans l&apos;application</p>
+          <p className="champ__aide">Ouvrez « Widget Cuizinote », collez la clé, touchez « Enregistrer ».</p>
+        </li>
+        <li className="etapes__element">
+          <p className="etapes__titre">Ajoutez le widget à l&apos;écran d&apos;accueil</p>
+          <p className="champ__aide">
+            Appui long sur un espace vide de l&apos;écran, « Widgets », « Widget Cuizinote », puis glissez-le. Touchez-le
+            pour le mettre à jour.
+          </p>
+          <p className="champ__aide">
+            Sur Samsung : Paramètres, Applications, Widget Cuizinote, Batterie, « Non restreinte », sinon il ne se met pas à
+            jour tout seul.
+          </p>
+        </li>
+      </ol>
+      <Message type="erreur">{erreur}</Message>
+    </div>
   );
 }
+

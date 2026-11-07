@@ -152,6 +152,9 @@ export default function PageRecette({ params }) {
         {recette.temps_cuisson > 0 && <span className="carte-recette__info"><Flame size={16} aria-hidden="true" />Cuisson {recette.temps_cuisson} min</span>}
         {temps > 0 && <span className="carte-recette__info">Total {temps} min</span>}
         {recette.note > 0 && <Etoiles valeur={recette.note} />}
+        <span className={`etiquette${recette.publiee ? ' etiquette--succes' : ' etiquette--neutre'}`}>
+          {recette.publiee ? 'Publiée dans la communauté' : 'Privée'}
+        </span>
       </div>
 
       {recette.etiquettes.length > 0 && (

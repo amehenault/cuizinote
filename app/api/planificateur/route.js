@@ -21,7 +21,7 @@ export const POST = route(async ({ requete, utilisateur }) => {
     if (!r) throw new ErreurHttp(400, 'Recette invalide');
   }
   if (d.aliment_id) {
-    const a = await q1('SELECT 1 FROM aliments WHERE id = $1 AND utilisateur_id = $2', [d.aliment_id, utilisateur.id]);
+    const a = await q1('SELECT 1 FROM aliments WHERE id = $1', [d.aliment_id]);
     if (!a) throw new ErreurHttp(400, 'Aliment invalide');
   }
   const ligne = await q1(

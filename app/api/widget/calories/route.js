@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { q, q1 } from '@/lib/db';
+import { avecObjectif, COLONNES_PROFIL } from '@/lib/auth';
 import { ErreurHttp, ok, route } from '@/lib/http';
 import { adresseIp, limiter } from '@/lib/limite';
 
@@ -16,9 +17,11 @@ export const GET = route(async ({ requete }) => {
     await limiter(`widget-ip:${ip}`, 30, 3600);
     throw new ErreurHttp(401, 'Clé absente ou invalide');
   }
-  const utilisateur = await q1('SELECT id, objectif_kcal FROM utilisateurs WHERE jeton_widget = $1', [
-    createHash('sha256').update(cle).digest('hex'),
-  ]);
+  const utilisateur = avecObjectif(
+    await q1(`SELECT ${COLONNES_PROFIL} FROM utilisateurs u WHERE u.jeton_widget = $1`, [
+      createHash('sha256').update(cle).digest('hex'),
+    ])
+  );
   if (!utilisateur) {
     await limiter(`widget-ip:${ip}`, 30, 3600);
     throw new ErreurHttp(401, 'Clé absente ou invalide');

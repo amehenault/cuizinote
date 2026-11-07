@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Save } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Message, versNombre } from './Elements';
+import TeleversementImage from './TeleversementImage';
 
 // Nutriments stockés en grammes pour 100 g. Unité affichée par défaut comme sur une étiquette
 // canadienne : grammes pour les macronutriments, milligrammes pour le sodium.
@@ -52,6 +53,8 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
       NUTRIMENTS.map(([cle, , unite]) => [cle, initialNutriment(depuis100(initial[cle], baseInitiale, initial.portion_g), unite)])
     )
   );
+  const [imageId, setImageId] = useState(initial.image_id || null);
+  const [imageUrl, setImageUrl] = useState(initial.image_url || null);
   const [erreur, setErreur] = useState('');
   const [erreurPortion, setErreurPortion] = useState(false);
   const champPortion = useRef(null);
@@ -106,7 +109,8 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
         portion_texte: valeurs.portion_texte.trim() || null,
         portion_g: portionG,
         kcal_100g: vers100(versNombre(valeurs.kcal), base, portionG),
-        image_url: initial.image_url || null,
+        image_url: imageUrl,
+        image_id: imageId,
         // Ancien champ « sel » (n'est plus affiché) : conservé tel quel
         sel_100g: initial.sel_100g ?? null,
         ...Object.fromEntries(
@@ -134,6 +138,21 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
 
   return (
     <form className="formulaire" onSubmit={soumettre}>
+      <div className="champ">
+        <span className="champ__libelle">Photo</span>
+        {!imageId && imageUrl ? (
+          <div className="rangee">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="aliment__vignette aliment__vignette--grande" src={imageUrl} alt="" referrerPolicy="no-referrer" />
+            <span className="champ__aide">Image d&apos;Open Food Facts.</span>
+            <button type="button" className="bouton bouton--fantome bouton--petit" onClick={() => setImageUrl(null)}>
+              Remplacer par ma photo
+            </button>
+          </div>
+        ) : (
+          <TeleversementImage imageId={imageId} onChange={setImageId} alt="Photo de l'aliment" compact />
+        )}
+      </div>
       <div className="formulaire__ligne">
         <label className="champ">
           <span className="champ__libelle">Nom</span>

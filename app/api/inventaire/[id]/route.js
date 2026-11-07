@@ -7,7 +7,7 @@ export const PUT = route(async ({ requete, utilisateur, params }) => {
   const i = await lireCorps(requete, schemaInventaire);
   const ligne = await q1(
     `UPDATE inventaire SET emplacement=$1, nom=$2,
-            aliment_id=(SELECT id FROM aliments WHERE id = $3 AND utilisateur_id = $8),
+            aliment_id=(SELECT id FROM aliments WHERE id = $3),
             quantite=$4, unite=$5, expire_le=$6
       WHERE id=$7 AND utilisateur_id=$8 RETURNING ${COLONNES_INVENTAIRE}`,
     [i.emplacement, i.nom, i.aliment_id, i.quantite, i.unite, i.expire_le, verifierUuid(params.id), utilisateur.id]

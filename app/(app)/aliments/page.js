@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Apple, Check, Pencil, Plus, ScanBarcode, Search, Trash2 } from 'lucide-react';
 import { api } from '@/lib/client';
 import { resumeCalories } from '@/lib/portion';
@@ -8,6 +8,7 @@ import { Chargement, EntetePage, EtatVide, Message, Modale } from '@/components/
 import AjoutParScan from '@/components/AjoutParScan';
 import FicheAliment from '@/components/FicheAliment';
 import FormulaireAliment from '@/components/FormulaireAliment';
+import VignetteAliment from '@/components/VignetteAliment';
 import { trouverEnInventaire } from '@/lib/disponibilite';
 
 export default function PageAliments() {
@@ -17,7 +18,36 @@ export default function PageAliments() {
   const [erreur, setErreur] = useState('');
   const [inventaire, setInventaire] = useState([]);
 
-  const charger = () => api('/api/aliments').then(setAliments).catch((e) => setErreur(e.message));
+  const [traduction, setTraduction] = useState('');
+  const traductionLancee = useRef(false);
+
+  const charger = () =>
+    api('/api/aliments')
+      .then((liste) => {
+        setAliments(liste);
+        // Noms pas encore vérifiés (souvent en anglais) : traduction automatique en français, une fois.
+        if (!traductionLancee.current && liste.some((a) => a.a_traduire)) {
+          traductionLancee.current = true;
+          traduire();
+        }
+      })
+      .catch((e) => setErreur(e.message));
+
+  async function traduire() {
+    setTraduction('Traduction des noms en français...');
+    try {
+      let total = 0;
+      for (let tour = 0; tour < 20; tour += 1) {
+        const r = await api('/api/aliments/traduire', { methode: 'POST' });
+        total += r.traduits;
+        if (!r.restant || (!r.traduits && tour > 0)) break;
+      }
+      setTraduction(total ? `${total} nom${total > 1 ? 's' : ''} traduit${total > 1 ? 's' : ''} en français.` : '');
+      if (total) api('/api/aliments').then(setAliments).catch(() => {});
+    } catch {
+      setTraduction('');
+    }
+  }
   const chargerInventaire = () => api('/api/inventaire').then(setInventaire).catch(() => {});
   useEffect(() => {
     charger();
@@ -41,7 +71,7 @@ export default function PageAliments() {
 
   return (
     <>
-      <EntetePage titre="Banque d'aliments" sousTitre="Valeurs nutritives utilisées pour calculer vos repas">
+      <EntetePage titre="Banque d'aliments" sousTitre="Banque commune à tous les membres : ce que vous ajoutez ou corrigez sert à tout le monde">
         <button type="button" className="bouton bouton--principal" onClick={() => setModale({ type: 'scan' })}>
           <ScanBarcode size={16} aria-hidden="true" />
           Scanner
@@ -66,6 +96,7 @@ export default function PageAliments() {
       </div>
 
       <Message type="erreur">{erreur}</Message>
+      <Message type="info">{traduction}</Message>
       {!aliments && !erreur && <Chargement />}
       {aliments?.length === 0 && (
         <EtatVide Icone={Apple} titre="Votre banque est vide">
@@ -77,12 +108,7 @@ export default function PageAliments() {
           <ul className="liste">
             {filtres.map((a) => (
               <li key={a.id} className="liste__element">
-                {a.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="aliment__vignette" src={a.image_url} alt="" loading="lazy" referrerPolicy="no-referrer" />
-                ) : (
-                  <span className="aliment__vignette aliment__vignette--vide"><Apple size={20} aria-hidden="true" /></span>
-                )}
+                <VignetteAliment aliment={a} />
                 <button type="button" className="liste__principal liste__bouton" onClick={() => setModale({ type: 'fiche', aliment: a })}>
                   <span className="liste__titre">
                     {a.nom}
@@ -103,9 +129,11 @@ export default function PageAliments() {
                   <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => setModale({ type: 'formulaire', aliment: a })} aria-label={`Modifier ${a.nom}`}>
                     <Pencil size={16} aria-hidden="true" />
                   </button>
-                  <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => supprimer(a)} aria-label={`Supprimer ${a.nom}`}>
-                    <Trash2 size={16} aria-hidden="true" />
-                  </button>
+                  {a.mien && (
+                    <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => supprimer(a)} aria-label={`Supprimer ${a.nom}`}>
+                      <Trash2 size={16} aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
               </li>
             ))}

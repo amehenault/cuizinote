@@ -8,6 +8,7 @@ import { EMPLACEMENTS, ajouterJours, debutSemaine, enLb, formaterJour, joursRest
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 import JournalJour from '@/components/JournalJour';
 import MenuSemaine from '@/components/MenuSemaine';
+import CommunauteAccueil from '@/components/CommunauteAccueil';
 
 const SOURCES = {
   samsung: 'Samsung Health',
@@ -70,6 +71,8 @@ export default function PageAccueil() {
           Planifier les repas
         </Link>
       </EntetePage>
+
+      <CommunauteAccueil />
 
       <div className="onglets onglets--principal" role="tablist">
         <button type="button" role="tab" aria-selected={onglet === 'jour'} className={`onglets__bouton${onglet === 'jour' ? ' onglets__bouton--actif' : ''}`} onClick={() => setOnglet('jour')}>

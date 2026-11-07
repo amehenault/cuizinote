@@ -8,8 +8,7 @@ export const GET = route(async ({ utilisateur, params }) => {
   const code = String(params.code || '');
   if (!/^[0-9]{6,14}$/.test(code)) throw new ErreurHttp(400, 'Code-barres invalide');
 
-  const connu = await q1(`SELECT ${COLONNES_ALIMENT} FROM aliments WHERE utilisateur_id = $1 AND code_barre = $2`, [
-    utilisateur.id,
+  const connu = await q1(`SELECT ${COLONNES_ALIMENT} FROM aliments WHERE code_barre = $1`, [
     code,
   ]);
   if (connu) return ok({ provenance: 'banque', aliment: connu });

@@ -7,6 +7,7 @@ import { EMPLACEMENTS, nombreFr, nutriment } from '@/lib/dates';
 import { LIBELLES_EMPLACEMENT, trouverEnInventaire } from '@/lib/disponibilite';
 import { libellePortion } from '@/lib/portion';
 import { Message } from './Elements';
+import VignetteAliment from './VignetteAliment';
 
 /** Fiche d'un aliment : valeurs nutritives, présence dans l'inventaire, ajout à l'épicerie ou à l'inventaire. */
 export default function FicheAliment({ aliment, inventaire, onModifier, onInventaireChange }) {
@@ -47,10 +48,7 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
   return (
     <div className="pile">
       <div className="rangee">
-        {aliment.image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="aliment__vignette" src={aliment.image_url} alt="" referrerPolicy="no-referrer" />
-        )}
+        <VignetteAliment aliment={aliment} grande />
         <div className="liste__principal">
           <p className="liste__titre">{aliment.nom}</p>
           <p className="liste__detail">{[aliment.marque, aliment.code_barre].filter(Boolean).join(' · ')}</p>
@@ -92,7 +90,7 @@ export default function FicheAliment({ aliment, inventaire, onModifier, onInvent
         </button>
         <button type="button" className="bouton bouton--fantome" onClick={onModifier}>
           <Pencil size={16} aria-hidden="true" />
-          Modifier les calories
+          Modifier (photo, calories)
         </button>
       </div>
       <Message type={message.type}>{message.texte}</Message>

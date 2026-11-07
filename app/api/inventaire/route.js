@@ -22,7 +22,7 @@ export const POST = route(async ({ requete, utilisateur }) => {
   const ligne = await q1(
     `INSERT INTO inventaire (utilisateur_id, emplacement, nom, aliment_id, quantite, unite, expire_le)
      VALUES ($1, $2, $3,
-             (SELECT id FROM aliments WHERE id = $4 AND utilisateur_id = $1),
+             (SELECT id FROM aliments WHERE id = $4),
              $5, $6, $7)
      RETURNING ${COLONNES_INVENTAIRE}`,
     [utilisateur.id, i.emplacement, i.nom, i.aliment_id, i.quantite, i.unite, i.expire_le]

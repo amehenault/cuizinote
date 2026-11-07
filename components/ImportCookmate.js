@@ -73,11 +73,9 @@ export default function ImportCookmate() {
   const enCours = progression && progression.faits < progression.total;
 
   return (
-    <section className="carte">
-      <div className="carte__entete">
-        <h2 className="carte__titre"><BookUp size={18} aria-hidden="true" />Importer depuis CookMate</h2>
-      </div>
-      <div className="carte__corps">
+    <div className="pile">
+      <p className="liste__titre">Recettes CookMate (.mcb)</p>
+      <div className="pile">
         <p className="champ__aide">
           Dans CookMate, exportez vos recettes (fichier .mcb), puis choisissez ce fichier ici. Titres, ingrédients,
           étapes, photos, notes, commentaires, catégories et valeurs nutritives sont repris. Pour tout récupérer,
@@ -126,6 +124,6 @@ export default function ImportCookmate() {
         )}
         <Message type={message.type}>{message.texte}</Message>
       </div>
-    </section>
+    </div>
   );
 }
