@@ -103,6 +103,56 @@ function FicheRepasMenu({ repas, jours, onFait }) {
   );
 }
 
+/** Encadré « Menu du jour » (même style que les tuiles Pas et Poids) : évite de défiler jusqu'au bon jour. */
+function MenuDuJour({ repas, objectif, onOuvrir, onPlanifier }) {
+  const total = repas.reduce((s, r) => s + (r.kcal || 0), 0);
+  const moments = MOMENTS.filter((m) => repas.some((r) => r.moment === m.valeur));
+  return (
+    <section className="stat menu-du-jour" aria-label="Menu du jour">
+      <div className="menu-du-jour__entete">
+        <span className="stat__libelle"><Utensils size={16} aria-hidden="true" />Menu du jour</span>
+        {repas.length > 0 && (
+          <span className="stat__note">{nombreFr(total)}{objectif ? ` / ${nombreFr(objectif)}` : ''} kcal</span>
+        )}
+      </div>
+      {repas.length === 0 ? (
+        <div className="menu-du-jour__vide">
+          <span className="stat__note">Rien de planifié aujourd&apos;hui.</span>
+          <button type="button" className="bouton bouton--secondaire bouton--petit" onClick={onPlanifier}>
+            <CalendarPlus size={14} aria-hidden="true" />
+            Planifier
+          </button>
+        </div>
+      ) : (
+        <ul className="menu-du-jour__liste">
+          {moments.map((m) => (
+            <li key={m.valeur} className="menu-du-jour__moment">
+              <span className="menu-du-jour__categorie">{m.libelle}</span>
+              {repas.filter((r) => r.moment === m.valeur).map((r) => (
+                <div key={r.id} className={`semaine__repas${r.mange ? ' semaine__repas--mange' : ''}`}>
+                  <button type="button" className="semaine__repas-nom" onClick={() => onOuvrir(r)}>
+                    {r.recette_titre || r.aliment_nom || r.libelle}
+                  </button>
+                  {r.kcal != null && <span className="semaine__repas-kcal">{nombreFr(r.kcal)}</span>}
+                  <button
+                    type="button"
+                    className={`semaine__manger${r.mange ? ' semaine__manger--fait' : ''}`}
+                    onClick={() => onOuvrir(r)}
+                    aria-label={r.mange ? 'Déjà mangé' : `J'ai mangé ${r.recette_titre || r.aliment_nom || r.libelle}`}
+                    title={r.mange ? 'Déjà mangé' : 'Je viens de le manger'}
+                  >
+                    {r.mange ? <Check size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
+                  </button>
+                </div>
+              ))}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /** Menu de la semaine : 7 jours x 6 catégories, aujourd'hui encadré. */
 export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
   const [debut, setDebut] = useState(() => debutInitial || debutSemaine());
@@ -116,8 +166,13 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
   const aujourdhui = versIso();
   const jours = useMemo(() => Array.from({ length: 7 }, (_, i) => ajouterJours(debut, i)), [debut]);
 
+  const [repasAujourdhui, setRepasAujourdhui] = useState([]);
+
   const charger = useCallback(() => {
     api(`/api/planificateur?debut=${debut}&fin=${fin}`).then(setRepas).catch((e) => setErreur(e.message));
+    // Le menu du jour reste visible même quand on regarde une autre semaine
+    const auj = versIso();
+    api(`/api/planificateur?debut=${auj}&fin=${auj}`).then(setRepasAujourdhui).catch(() => {});
   }, [debut, fin]);
 
   useEffect(() => {
@@ -139,6 +194,12 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
 
   return (
     <div className="pile">
+      <MenuDuJour
+        repas={repasAujourdhui}
+        objectif={objectif}
+        onOuvrir={setFiche}
+        onPlanifier={() => setAjout({ jour: aujourdhui, moment: 'souper' })}
+      />
       <div className="rangee rangee--espacee">
         <h2>
           Semaine du {formaterJour(debut, { day: 'numeric', month: 'long' })} au {formaterJour(fin, { day: 'numeric', month: 'long' })}

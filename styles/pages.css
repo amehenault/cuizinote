@@ -1070,3 +1070,42 @@ button.semaine__repas-nom:hover {
   width: 4.5rem;
   text-align: center;
 }
+
+/* ==========================================================================
+   Bloc : menu-du-jour (encadré en haut du menu de la semaine)
+   ========================================================================== */
+.menu-du-jour {
+  gap: var(--espace-3);
+}
+
+.menu-du-jour__entete,
+.menu-du-jour__vide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-2);
+}
+
+.menu-du-jour__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--espace-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-du-jour__moment {
+  display: grid;
+  gap: var(--espace-1);
+  align-content: start;
+}
+
+.menu-du-jour__categorie {
+  font-size: var(--taille-xs);
+  font-weight: 600;
+  color: var(--couleur-texte-attenue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
