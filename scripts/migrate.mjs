@@ -5,6 +5,11 @@ import { readFile } from 'node:fs/promises';
 import { neon } from '@neondatabase/serverless';
 
 const url = process.env.DATABASE_URL;
+if (!url && process.argv.includes('--si-possible')) {
+  // Build sans base de données (ex. : poste local) : on construit quand même.
+  console.log('DATABASE_URL absent : schéma non appliqué.');
+  process.exit(0);
+}
 if (!url) {
   console.error('DATABASE_URL est manquant (fichier .env ou variable d\'environnement).');
   process.exit(1);

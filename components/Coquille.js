@@ -21,7 +21,7 @@ import { api } from '@/lib/client';
 // sont accessibles par des boutons dans les pages (Inventaire, Recettes, Accueil).
 const LIENS = [
   { href: '/', libelle: 'Accueil', Icone: LayoutDashboard },
-  { href: '/recettes', libelle: 'Recettes', Icone: BookOpen },
+  { href: '/recettes', libelle: 'Recettes', Icone: BookOpen, section: ['/assistant', '/communaute', '/aliments'] },
   { href: '/communaute', libelle: 'Communauté', Icone: UsersRound, bureau: true },
   { href: '/planificateur', libelle: 'Semaine', Icone: CalendarDays },
   { href: '/inventaire', libelle: 'Inventaire', Icone: Refrigerator },
@@ -47,13 +47,15 @@ export default function Coquille({ nom, children }) {
           Cuizinote
         </Link>
         <ul className="nav__liste">
-          {LIENS.map(({ href, libelle, Icone, bureau }) => {
+          {LIENS.map(({ href, libelle, Icone, bureau, section }) => {
             const actif = href === '/' ? chemin === '/' : chemin.startsWith(href);
+            // Sur téléphone, « Recettes » reste surligné dans ses sous-pages (Assistant, Communauté, Aliments).
+            const dansSection = !actif && section?.some((s) => chemin.startsWith(s));
             return (
               <li key={href} className={`nav__element${bureau ? ' nav__element--bureau' : ''}`}>
                 <Link
                   href={href}
-                  className={`nav__lien${actif ? ' nav__lien--actif' : ''}`}
+                  className={`nav__lien${actif ? ' nav__lien--actif' : ''}${dansSection ? ' nav__lien--section' : ''}`}
                   aria-current={actif ? 'page' : undefined}
                 >
                   <Icone size={20} aria-hidden="true" />

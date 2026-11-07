@@ -258,3 +258,10 @@ ALTER TABLE aliments ADD COLUMN IF NOT EXISTS image_id uuid REFERENCES images(id
 
 -- Traduction automatique des noms en français : date du dernier passage (null = à vérifier)
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS traduit_le timestamptz;
+
+-- Format du contenant complet (ex. : 893 ml, 400 g), différent de la portion pour les calories.
+-- Sert de quantité par défaut dans l'inventaire (1 × 893 ml).
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_qte numeric(10,2);
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_unite text;
+ALTER TABLE aliments DROP CONSTRAINT IF EXISTS aliments_contenant_unite_check;
+ALTER TABLE aliments ADD CONSTRAINT aliments_contenant_unite_check CHECK (contenant_unite IN ('g', 'ml'));

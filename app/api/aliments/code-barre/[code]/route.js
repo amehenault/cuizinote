@@ -1,4 +1,4 @@
-import { q1 } from '@/lib/db';
+import { q, q1 } from '@/lib/db';
 import { ErreurHttp, ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
 import { produitParCodeBarre } from '@/lib/openfoodfacts';
@@ -11,7 +11,22 @@ export const GET = route(async ({ utilisateur, params }) => {
   const connu = await q1(`SELECT ${COLONNES_ALIMENT} FROM aliments WHERE code_barre = $1`, [
     code,
   ]);
-  if (connu) return ok({ provenance: 'banque', aliment: connu });
+  if (connu) {
+    // Produit scanné avant l'ajout du format du contenant : on le complète une fois avec Open Food Facts.
+    if (connu.contenant_qte == null) {
+      const produit = await produitParCodeBarre(code).catch(() => null);
+      if (produit?.contenant_qte) {
+        await q('UPDATE aliments SET contenant_qte = $1, contenant_unite = $2 WHERE id = $3', [
+          produit.contenant_qte,
+          produit.contenant_unite,
+          connu.id,
+        ]);
+        connu.contenant_qte = produit.contenant_qte;
+        connu.contenant_unite = produit.contenant_unite;
+      }
+    }
+    return ok({ provenance: 'banque', aliment: connu });
+  }
 
   await limiter(`code-barre:${utilisateur.id}`, 120, 3600);
   const produit = await produitParCodeBarre(code);

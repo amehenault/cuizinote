@@ -9,6 +9,7 @@ import AjoutParScan from '@/components/AjoutParScan';
 import FicheAliment from '@/components/FicheAliment';
 import FormulaireAliment from '@/components/FormulaireAliment';
 import VignetteAliment from '@/components/VignetteAliment';
+import OngletsRecettes from '@/components/OngletsRecettes';
 import { trouverEnInventaire } from '@/lib/disponibilite';
 
 export default function PageAliments() {
@@ -71,6 +72,7 @@ export default function PageAliments() {
 
   return (
     <>
+      <OngletsRecettes />
       <EntetePage titre="Banque d'aliments" sousTitre="Banque commune à tous les membres : ce que vous ajoutez ou corrigez sert à tout le monde">
         <button type="button" className="bouton bouton--principal" onClick={() => setModale({ type: 'scan' })}>
           <ScanBarcode size={16} aria-hidden="true" />

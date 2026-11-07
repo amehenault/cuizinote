@@ -27,11 +27,11 @@ export const PUT = route(async ({ requete, utilisateur, params }) => {
   const ligne = await q1(
     `UPDATE aliments SET nom=$1, marque=$2, code_barre=$3, kcal_100g=$4, proteines_100g=$5, glucides_100g=$6,
             lipides_100g=$7, fibres_100g=$8, sucres_100g=$9, sel_100g=$10, portion_g=$11, image_url=$12, unite=$14,
-            portion_texte=$15, sodium_100g=$16, image_id=$17, traduit_le=now()
+            portion_texte=$15, sodium_100g=$16, image_id=$17, contenant_qte=$19, contenant_unite=$20, traduit_le=now()
       WHERE id=$13 RETURNING ${COLONNES_ALIMENT}, (utilisateur_id = $18) AS mien`,
     [a.nom, a.marque, a.code_barre, a.kcal_100g, a.proteines_100g, a.glucides_100g, a.lipides_100g,
       a.fibres_100g, a.sucres_100g, a.sel_100g, a.portion_g, a.image_url, id, a.unite, a.portion_texte, a.sodium_100g,
-      a.image_id, utilisateur.id]
+      a.image_id, utilisateur.id, a.contenant_qte, a.contenant_qte ? a.contenant_unite || a.unite : null]
   );
   return ok(ligne);
 });

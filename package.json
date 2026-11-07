@@ -5,7 +5,7 @@
   "description": "Cuizinote - recettes, nutrition, inventaire, planification de repas et suivi santé",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate.mjs --si-possible && next build",
     "start": "next start",
     "db:migrate": "node scripts/migrate.mjs"
   },

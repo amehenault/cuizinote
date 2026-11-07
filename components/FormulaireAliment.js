@@ -46,6 +46,8 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
     unite: initial.unite || 'g',
     portion_texte: initial.portion_texte || '',
     portion_g: versTexte(initial.portion_g, 1),
+    contenant_qte: versTexte(initial.contenant_qte, 2),
+    contenant_unite: initial.contenant_unite || initial.unite || 'g',
     kcal: versTexte(depuis100(initial.kcal_100g, baseInitiale, initial.portion_g), 0),
   }));
   const [nutriments, setNutriments] = useState(() =>
@@ -108,6 +110,8 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
         unite: valeurs.unite,
         portion_texte: valeurs.portion_texte.trim() || null,
         portion_g: portionG,
+        contenant_qte: versNombre(valeurs.contenant_qte),
+        contenant_unite: versNombre(valeurs.contenant_qte) ? valeurs.contenant_unite : null,
         kcal_100g: vers100(versNombre(valeurs.kcal), base, portionG),
         image_url: imageUrl,
         image_id: imageId,
@@ -195,6 +199,27 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
             </select>
           </div>
           <span className="champ__aide">Sert seulement au calcul ; indiqué entre parenthèses sur l&apos;étiquette.</span>
+        </div>
+      </div>
+
+      <div className="formulaire__ligne">
+        <div className="champ">
+          <span className="champ__libelle">Format du contenant</span>
+          <div className="champ__groupe">
+            <input
+              className="champ__saisie"
+              inputMode="decimal"
+              value={valeurs.contenant_qte}
+              onChange={changer('contenant_qte')}
+              aria-label="Format du contenant"
+              aria-describedby="aide-contenant"
+            />
+            <select className="champ__saisie champ__saisie--unite" value={valeurs.contenant_unite} onChange={changer('contenant_unite')} aria-label="Unité du contenant">
+              <option value="g">g</option>
+              <option value="ml">ml</option>
+            </select>
+          </div>
+          <span className="champ__aide" id="aide-contenant">Le paquet complet (ex. : 893 ml). Quantité par défaut dans l&apos;inventaire.</span>
         </div>
       </div>
 

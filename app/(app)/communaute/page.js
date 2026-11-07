@@ -5,6 +5,7 @@ import { Search, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, EtatVide, Message } from '@/components/Elements';
 import CarteRecette from '@/components/CarteRecette';
+import OngletsRecettes from '@/components/OngletsRecettes';
 
 export default function PageCommunaute() {
   const [recettes, setRecettes] = useState(null);
@@ -23,6 +24,7 @@ export default function PageCommunaute() {
 
   return (
     <>
+      <OngletsRecettes />
       <EntetePage titre="Communauté" sousTitre="Les recettes partagées par les membres. Ajoutez celles qui vous plaisent à vos recettes." />
 
       <div className="filtres">

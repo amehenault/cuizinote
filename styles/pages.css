@@ -1049,3 +1049,8 @@ button.semaine__repas-nom:hover {
 .assistant__exemple {
   text-transform: none;
 }
+
+/* Onglets de la section Recettes (Mes recettes, Assistant, Communauté, Aliments) : restent visibles */
+.onglets--section .onglets__bouton {
+  text-decoration: none;
+}
