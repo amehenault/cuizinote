@@ -35,10 +35,6 @@ export default function SuppressionCompte() {
 
   return (
     <div className="pile">
-      <p className="champ__aide">
-        Efface pour toujours vos recettes, votre journal, votre inventaire, votre planificateur, vos données santé et vos
-        clés (widget, Samsung Health). Les aliments que vous avez ajoutés restent dans la banque commune.
-      </p>
       <div>
         <button type="button" className="bouton bouton--danger" onClick={() => setOuverte(true)}>
           <Trash2 size={16} aria-hidden="true" />

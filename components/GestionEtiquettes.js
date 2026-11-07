@@ -48,11 +48,7 @@ export default function GestionEtiquettes() {
 
   return (
     <div className="pile">
-      <p className="champ__aide">
-        Pour créer une étiquette, ajoutez-la dans une recette. Ici, vous pouvez les renommer ou les supprimer.
-        Les recettes sont étiquetées automatiquement selon leurs ingrédients, et mises à jour quand vous les modifiez.
-        Les étiquettes ajoutées à la main sont toujours gardées, et celles que vous supprimez ne reviennent pas.
-      </p>
+
       <Message type="erreur">{erreur}</Message>
       {etiquettes && etiquettes.length === 0 && <p className="champ__aide">Aucune étiquette pour l&apos;instant.</p>}
       {etiquettes && etiquettes.length > 0 && (

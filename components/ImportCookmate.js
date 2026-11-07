@@ -76,11 +76,6 @@ export default function ImportCookmate() {
     <div className="pile">
       <p className="liste__titre">Recettes CookMate (.mcb)</p>
       <div className="pile">
-        <p className="champ__aide">
-          Dans CookMate, exportez vos recettes (fichier .mcb), puis choisissez ce fichier ici. Titres, ingrédients,
-          étapes, photos, notes, commentaires, catégories et valeurs nutritives sont repris. Pour tout récupérer,
-          sélectionnez toutes vos recettes dans CookMate avant d&apos;exporter.
-        </p>
         <div>
           <label className="bouton bouton--secondaire">
             <Upload size={16} aria-hidden="true" />
