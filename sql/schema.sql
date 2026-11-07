@@ -286,3 +286,13 @@ ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_upc_le timestamptz;
 -- Calories du journal corrigées à la main : jamais recalculées.
 -- Les autres (recette ou aliment liés) suivent les changements des valeurs nutritives.
 ALTER TABLE journal ADD COLUMN IF NOT EXISTS kcal_manuel boolean NOT NULL DEFAULT false;
+
+-- Verres et tasses de chaque personne (contenance en ml) : proposés quand on ajoute une boisson
+CREATE TABLE IF NOT EXISTS verres (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  utilisateur_id uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  nom            text NOT NULL,
+  ml             numeric(7,2) NOT NULL CHECK (ml > 0 AND ml <= 5000),
+  cree_le        timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS verres_utilisateur_idx ON verres(utilisateur_id);
