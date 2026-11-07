@@ -1,3 +1,4 @@
+import { LIBELLE_CONTENANT_SQL as LIBELLE_SQL } from '@/lib/colonnes';
 import { q } from '@/lib/db';
 import { ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
@@ -12,15 +13,6 @@ const EN_PARALLELE = 4;
 const MES_PRODUITS = `(a.utilisateur_id = $1 OR a.id IN (SELECT aliment_id FROM inventaire WHERE utilisateur_id = $1))`;
 const A_CHERCHER_OFF = `${MES_PRODUITS} AND a.code_barre IS NOT NULL AND a.contenant_qte IS NULL AND a.contenant_verifie_le IS NULL`;
 
-/** Texte « × 893 ml » / « × 1,89 L » calculé en SQL à partir d'un aliment « a ». */
-const LIBELLE_SQL = `'× ' || CASE
-    WHEN a.contenant_qte >= 1000 THEN
-      replace(trim(trailing '.' FROM trim(trailing '0' FROM round(a.contenant_qte / 1000, 2)::text)), '.', ',')
-      || CASE WHEN coalesce(a.contenant_unite, a.unite) = 'ml' THEN ' L' ELSE ' kg' END
-    ELSE
-      replace(trim(trailing '.' FROM trim(trailing '0' FROM round(a.contenant_qte, 2)::text)), '.', ',')
-      || ' ' || coalesce(a.contenant_unite, a.unite)
-  END`;
 
 /**
  * Retire les formats estimés (version précédente) : seules les vraies mesures sont gardées.
@@ -61,6 +53,7 @@ export const POST = route(async ({ utilisateur }) => {
 
   let trouves = 0;
   let erreur = null;
+  const nouveaux = [];
   const parCode = await q(`SELECT a.id, a.code_barre FROM aliments a WHERE ${A_CHERCHER_OFF} ORDER BY a.cree_le LIMIT ${LOT_OFF}`, [u]);
   for (let i = 0; i < parCode.length; i += EN_PARALLELE) {
     const resultats = await Promise.all(
@@ -77,7 +70,10 @@ export const POST = route(async ({ utilisateur }) => {
     );
     for (const { a, p, reussi } of resultats) {
       if (!reussi) continue;
-      if (p?.contenant_qte) trouves += 1;
+      if (p?.contenant_qte) {
+        trouves += 1;
+        nouveaux.push(a.id);
+      }
       await q(
         `UPDATE aliments SET contenant_qte = coalesce(contenant_qte, $2), contenant_unite = coalesce(contenant_unite, $3),
                 contenant_verifie_le = now() WHERE id = $1`,
@@ -85,6 +81,17 @@ export const POST = route(async ({ utilisateur }) => {
       );
     }
   }
+
+  // Format trouvé dans Open Food Facts : appliqué à ses articles liés (1 contenant)
+  const appliques = nouveaux.length
+    ? await q(
+        `UPDATE inventaire i SET quantite = 1, unite = ${LIBELLE_SQL}
+           FROM aliments a
+          WHERE a.id = i.aliment_id AND a.id = ANY($2::uuid[]) AND i.utilisateur_id = $1 AND a.contenant_qte > 0
+          RETURNING i.id`,
+        [u, nouveaux]
+      )
+    : [];
 
   // Quantités vides ou « 1 » sans unité : un contenant complet du produit lié
   const completes = await q(
@@ -99,6 +106,22 @@ export const POST = route(async ({ utilisateur }) => {
 
   const [{ restant }] = await q(`SELECT count(*)::int AS restant FROM aliments a WHERE ${A_CHERCHER_OFF}`, [u]);
 
+  // Passage unique : chaque article lié à un produit de format connu devient « 1 × format »
+  // (la personne ajuste ensuite la quantité). Les formats trouvés plus tard sont appliqués plus haut.
+  const [{ fait }] = await q('SELECT formats_inventaire_le IS NOT NULL AS fait FROM utilisateurs WHERE id = $1', [u]);
+  if (!fait) {
+    const tous = await q(
+      `UPDATE inventaire i SET quantite = 1, unite = ${LIBELLE_SQL}
+         FROM aliments a
+        WHERE a.id = i.aliment_id AND i.utilisateur_id = $1 AND a.contenant_qte > 0
+          AND (i.quantite IS DISTINCT FROM 1 OR i.unite IS DISTINCT FROM ${LIBELLE_SQL})
+        RETURNING i.id`,
+      [u]
+    );
+    await q('UPDATE utilisateurs SET formats_inventaire_le = now() WHERE id = $1', [u]);
+    completes.push(...tous);
+  }
+
   // Articles dont le format reste inconnu, et pourquoi
   const sansFormat = restant
     ? []
@@ -112,5 +135,5 @@ export const POST = route(async ({ utilisateur }) => {
           ORDER BY raison, i.nom LIMIT 100`,
         [u]
       );
-  return ok({ trouves, erreur, quantites: completes.length + uns.length, restant, sansFormat });
+  return ok({ trouves, erreur, quantites: completes.length + uns.length + appliques.length, restant, sansFormat });
 });

@@ -272,3 +272,6 @@ ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_verifie_le timestamptz;
 -- Format estimé par l'IA quand Open Food Facts ne le donne pas (null = pas encore estimé)
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_estime_le timestamptz;
 ALTER TABLE inventaire ADD COLUMN IF NOT EXISTS format_estime_le timestamptz;
+
+-- Passage unique : chaque article de l'inventaire lié à un produit de format connu devient « 1 × format »
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS formats_inventaire_le timestamptz;

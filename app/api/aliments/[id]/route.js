@@ -2,7 +2,7 @@ import { q, q1 } from '@/lib/db';
 import { verifierImage } from '@/lib/images';
 import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 import { schemaAliment } from '@/lib/schemas';
-import { COLONNES_ALIMENT } from '@/lib/colonnes';
+import { COLONNES_ALIMENT, LIBELLE_CONTENANT_SQL } from '@/lib/colonnes';
 
 export const GET = route(async ({ utilisateur, params }) => {
   const ligne = await q1(`SELECT ${COLONNES_ALIMENT}, (utilisateur_id = $2) AS mien FROM aliments WHERE id = $1`, [
@@ -17,7 +17,7 @@ export const GET = route(async ({ utilisateur, params }) => {
 export const PUT = route(async ({ requete, utilisateur, params }) => {
   const id = verifierUuid(params.id);
   const a = await lireCorps(requete, schemaAliment);
-  const actuel = await q1('SELECT image_id FROM aliments WHERE id = $1', [id]);
+  const actuel = await q1('SELECT image_id, contenant_qte::float, contenant_unite FROM aliments WHERE id = $1', [id]);
   if (!actuel) throw new ErreurHttp(404, 'Aliment introuvable');
   await verifierImage(utilisateur.id, a.image_id, actuel.image_id);
   if (a.code_barre) {
@@ -33,6 +33,18 @@ export const PUT = route(async ({ requete, utilisateur, params }) => {
       a.fibres_100g, a.sucres_100g, a.sel_100g, a.portion_g, a.image_url, id, a.unite, a.portion_texte, a.sodium_100g,
       a.image_id, utilisateur.id, a.contenant_qte, a.contenant_qte ? a.contenant_unite || a.unite : null]
   );
+  // Format du contenant entré ou modifié : appliqué aux articles de son inventaire liés à ce produit.
+  // Une quantité déjà en contenants (« 3 × 893 ml ») est gardée ; sinon elle devient 1 contenant.
+  if (ligne.contenant_qte && (ligne.contenant_qte !== actuel.contenant_qte || ligne.contenant_unite !== actuel.contenant_unite)) {
+    await q(
+      `UPDATE inventaire i
+          SET quantite = CASE WHEN i.unite LIKE '× %' AND i.quantite > 0 THEN i.quantite ELSE 1 END,
+              unite = ${LIBELLE_CONTENANT_SQL}
+         FROM aliments a
+        WHERE a.id = i.aliment_id AND a.id = $1 AND i.utilisateur_id = $2`,
+      [id, utilisateur.id]
+    );
+  }
   return ok(ligne);
 });
 
