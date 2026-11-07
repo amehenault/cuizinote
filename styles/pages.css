@@ -983,8 +983,64 @@ button.semaine__repas-nom:hover {
   white-space: nowrap;
 }
 
-@media (max-width: 520px) {
+/* Pas et Poids : toujours 2 colonnes sur téléphone */
+@media (max-width: 759px) {
   .grille--stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espace-3);
   }
+
+  .grille--stats > .stat {
+    padding: var(--espace-3);
+  }
+}
+
+/* Titres des tuiles (Pas, Poids, Communauté) en gras */
+.stat__libelle {
+  font-weight: 700;
+  color: var(--couleur-texte);
+}
+
+.stat__note {
+  display: block;
+  line-height: 1.35;
+}
+
+/* Communauté plus mince : petites cartes, marges réduites */
+.stat.communaute {
+  gap: var(--espace-2);
+  padding: var(--espace-3);
+}
+
+.communaute .bouton--petit {
+  min-height: 0;
+  padding-block: 2px;
+}
+
+.communaute__bande {
+  grid-auto-columns: 140px;
+  gap: var(--espace-2);
+  padding-bottom: var(--espace-1);
+}
+
+.carte-recette--compacte .carte-recette__visuel {
+  aspect-ratio: 4 / 3;
+}
+
+.carte-recette--compacte .carte-recette__corps {
+  gap: 2px;
+  padding: var(--espace-2);
+}
+
+.carte-recette--compacte .carte-recette__titre {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--taille-xs);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.carte-recette--compacte .carte-recette__meta,
+.carte-recette--compacte .etoiles {
+  display: none;
 }

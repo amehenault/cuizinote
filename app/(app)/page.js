@@ -22,28 +22,37 @@ function Sante({ poids, pas, jour }) {
   const moyenne = pas.length ? pas.reduce((s, p) => s + p.nombre, 0) / pas.length : null;
   const dernier = poids[0];
   const ecart = dernier && poids[1] ? dernier.poids_kg - poids[1].poids_kg : null;
+  // Chaque note est découpée en lignes courtes qui tiennent dans une tuile étroite (2 colonnes sur téléphone).
   const notePas = [
     pasDuJour ? SOURCES[pasDuJour.source] || pasDuJour.source : 'Aucune donnée',
     moyenne != null ? `moyenne : ${nombreFr(moyenne)}` : null,
   ];
   const notePoids = dernier
     ? [
-        new Date(dernier.mesure_le).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' }),
         SOURCES[dernier.source] || dernier.source,
-        ecart != null ? `${ecart > 0 ? '+' : ''}${nombreFr(enLb(ecart), 1)} lb` : null,
+        [
+          new Date(dernier.mesure_le).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' }),
+          ecart != null ? `${ecart > 0 ? '+' : ''}${nombreFr(enLb(ecart), 1)} lb` : null,
+        ]
+          .filter(Boolean)
+          .join(' · '),
       ]
     : ['Aucune pesée'];
+  const lignes = (note) =>
+    note.filter(Boolean).map((t) => (
+      <span key={t} className="stat__note">{t}</span>
+    ));
   return (
     <div className="grille grille--stats">
       <Link href="/sante" className="stat">
         <span className="stat__libelle"><Footprints size={16} aria-hidden="true" />Pas</span>
         <span className="stat__valeur">{pasDuJour ? nombreFr(pasDuJour.nombre) : '-'}</span>
-        <span className="stat__note">{notePas.filter(Boolean).join(' · ')}</span>
+        {lignes(notePas)}
       </Link>
       <Link href="/sante" className="stat">
         <span className="stat__libelle"><Scale size={16} aria-hidden="true" />Poids</span>
         <span className="stat__valeur">{dernier ? `${nombreFr(enLb(dernier.poids_kg), 1)} lb` : '-'}</span>
-        <span className="stat__note">{notePoids.filter(Boolean).join(' · ')}</span>
+        {lignes(notePoids)}
       </Link>
     </div>
   );

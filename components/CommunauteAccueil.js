@@ -30,6 +30,7 @@ export default function CommunauteAccueil() {
           <ChevronRight size={14} aria-hidden="true" />
         </Link>
       </div>
+      <p className="stat__note">Recettes partagées avec toute la communauté</p>
       {recettes.length ? (
         <div className="communaute__bande">
           {recettes.map((r) => (
@@ -37,7 +38,7 @@ export default function CommunauteAccueil() {
           ))}
         </div>
       ) : (
-        <p className="champ__aide">Les recettes partagées par les autres membres apparaîtront ici.</p>
+        <p className="stat__note">Aucune recette pour l&apos;instant.</p>
       )}
     </section>
   );
