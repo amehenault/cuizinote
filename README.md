@@ -54,7 +54,7 @@ npm run dev
 
 ## Base de données
 
-Le schéma est dans `sql/schema.sql`. `npm run db:migrate` l'applique ; il peut être relancé sans risque.
+Le schéma est dans `sql/schema.sql`. `npm run db:migrate` l'applique ; il peut être relancé sans risque. Il est aussi appliqué automatiquement à chaque build (`npm run build`, donc à chaque déploiement Vercel) quand `DATABASE_URL` est défini.
 
 ## Santé : VeSync et Samsung Health
 
