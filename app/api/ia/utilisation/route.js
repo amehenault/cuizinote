@@ -3,7 +3,8 @@ import { ok, route } from '@/lib/http';
 
 // Quota gratuit de Google Gemini : partagé par toute l'application, remis à zéro chaque jour à minuit, heure du Pacifique.
 // Google ne permet pas de lire le quota exact : on compte nos propres appels, comparés à GEMINI_LIMITE_JOUR.
-const LIMITE_PAR_DEFAUT = 250;
+// Offre gratuite (AI Studio, nov. 2026) : 20 requêtes par jour pour chacun des 3 modèles Flash utilisés.
+const LIMITE_PAR_DEFAUT = 60;
 
 export const GET = route(async () => {
   const limite = Math.max(Number(process.env.GEMINI_LIMITE_JOUR) || LIMITE_PAR_DEFAUT, 1);
@@ -14,7 +15,7 @@ export const GET = route(async () => {
      )
      SELECT b.debut, b.fin,
             count(a.id) FILTER (WHERE a.statut = 200)::int AS utilisees,
-            coalesce(bool_or(a.statut = 429), false) AS epuise
+            coalesce(max(a.cree_le) FILTER (WHERE a.statut = 999) > coalesce(max(a.cree_le) FILTER (WHERE a.statut = 200), '-infinity'), false) AS epuise
        FROM bornes b LEFT JOIN ia_appels a ON a.cree_le >= b.debut
       GROUP BY b.debut, b.fin`
   );

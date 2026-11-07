@@ -51,8 +51,9 @@ export default function UtilisationIA() {
         (dans {delai(fin.getTime() - Date.now())}).
       </p>
       <p className="champ__aide">
-        Ce quota gratuit de Google est partagé par tous les comptes Cuizinote : assistant, traduction des aliments et étiquetage
-        des recettes. C&apos;est une estimation ; Google ne donne pas le chiffre exact.
+        Ce quota gratuit de Google (environ 20 demandes par jour pour chacun des 3 modèles) est partagé par tous les comptes
+        Cuizinote : assistant, traduction des aliments et étiquetage des recettes. C&apos;est une estimation ; Google
+        n&apos;affiche pas le restant du jour.
       </p>
     </div>
   );

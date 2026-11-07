@@ -21,9 +21,11 @@ export const GET = route(async ({ requete, utilisateur }) => {
       while (Date.now() - debut < 40000) {
         const lot = await recettesAEtiqueter(utilisateur.id, { limite: 10, apres });
         if (!lot.length) return;
-        await limiter(`ia-auto:${utilisateur.id}`, 30, 3600);
+        await limiter(`ia-auto:${utilisateur.id}`, 6, 3600);
         await etiqueterAutomatiquement(utilisateur.id, lot);
         apres = lot.at(-1).id;
+        await new Promise((r) => setTimeout(r, 15000)); // Google : 5 requêtes par minute au maximum
+
       }
     } catch (e) {
       if (e?.statut !== 429) console.error('Étiquetage automatique :', e.message);
