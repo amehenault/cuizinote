@@ -37,10 +37,10 @@ export const POST = route(async ({ requete, utilisateur }) => {
   }
 
   const ligne = await q1(
-    `INSERT INTO journal (utilisateur_id, jour, moment, libelle, recette_id, aliment_id, portions, grammes, kcal)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+    `INSERT INTO journal (utilisateur_id, jour, moment, libelle, recette_id, aliment_id, portions, grammes, kcal, kcal_manuel)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [utilisateur.id, d.jour, d.moment, libelle, d.recette_id, d.recette_id ? null : d.aliment_id, d.portions, grammes,
-      kcal == null ? null : Math.round(kcal)]
+      kcal == null ? null : Math.round(kcal), d.kcal != null]
   );
   return ok(ligne, 201);
 });

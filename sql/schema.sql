@@ -282,3 +282,7 @@ ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_web_le timestamptz;
 -- Format cherché dans UPCitemdb (base de codes-barres) quand Open Food Facts ne le donne pas (null = pas encore cherché).
 -- contenant_web_le (ancienne recherche par l'IA) n'est plus utilisé : ses formats sont retirés.
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS contenant_upc_le timestamptz;
+
+-- Calories du journal corrigées à la main : jamais recalculées.
+-- Les autres (recette ou aliment liés) suivent les changements des valeurs nutritives.
+ALTER TABLE journal ADD COLUMN IF NOT EXISTS kcal_manuel boolean NOT NULL DEFAULT false;

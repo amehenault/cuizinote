@@ -3,6 +3,7 @@ import { verifierImage } from '@/lib/images';
 import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 import { schemaAliment } from '@/lib/schemas';
 import { COLONNES_ALIMENT, LIBELLE_CONTENANT_SQL } from '@/lib/colonnes';
+import { recalculerJournal } from '@/lib/planification';
 
 export const GET = route(async ({ utilisateur, params }) => {
   const ligne = await q1(`SELECT ${COLONNES_ALIMENT}, (utilisateur_id = $2) AS mien FROM aliments WHERE id = $1`, [
@@ -33,6 +34,8 @@ export const PUT = route(async ({ requete, utilisateur, params }) => {
       a.fibres_100g, a.sucres_100g, a.sel_100g, a.portion_g, a.image_url, id, a.unite, a.portion_texte, a.sodium_100g,
       a.image_id, utilisateur.id, a.contenant_qte, a.contenant_qte ? a.contenant_unite || a.unite : null]
   );
+  // Les recettes et le menu se recalculent tout seuls ; le journal (déjà mangé) est mis à jour ici.
+  await recalculerJournal({ alimentId: id });
   // Format du contenant entré ou modifié : appliqué aux articles de son inventaire liés à ce produit.
   // Une quantité déjà en contenants (« 3 × 893 ml ») est gardée ; sinon elle devient 1 contenant.
   if (ligne.contenant_qte && (ligne.contenant_qte !== actuel.contenant_qte || ligne.contenant_unite !== actuel.contenant_unite)) {

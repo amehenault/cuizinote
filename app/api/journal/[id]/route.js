@@ -13,7 +13,9 @@ const schemaModification = z.object({
 export const PATCH = route(async ({ requete, utilisateur, params }) => {
   const d = await lireCorps(requete, schemaModification);
   const ligne = await q1(
+    // Calories changées à la main : elles ne seront plus recalculées (kcal_manuel).
     `UPDATE journal SET kcal = CASE WHEN $1::boolean THEN $2 ELSE kcal END,
+            kcal_manuel = kcal_manuel OR ($1::boolean AND $2::numeric IS DISTINCT FROM round(kcal)),
             moment = coalesce($3, moment), libelle = coalesce($4, libelle)
       WHERE id = $5 AND utilisateur_id = $6 RETURNING id`,
     [d.kcal !== undefined, d.kcal ?? null, d.moment ?? null, d.libelle ?? null, verifierUuid(params.id), utilisateur.id]

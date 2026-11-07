@@ -1,5 +1,6 @@
 import { q } from '@/lib/db';
 import { enregistrerRecette, obtenirRecette } from '@/lib/recettes';
+import { recalculerJournal } from '@/lib/planification';
 import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 import { schemaRecette } from '@/lib/schemas';
 
@@ -11,6 +12,8 @@ export const PUT = route(async ({ requete, utilisateur, params }) => {
   const id = verifierUuid(params.id);
   const donnees = await lireCorps(requete, schemaRecette);
   await enregistrerRecette(utilisateur.id, donnees, id);
+  // Ingrédients, portions ou valeurs changés : les repas déjà mangés de cette recette suivent.
+  await recalculerJournal({ recetteId: id });
   return ok({ id });
 });
 
