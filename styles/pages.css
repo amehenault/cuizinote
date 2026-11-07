@@ -1183,3 +1183,172 @@ details[open] > .parametres__repli .parametres__chevron {
 .choix-verres__detail {
   font-size: var(--taille-xs);
 }
+
+/* Sélecteur de mesure d'un ingrédient (c. à thé, c. à soupe, tasse, manuelle) */
+.mesure {
+  position: relative;
+  min-width: 0;
+}
+
+.mesure__bouton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-2);
+  width: 100%;
+  min-height: 38px;
+  padding: var(--espace-1) var(--espace-3);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  color: var(--couleur-texte);
+  background: var(--couleur-champ);
+  border: 1px solid var(--couleur-bordure-forte);
+  border-radius: var(--rayon-m);
+  cursor: pointer;
+}
+
+.mesure__bouton:hover {
+  border-color: var(--couleur-primaire);
+}
+
+.mesure__bouton[aria-expanded='true'] {
+  border-color: var(--couleur-primaire);
+  box-shadow: 0 0 0 3px var(--couleur-primaire-pale);
+}
+
+.mesure__bouton--manuel {
+  color: var(--couleur-texte-attenue);
+  font-weight: 500;
+}
+
+.mesure__valeur {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espace-2);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mesure__equivalent {
+  font-size: var(--taille-xs);
+  font-weight: 500;
+  color: var(--couleur-texte-attenue);
+}
+
+.mesure__chevron {
+  flex-shrink: 0;
+  color: var(--couleur-texte-attenue);
+  transition: transform 0.15s;
+}
+
+.mesure__bouton[aria-expanded='true'] .mesure__chevron {
+  transform: rotate(180deg);
+}
+
+.mesure__panneau {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: var(--espace-3);
+  background: var(--couleur-champ);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-l);
+  box-shadow: 0 12px 32px rgb(43 27 44 / 0.18);
+}
+
+.mesure__groupe + .mesure__groupe {
+  margin-top: var(--espace-3);
+}
+
+.mesure__titre {
+  margin: 0 0 var(--espace-2);
+  font-size: var(--taille-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--couleur-texte-attenue);
+}
+
+.mesure__grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  gap: 6px;
+}
+
+.mesure__pastille {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 6px 4px;
+  font: inherit;
+  color: var(--couleur-texte);
+  background: var(--couleur-surface);
+  border: 1.5px solid transparent;
+  border-radius: var(--rayon-m);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.mesure__pastille:hover {
+  border-color: var(--couleur-bordure-forte);
+}
+
+.mesure__pastille--actif {
+  color: var(--couleur-texte-inverse);
+  background: var(--couleur-primaire);
+  border-color: var(--couleur-primaire);
+}
+
+.mesure__fraction {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.mesure__ml {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.mesure__manuelle {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  width: 100%;
+  margin-top: var(--espace-3);
+  padding: var(--espace-3);
+  font: inherit;
+  text-align: left;
+  color: var(--couleur-texte);
+  background: transparent;
+  border: 1.5px dashed var(--couleur-bordure-forte);
+  border-radius: var(--rayon-m);
+  cursor: pointer;
+}
+
+.mesure__manuelle:hover,
+.mesure__manuelle--actif {
+  background: var(--couleur-primaire-pale);
+  border-color: var(--couleur-primaire);
+  border-style: solid;
+}
+
+.mesure__manuelle > span {
+  display: grid;
+  flex: 1;
+}
+
+.mesure__detail {
+  font-size: var(--taille-xs);
+  color: var(--couleur-texte-attenue);
+}
+
+.mesure__coche {
+  color: var(--couleur-primaire);
+}

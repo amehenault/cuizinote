@@ -11,7 +11,8 @@ import RechercheAliment from './RechercheAliment';
 import SaisieEtiquettes from './SaisieEtiquettes';
 import TeleversementImage from './TeleversementImage';
 import { resumeCalories } from '@/lib/portion';
-import { GROUPES_MESURES, grammesDeMesure, grammesParMl, libelleMesure, mesureDepuisTexte } from '@/lib/mesures';
+import { grammesDeMesure, grammesParMl, mesureDepuisTexte } from '@/lib/mesures';
+import SelecteurMesure from './SelecteurMesure';
 
 /** Produit lié avec une portion d'étiquette : la quantité est un nombre de portions. */
 const enPortions = (ing) => Boolean(ing.aliment_id && ing.portion_g);
@@ -374,23 +375,13 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                     )}
                     {ing.aliment_id && grammesParMl(ing) ? (
                       <div className="rangee" style={{ flexWrap: 'nowrap', gap: 'var(--espace-1)' }}>
-                        <select
-                          className="champ__saisie champ__saisie--compact"
-                          value={ing.mesure || ''}
-                          onChange={(e) => majIngredient(i, { mesure: e.target.value })}
-                          aria-label={`Mesure de l'ingrédient ${i + 1}`}
-                          title={ing.mesure && enGrammes(ing) != null ? `= ${Math.round(enGrammes(ing))} ${ing.unite || 'g'}` : undefined}
-                        >
-                          <option value="">{enPortions(ing) ? 'Portions de l’étiquette' : `Quantité en ${ing.unite || 'g'}`}</option>
-                          {ing.mesure && !GROUPES_MESURES.some((g) => g.options.includes(ing.mesure)) && (
-                            <option value={ing.mesure}>{libelleMesure(ing.mesure)}</option>
-                          )}
-                          {GROUPES_MESURES.map((g) => (
-                            <optgroup key={g.titre} label={g.titre}>
-                              {g.options.map((cle) => <option key={cle} value={cle}>{libelleMesure(cle)}</option>)}
-                            </optgroup>
-                          ))}
-                        </select>
+                        <SelecteurMesure
+                          valeur={ing.mesure || ''}
+                          onChange={(cle) => majIngredient(i, { mesure: cle })}
+                          libelle={`Mesure de l'ingrédient ${i + 1}`}
+                          equivalent={ing.mesure && enGrammes(ing) != null ? `≈ ${Math.round(enGrammes(ing))} ${ing.unite || 'g'}` : null}
+                          detailManuel={enPortions(ing) ? `Nombre de portions de l’étiquette (1 = ${ing.portion_texte || `${ing.portion_g} ${ing.unite || 'g'}`})` : `Quantité en ${ing.unite || 'g'}`}
+                        />
                         {!ing.mesure && (
                           <input
                             className="champ__saisie champ__saisie--compact"
