@@ -60,6 +60,7 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
   const [erreur, setErreur] = useState('');
   const [erreurPortion, setErreurPortion] = useState(false);
   const champPortion = useRef(null);
+  const portionAjoutee = useRef(!initial.portion_g);
   const [envoi, setEnvoi] = useState(false);
 
   const changer = (cle) => (e) => setValeurs((v) => ({ ...v, [cle]: e.target.value }));
@@ -192,7 +193,21 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
         <div className="champ">
           <span className="champ__libelle">Poids de cette portion</span>
           <div className="champ__groupe">
-            <input className="champ__saisie" inputMode="decimal" value={valeurs.portion_g} onChange={changer('portion_g')} aria-label="Poids de la portion" />
+            <input
+              className="champ__saisie"
+              inputMode="decimal"
+              value={valeurs.portion_g}
+              onChange={changer('portion_g')}
+              onBlur={() => {
+                // Poids de portion ajouté à des valeurs « pour 100 g » (ex. : Open Food Facts sans portion) :
+                // on affiche les valeurs pour 1 portion, comme sur l'étiquette (ex. : 356 kcal / 100 g -> 160 kcal / 45 g).
+                if (portionAjoutee.current && base === '100' && versNombre(valeurs.portion_g)) {
+                  portionAjoutee.current = false;
+                  changerBase('portion');
+                }
+              }}
+              aria-label="Poids de la portion"
+            />
             <select className="champ__saisie champ__saisie--unite" value={u} onChange={changer('unite')} aria-label="Unité">
               <option value="g">g</option>
               <option value="ml">ml</option>
@@ -216,7 +231,10 @@ export default function FormulaireAliment({ initial = {}, onEnregistre }) {
             />
             <select className="champ__saisie champ__saisie--unite" value={valeurs.contenant_unite} onChange={changer('contenant_unite')} aria-label="Unité du contenant">
               <option value="g">g</option>
+              <option value="kg">kg</option>
               <option value="ml">ml</option>
+              <option value="L">L</option>
+              <option value="lb">lb</option>
             </select>
           </div>
           <span className="champ__aide" id="aide-contenant">Le paquet complet (ex. : 893 ml). Quantité par défaut dans l&apos;inventaire.</span>

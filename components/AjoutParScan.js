@@ -24,6 +24,9 @@ export default function AjoutParScan({ onEnregistre }) {
       if (r.provenance === 'openfoodfacts') {
         const enregistre = await api('/api/aliments', { methode: 'POST', corps: r.aliment });
         setResultat({ provenance: 'ajoute', aliment: enregistre });
+      } else if (r.provenance === 'introuvable') {
+        setErreur("Produit introuvable dans Open Food Facts. Entrez les valeurs de l'étiquette (onglet « 1 portion »).");
+        setResultat({ provenance: 'manuel', aliment: r.aliment });
       } else {
         setResultat(r);
       }
@@ -43,7 +46,7 @@ export default function AjoutParScan({ onEnregistre }) {
     <div className="pile">
       {resultat.provenance === 'banque' && <Message type="info">Ce produit est déjà dans votre banque. Vous pouvez corriger ses valeurs.</Message>}
       {resultat.provenance === 'ajoute' && (
-        <Message type="succes">Produit ajouté à votre banque d&apos;aliments. Corrigez les calories au besoin.</Message>
+        <Message type="succes">Produit ajouté à votre banque d&apos;aliments. Vérifiez les valeurs avec l&apos;étiquette.</Message>
       )}
       <Message type="alerte">{erreur}</Message>
       <FormulaireAliment key={resultat.aliment.id || 'nouveau'} initial={resultat.aliment} onEnregistre={onEnregistre} />
