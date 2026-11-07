@@ -16,6 +16,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { api } from '@/lib/client';
+import PropositionsAliments from './PropositionsAliments';
 
 // bureau : visible seulement dans le menu latéral (ordinateur). Sur téléphone, ces pages
 // sont accessibles par des boutons dans les pages (Inventaire, Recettes, Accueil).
@@ -75,6 +76,7 @@ export default function Coquille({ nom, children }) {
         </div>
       </nav>
       <main className="app__contenu">{children}</main>
+      <PropositionsAliments />
     </div>
   );
 }

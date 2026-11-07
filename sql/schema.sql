@@ -345,3 +345,22 @@ ALTER TABLE ia_appels ADD COLUMN IF NOT EXISTS source text;
 
 -- Traduction des noms d'aliments : dernier essai raté (on ne réessaie qu'après 24 h, pour ménager le quota de l'IA).
 ALTER TABLE aliments ADD COLUMN IF NOT EXISTS traduction_essai_le timestamptz;
+
+-- Versions de la banque d'aliments : quand quelqu'un modifie une fiche commune, chaque autre personne qui
+-- l'utilise garde sa version (copie privée liée par version_de) et reçoit une proposition à accepter ou refuser.
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS prive boolean NOT NULL DEFAULT false;
+ALTER TABLE aliments ADD COLUMN IF NOT EXISTS version_de uuid REFERENCES aliments(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS aliments_version_de_idx ON aliments(version_de, utilisateur_id);
+CREATE TABLE IF NOT EXISTS aliments_propositions (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  aliment_id      uuid NOT NULL REFERENCES aliments(id) ON DELETE CASCADE,
+  copie_id        uuid REFERENCES aliments(id) ON DELETE SET NULL,
+  destinataire_id uuid NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  auteur_id       uuid REFERENCES utilisateurs(id) ON DELETE SET NULL,
+  avant           jsonb NOT NULL,
+  apres           jsonb NOT NULL,
+  cree_le         timestamptz NOT NULL DEFAULT now(),
+  traitee_le      timestamptz,
+  acceptee        boolean
+);
+CREATE INDEX IF NOT EXISTS aliments_propositions_dest_idx ON aliments_propositions(destinataire_id, traitee_le);

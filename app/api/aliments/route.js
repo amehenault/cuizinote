@@ -3,6 +3,7 @@ import { q, q1 } from '@/lib/db';
 import { verifierImage } from '@/lib/images';
 import { lireCorps, ok, route } from '@/lib/http';
 import { schemaAliment } from '@/lib/schemas';
+import { modifierAliment } from '@/lib/versions-aliments';
 
 // Banque d'aliments commune à tous les utilisateurs. « mien » : la personne connectée l'a ajouté.
 export const GET = route(async ({ requete, utilisateur }) => {
@@ -10,7 +11,9 @@ export const GET = route(async ({ requete, utilisateur }) => {
   return ok(
     await q(
       `SELECT ${COLONNES_ALIMENT}, (utilisateur_id = $1) AS mien FROM aliments
-        WHERE ($2 = '' OR nom ILIKE '%' || $2 || '%' OR marque ILIKE '%' || $2 || '%' OR code_barre = $2)
+        WHERE (NOT prive OR utilisateur_id = $1)
+          AND NOT EXISTS (SELECT 1 FROM aliments v WHERE v.version_de = aliments.id AND v.utilisateur_id = $1)
+          AND ($2 = '' OR nom ILIKE '%' || $2 || '%' OR marque ILIKE '%' || $2 || '%' OR code_barre = $2)
         ORDER BY nom LIMIT ${recherche ? 30 : 2000}`,
       [utilisateur.id, recherche.replace(/[%_\\]/g, '\\$&')]
     )
@@ -20,6 +23,13 @@ export const GET = route(async ({ requete, utilisateur }) => {
 export const POST = route(async ({ requete, utilisateur }) => {
   const a = await lireCorps(requete, schemaAliment);
   await verifierImage(utilisateur.id, a.image_id);
+  if (a.code_barre) {
+    const existant = await q1('SELECT id FROM aliments WHERE code_barre = $1', [a.code_barre]);
+    if (existant) {
+      const mienne = await q1('SELECT id FROM aliments WHERE version_de = $1 AND utilisateur_id = $2', [existant.id, utilisateur.id]);
+      return ok(await modifierAliment(utilisateur.id, mienne?.id || existant.id, a), 201);
+    }
+  }
   // Code-barres déjà connu dans la banque commune : on met à jour la fiche existante.
   const ligne = await q1(
     `INSERT INTO aliments (utilisateur_id, nom, marque, code_barre, kcal_100g, proteines_100g, glucides_100g,

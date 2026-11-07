@@ -30,7 +30,8 @@ export const GET = route(async ({ utilisateur, params }) => {
         connu.contenant_unite = contenant.contenant_unite;
       }
     }
-    return ok({ provenance: 'banque', aliment: connu });
+    const mienne = await q1(`SELECT ${COLONNES_ALIMENT} FROM aliments WHERE version_de = $1 AND utilisateur_id = $2`, [connu.id, utilisateur.id]);
+    return ok({ provenance: 'banque', aliment: mienne || connu });
   }
 
   await limiter(`code-barre:${utilisateur.id}`, 120, 3600);
