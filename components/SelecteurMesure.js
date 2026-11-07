@@ -11,7 +11,7 @@ const mlFr = (ml) => `${String(Math.round(ml * 10) / 10).replace('.', ',')} ml`;
  * ou « Mesure manuelle » (portions de l'étiquette ou grammes).
  * valeur : « tasse:1/3 » ou '' (manuelle).
  */
-export default function SelecteurMesure({ valeur, onChange, detailManuel, equivalent, libelle }) {
+export default function SelecteurMesure({ valeur, onChange, detailManuel, equivalent, libelle, groupes = GROUPES_MESURES }) {
   const [ouvert, setOuvert] = useState(false);
   const boite = useRef(null);
 
@@ -33,7 +33,7 @@ export default function SelecteurMesure({ valeur, onChange, detailManuel, equiva
     onChange(cle);
     setOuvert(false);
   };
-  const horsListe = valeur && !GROUPES_MESURES.some((g) => g.options.includes(valeur));
+  const horsListe = valeur && !groupes.some((g) => g.options.includes(valeur));
 
   return (
     <div className="mesure" ref={boite}>
@@ -68,7 +68,7 @@ export default function SelecteurMesure({ valeur, onChange, detailManuel, equiva
               </div>
             </div>
           )}
-          {GROUPES_MESURES.map((g) => (
+          {groupes.map((g) => (
             <div key={g.titre} className="mesure__groupe">
               <p className="mesure__titre">{g.titre}</p>
               <div className="mesure__grille">
@@ -99,7 +99,7 @@ export default function SelecteurMesure({ valeur, onChange, detailManuel, equiva
 }
 
 function Pastille({ cle, actif, onClick }) {
-  const quantite = String(cle).split(':')[1];
+  const [unite, quantite] = String(cle).split(':');
   return (
     <button
       type="button"
@@ -110,7 +110,7 @@ function Pastille({ cle, actif, onClick }) {
       title={libelleMesure(cle)}
     >
       <span className="mesure__fraction">{quantite.includes('.') ? quantite.replace('.', ',') : quantite}</span>
-      <span className="mesure__ml">{mlFr(mlDeMesure(cle))}</span>
+      <span className="mesure__ml">{unite === 'spray' ? `${String(mlDeMesure(cle)).replace('.', ',')} ml` : mlFr(mlDeMesure(cle))}</span>
     </button>
   );
 }

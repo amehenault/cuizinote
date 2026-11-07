@@ -11,7 +11,13 @@ import RechercheAliment from './RechercheAliment';
 import SaisieEtiquettes from './SaisieEtiquettes';
 import TeleversementImage from './TeleversementImage';
 import { resumeCalories } from '@/lib/portion';
-import { grammesDeMesure, grammesParMl, mesureDepuisTexte } from '@/lib/mesures';
+import { estHuile, grammesDeMesure, grammesParMl, groupesPour, mesureDepuisTexte } from '@/lib/mesures';
+
+/** Mesure de départ d'un aliment lié : celle du texte (« 2 c. à soupe »), sinon 1 spray pour une huile. */
+function mesureDeDepart(texte, aliment) {
+  if (!grammesParMl(aliment)) return '';
+  return mesureDepuisTexte(texte) || (estHuile(aliment.nom ?? aliment.aliment_nom) ? 'spray:1' : '');
+}
 import SelecteurMesure from './SelecteurMesure';
 
 /** Produit lié avec une portion d'étiquette : la quantité est un nombre de portions. */
@@ -104,6 +110,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
       portion_g: a.portion_g ?? null,
       portion_texte: a.portion_texte || null,
       grammes: a.portion_g ? '1' : '100',
+      mesure: mesureDeDepart(a.portion_texte, a),
     };
     setR((x) => {
       const liste = [...x.ingredients];
@@ -368,7 +375,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                             portion_texte: a.portion_texte || null,
                             texte: ing.texte || a.nom,
                             grammes: a.portion_g ? '1' : ing.grammes || '100',
-                            mesure: grammesParMl(a) ? mesureDepuisTexte(ing.texte) || '' : '',
+                            mesure: mesureDeDepart(ing.texte, a),
                           })
                         }
                       />
@@ -379,6 +386,7 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                           valeur={ing.mesure || ''}
                           onChange={(cle) => majIngredient(i, { mesure: cle })}
                           libelle={`Mesure de l'ingrédient ${i + 1}`}
+                          groupes={groupesPour(ing)}
                           equivalent={ing.mesure && enGrammes(ing) != null ? `≈ ${Math.round(enGrammes(ing))} ${ing.unite || 'g'}` : null}
                           detailManuel={enPortions(ing) ? `Nombre de portions de l’étiquette (1 = ${ing.portion_texte || `${ing.portion_g} ${ing.unite || 'g'}`})` : `Quantité en ${ing.unite || 'g'}`}
                         />
