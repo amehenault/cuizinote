@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
-import { BookmarkPlus, Check, Clock, Flame, Send, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookmarkPlus, CalendarPlus, Check, Clock, Flame, Send, Sparkles } from 'lucide-react';
 import { api } from '@/lib/client';
-import { EMPLACEMENTS } from '@/lib/dates';
+import { EMPLACEMENTS, MOMENTS, ajouterJours, debutSemaine, formaterJour, versIso } from '@/lib/dates';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 
 const EXEMPLES = [
@@ -14,10 +14,18 @@ const EXEMPLES = [
   'Un repas à préparer d\'avance pour mes lunchs de la semaine',
 ];
 
-function Proposition({ recette }) {
+function Proposition({ recette, semaine }) {
   const [etat, setEtat] = useState({ enregistree: null, erreur: '', envoi: false });
+  const jours = semaine ? Array.from({ length: 7 }, (_, n) => ajouterJours(semaine, n)) : [];
+  const [planif, setPlanif] = useState(() => ({
+    jour: jours.includes(versIso()) ? versIso() : jours[0],
+    moment: (recette.etiquettes || []).find((e) => MOMENTS.some((m) => m.valeur === e)) || 'souper',
+    fait: false,
+  }));
 
+  /** Enregistre la recette (une seule fois) et retourne son identifiant. */
   async function enregistrer() {
+    if (etat.enregistree) return etat.enregistree;
     setEtat({ ...etat, envoi: true, erreur: '' });
     try {
       const { id } = await api('/api/recettes', {
@@ -38,8 +46,24 @@ function Proposition({ recette }) {
         },
       });
       setEtat({ enregistree: id, erreur: '', envoi: false });
+      return id;
     } catch (e) {
       setEtat({ enregistree: null, erreur: e.message, envoi: false });
+      return null;
+    }
+  }
+
+  async function planifier() {
+    const id = await enregistrer();
+    if (!id) return;
+    try {
+      await api('/api/planificateur', {
+        methode: 'POST',
+        corps: { jour: planif.jour, moment: planif.moment, recette_id: id, portions: 1 },
+      });
+      setPlanif((p) => ({ ...p, fait: true }));
+    } catch (e) {
+      setEtat((x) => ({ ...x, erreur: e.message }));
     }
   }
 
@@ -68,13 +92,32 @@ function Proposition({ recette }) {
           <p className="champ__aide">À acheter : {recette.manquants.join(', ')}</p>
         )}
         <Message type="erreur">{etat.erreur}</Message>
+        {semaine &&
+          (planif.fait ? (
+            <Message type="succes">
+              Ajoutée au planificateur : {MOMENTS.find((m) => m.valeur === planif.moment)?.libelle.toLowerCase()}, {formaterJour(planif.jour)}.
+            </Message>
+          ) : (
+            <div className="rangee">
+              <select className="champ__saisie champ__saisie--court" value={planif.jour} onChange={(e) => setPlanif({ ...planif, jour: e.target.value })} aria-label="Jour">
+                {jours.map((j) => <option key={j} value={j}>{formaterJour(j, { weekday: 'long', day: 'numeric' })}</option>)}
+              </select>
+              <select className="champ__saisie champ__saisie--court" value={planif.moment} onChange={(e) => setPlanif({ ...planif, moment: e.target.value })} aria-label="Repas">
+                {MOMENTS.map((m) => <option key={m.valeur} value={m.valeur}>{m.libelle}</option>)}
+              </select>
+              <button type="button" className="bouton bouton--principal" onClick={planifier} disabled={etat.envoi}>
+                <CalendarPlus size={16} aria-hidden="true" />
+                Planifier
+              </button>
+            </div>
+          ))}
         {etat.enregistree ? (
           <Link href={`/recettes/${etat.enregistree}`} className="bouton bouton--secondaire">
             <Check size={16} aria-hidden="true" />
             Ajoutée - voir la recette
           </Link>
         ) : (
-          <button type="button" className="bouton bouton--principal" onClick={enregistrer} disabled={etat.envoi}>
+          <button type="button" className={`bouton ${semaine ? 'bouton--secondaire' : 'bouton--principal'}`} onClick={enregistrer} disabled={etat.envoi}>
             <BookmarkPlus size={16} aria-hidden="true" />
             {etat.envoi ? 'Ajout...' : 'Ajouter à mes recettes'}
           </button>
@@ -84,7 +127,10 @@ function Proposition({ recette }) {
   );
 }
 
-export default function PageAssistant() {
+export default function PageAssistant({ searchParams }) {
+  // ?semaine=AAAA-MM-JJ (depuis le planificateur) : chaque idée peut être planifiée directement.
+  const params = use(searchParams);
+  const semaine = /^\d{4}-\d{2}-\d{2}$/.test(params?.semaine || '') ? debutSemaine(params.semaine) : null;
   // La conversation vit uniquement en mémoire : elle disparaît en quittant la page.
   const [fil, setFil] = useState([]);
   const [demande, setDemande] = useState('');
@@ -115,7 +161,21 @@ export default function PageAssistant() {
 
   return (
     <div className="assistant">
-      <EntetePage titre="Assistant culinaire" sousTitre="Des idées de repas à partir de ce que vous avez sous la main" />
+      <EntetePage
+        titre="Idées de repas (IA)"
+        sousTitre={
+          semaine
+            ? `Semaine du ${formaterJour(semaine, { day: 'numeric', month: 'long' })} : touchez « Planifier » sous une idée pour l'ajouter.`
+            : 'Des idées de repas à partir de ce que vous avez sous la main'
+        }
+      >
+        {semaine && (
+          <Link href={`/planificateur?semaine=${semaine}`} className="bouton bouton--secondaire">
+            <ArrowLeft size={16} aria-hidden="true" />
+            Retour à la semaine
+          </Link>
+        )}
+      </EntetePage>
 
       {fil.length === 0 && (
         <div className="carte carte--accent">
@@ -138,7 +198,7 @@ export default function PageAssistant() {
             <div key={i} className="pile">
               {m.message && <p className="assistant__bulle assistant__bulle--ia">{m.message}</p>}
               <div className="assistant__propositions">
-                {m.recettes.map((r, n) => <Proposition key={n} recette={r} />)}
+                {m.recettes.map((r, n) => <Proposition key={n} recette={r} semaine={semaine} />)}
               </div>
             </div>
           )

@@ -64,8 +64,10 @@
   justify-content: center;
   gap: 2px;
   height: 100%;
-  padding: var(--espace-1);
-  font-size: 0.6875rem;
+  padding: var(--espace-1) 1px;
+  /* Rétrécit avec l'écran pour que « Paramètres » tienne en entier sur les petits téléphones */
+  font-size: min(0.6875rem, 2.65vw);
+  letter-spacing: -0.01em;
   color: var(--couleur-nav-texte);
   text-decoration: none;
   border-radius: var(--rayon-m);
@@ -85,8 +87,6 @@
 
 .nav__libelle {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { ListChecks, ShoppingCart } from 'lucide-react';
+import { ListChecks, ShoppingCart, Sparkles } from 'lucide-react';
 import { api } from '@/lib/client';
 import { ajouterJours, debutSemaine } from '@/lib/dates';
 import { EntetePage, Message } from '@/components/Elements';
@@ -38,6 +38,10 @@ export default function PagePlanificateur({ searchParams }) {
           <ShoppingCart size={16} aria-hidden="true" />
           Générer l&apos;épicerie
         </button>
+        <Link href={`/assistant?semaine=${debutAffiche}`} className="bouton bouton--secondaire">
+          <Sparkles size={16} aria-hidden="true" />
+          Idées IA
+        </Link>
         <Link href="/epicerie" className="bouton bouton--secondaire">
           <ListChecks size={16} aria-hidden="true" />
           Liste d&apos;épicerie
