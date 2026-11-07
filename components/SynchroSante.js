@@ -134,7 +134,34 @@ export default function SynchroSante() {
       <p className="champ__aide">
         Balance VeSync : reliez l&apos;application VeSync à Samsung Health ou Health Connect, et vos pesées suivront.
       </p>
+      {etat?.dernier_envoi && <DernierEnvoi envoi={etat.dernier_envoi} />}
       <Message type="erreur">{erreur}</Message>
     </div>
+  );
+}
+
+/** Diagnostic : ce que la passerelle a réellement envoyé la dernière fois. */
+function DernierEnvoi({ envoi }) {
+  const { retenu = {} } = envoi;
+  const jours = { ...(retenu.intervalles_par_jour || {}), ...(retenu.totaux_quotidiens || {}) };
+  const texte = JSON.stringify(envoi, null, 2);
+  return (
+    <details className="pile pile--serre">
+      <summary className="liste__titre">Détails du dernier envoi (diagnostic)</summary>
+      <p className="champ__aide">
+        Reçu le {new Date(envoi.recu_le).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })}
+        {envoi.test ? ' (envoi de test)' : ''}.
+        {Object.keys(jours).length
+          ? ` Pas retenus : ${Object.entries(jours).sort().map(([j, n]) => `${j} = ${n}`).join(', ')}.`
+          : ' Aucun pas retenu dans cet envoi.'}
+      </p>
+      <pre className="champ__aide" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: '20rem', overflow: 'auto' }}>{texte}</pre>
+      <div>
+        <button type="button" className="bouton bouton--secondaire" onClick={() => navigator.clipboard.writeText(texte).catch(() => {})}>
+          <Copy size={16} aria-hidden="true" />
+          Copier les détails
+        </button>
+      </div>
+    </details>
   );
 }

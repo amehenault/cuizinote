@@ -296,3 +296,6 @@ CREATE TABLE IF NOT EXISTS verres (
   cree_le        timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS verres_utilisateur_idx ON verres(utilisateur_id);
+
+-- Diagnostic : résumé du dernier envoi reçu de la passerelle santé (clés, extraits, totaux retenus).
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS dernier_envoi_sante jsonb;

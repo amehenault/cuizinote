@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { q, q1 } from '@/lib/db';
 import { ErreurHttp, ok, route } from '@/lib/http';
 import { adresseIp, limiter } from '@/lib/limite';
-import { lireReception } from '@/lib/sante-reception';
+import { lireReception, resumerEnvoi } from '@/lib/sante-reception';
 
 export const maxDuration = 30;
 
@@ -46,7 +46,10 @@ export const POST = route(async ({ requete }) => {
 
   const donnees = lireReception(corps);
   const id = utilisateur.id;
-  await q('UPDATE utilisateurs SET synchro_sante_le = now() WHERE id = $1', [id]);
+  await q('UPDATE utilisateurs SET synchro_sante_le = now(), dernier_envoi_sante = $2 WHERE id = $1', [
+    id,
+    JSON.stringify({ recu_le: new Date().toISOString(), ...resumerEnvoi(corps, donnees) }),
+  ]);
   if (donnees.test) return ok({ ok: true, message: 'Connexion à Cuizinote réussie' });
 
   // 1. Totaux quotidiens : remplacent la valeur du jour (le total du jour en cours augmente au fil des envois)

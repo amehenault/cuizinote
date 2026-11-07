@@ -6,6 +6,8 @@ import { api } from '@/lib/client';
 
 const SUGGESTIONS_DE_BASE = ['déjeuner', 'dîner', 'souper', 'collation', 'dessert', 'poulet', 'bœuf', 'porc', 'poisson', 'végétarien', 'viandes', 'haut en calories', 'faible en calories', 'rapide', 'congelable', 'lunch'];
 
+const nettoyer = (brut) => brut.trim().toLowerCase().slice(0, 40);
+
 export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }) {
   const [texte, setTexte] = useState('');
   const [existantes, setExistantes] = useState([]);
@@ -14,9 +16,17 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
     api('/api/etiquettes').then((l) => setExistantes(l.map((e) => e.nom))).catch(() => {});
   }, []);
 
+  function ajouterPlusieurs(bruts) {
+    const nouveaux = [...valeur];
+    for (const b of bruts) {
+      const nom = nettoyer(b);
+      if (nom && !nouveaux.includes(nom) && nouveaux.length < 30) nouveaux.push(nom);
+    }
+    if (nouveaux.length !== valeur.length) onChange(nouveaux);
+  }
+
   function ajouter(brut) {
-    const nom = brut.trim().toLowerCase().slice(0, 40);
-    if (nom && !valeur.includes(nom) && valeur.length < 30) onChange([...valeur, nom]);
+    ajouterPlusieurs([brut]);
     setTexte('');
   }
 
@@ -40,8 +50,20 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
           id={id}
           className="saisie-etiquettes__champ"
           value={texte}
-          placeholder="Ajouter une étiquette puis Entrée"
-          onChange={(e) => setTexte(e.target.value)}
+          placeholder="Nouvelle étiquette"
+          enterKeyHint="done"
+          autoCapitalize="none"
+          onChange={(e) => {
+            // Les claviers Android n'envoient pas toujours la touche virgule : on la détecte dans le texte.
+            const v = e.target.value;
+            if (v.includes(',')) {
+              const morceaux = v.split(',');
+              ajouterPlusieurs(morceaux.slice(0, -1));
+              setTexte(morceaux.at(-1));
+            } else setTexte(v);
+          }}
+          // Texte tapé puis on touche ailleurs (ex. : « Enregistrer ») : l'étiquette n'est pas perdue.
+          onBlur={() => texte.trim() && ajouter(texte)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ',') {
               e.preventDefault();
@@ -51,11 +73,28 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
             }
           }}
         />
+        {texte.trim() && (
+          <button
+            type="button"
+            className="etiquette etiquette--bouton"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => ajouter(texte)}
+          >
+            <Plus size={12} aria-hidden="true" />
+            Ajouter « {nettoyer(texte)} »
+          </button>
+        )}
       </div>
       {suggestions.length > 0 && (
         <div className="saisie-etiquettes__suggestions">
           {suggestions.map((s) => (
-            <button key={s} type="button" className="etiquette etiquette--neutre etiquette--bouton" onClick={() => ajouter(s)}>
+            <button
+              key={s}
+              type="button"
+              className="etiquette etiquette--neutre etiquette--bouton"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => ajouter(s)}
+            >
               <Plus size={12} aria-hidden="true" />
               {s}
             </button>

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Apple, Bot, CupSoda, HeartPulse, LogOut, Smartphone, Target, Trash2, Upload, UserRound } from 'lucide-react';
+import { Apple, Bot, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 import CleWidget from '@/components/CleWidget';
 import GestionCompte from '@/components/GestionCompte';
+import GestionEtiquettes from '@/components/GestionEtiquettes';
 import GestionVerres from '@/components/GestionVerres';
 import ImportCookmate from '@/components/ImportCookmate';
 import ObjectifCalorique from '@/components/ObjectifCalorique';
@@ -17,6 +18,7 @@ const SECTIONS = [
   { id: 'compte', titre: 'Gestion du compte', Icone: UserRound },
   { id: 'objectif', titre: 'Objectif calorique', Icone: Target },
   { id: 'verres', titre: 'Mes verres et tasses', Icone: CupSoda },
+  { id: 'etiquettes', titre: 'Étiquettes de recettes', Icone: Tags },
   { id: 'samsung', titre: 'Samsung Health', Icone: HeartPulse },
   { id: 'widget', titre: 'Widget Android', Icone: Smartphone },
   { id: 'importation', titre: 'Importation', Icone: Upload },
@@ -84,6 +86,10 @@ export default function PageParametres() {
 
       <Section id="verres">
         <GestionVerres />
+      </Section>
+
+      <Section id="etiquettes">
+        <GestionEtiquettes />
       </Section>
 
       <Section id="samsung">

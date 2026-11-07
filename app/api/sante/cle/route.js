@@ -6,7 +6,8 @@ import { ok, route } from '@/lib/http';
 export const GET = route(async ({ utilisateur }) =>
   ok(
     await q1(
-      `SELECT jeton_sante IS NOT NULL AS active, jeton_sante_cree_le AS cree_le, synchro_sante_le AS derniere_synchro
+      `SELECT jeton_sante IS NOT NULL AS active, jeton_sante_cree_le AS cree_le, synchro_sante_le AS derniere_synchro,
+              dernier_envoi_sante AS dernier_envoi
          FROM utilisateurs WHERE id = $1`,
       [utilisateur.id]
     )
