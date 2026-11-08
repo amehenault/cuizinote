@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Pencil, X } from 'lucide-react';
-import { GROUPES_MESURES, libelleMesure, mlDeMesure } from '@/lib/mesures';
+import { clePrecise, estPoids, G_PAR_UNITE, GROUPES_MESURES, grammesDePoids, libelleMesure, mlDeMesure } from '@/lib/mesures';
 
 const mlFr = (ml) => `${String(Math.round(ml * 10) / 10).replace('.', ',')} ml`;
 
 /**
  * Choix de la mesure d'un ingrédient : cuillère à thé, cuillère à soupe, tasse (avec les ml),
- * ou « Mesure manuelle » (portions de l'étiquette ou grammes).
- * valeur : « tasse:1/3 » ou '' (manuelle).
+ * une quantité précise (« 254 g », « 1/2 lb ») ou « Mesure manuelle » (portions de l'étiquette ou grammes).
+ * valeur : « tasse:1/3 », « lb:1/2 » ou '' (manuelle).
  */
-export default function SelecteurMesure({ valeur, onChange, detailManuel, equivalent, libelle, groupes = GROUPES_MESURES }) {
+export default function SelecteurMesure({ valeur, onChange, detailManuel, equivalent, libelle, groupes = GROUPES_MESURES, unites = [] }) {
   const [ouvert, setOuvert] = useState(false);
+  const [unitePrecise, uniteValeur] = String(valeur || '').split(':');
+  const precise = unites.some(([u]) => u === unitePrecise) && !groupes.some((g) => g.options.includes(valeur));
+  const [saisie, setSaisie] = useState({ quantite: precise ? uniteValeur : '', unite: precise ? unitePrecise : unites[0]?.[0] || 'g' });
+  const clePrete = clePrecise(saisie.unite, saisie.quantite);
   const boite = useRef(null);
 
   useEffect(() => {
@@ -33,7 +37,7 @@ export default function SelecteurMesure({ valeur, onChange, detailManuel, equiva
     onChange(cle);
     setOuvert(false);
   };
-  const horsListe = valeur && !groupes.some((g) => g.options.includes(valeur));
+  const horsListe = valeur && !precise && !groupes.some((g) => g.options.includes(valeur));
 
   return (
     <div className="mesure" ref={boite}>
@@ -66,6 +70,48 @@ export default function SelecteurMesure({ valeur, onChange, detailManuel, equiva
               <div className="mesure__grille">
                 <Pastille cle={valeur} actif onClick={() => setOuvert(false)} />
               </div>
+            </div>
+          )}
+          {unites.length > 0 && (
+            <div className="mesure__groupe">
+              <p className="mesure__titre">Quantité précise</p>
+              <div className="mesure__precise">
+                <input
+                  className="champ__saisie champ__saisie--compact mesure__precise-saisie"
+                  inputMode="decimal"
+                  placeholder="ex. : 254 ou 1/2"
+                  value={saisie.quantite}
+                  onChange={(e) => setSaisie((x) => ({ ...x, quantite: e.target.value }))}
+                  onKeyDown={(e) => {
+                    // Pas de formulaire imbriqué : Entrée valide sans envoyer la recette.
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();
+                    if (clePrete) choisir(clePrete);
+                  }}
+                  aria-label="Quantité précise"
+                />
+                <div className="mesure__unites" role="radiogroup" aria-label="Unité">
+                  {unites.map(([u, nom]) => (
+                    <button
+                      key={u}
+                      type="button"
+                      role="radio"
+                      aria-checked={saisie.unite === u}
+                      className={`mesure__unite${saisie.unite === u ? ' mesure__unite--actif' : ''}`}
+                      onClick={() => setSaisie((x) => ({ ...x, unite: u }))}
+                    >
+                      {nom}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="bouton bouton--principal bouton--petit" disabled={!clePrete} onClick={() => choisir(clePrete)}>
+                  <Check size={14} aria-hidden="true" />
+                  OK
+                </button>
+              </div>
+              {clePrete && G_PAR_UNITE[saisie.unite] && saisie.unite !== 'g' && (
+                <p className="mesure__detail">= {String(Math.round(grammesDePoids(clePrete))).replace('.', ',')} g</p>
+              )}
             </div>
           )}
           {groupes.map((g) => (
@@ -110,7 +156,9 @@ function Pastille({ cle, actif, onClick }) {
       title={libelleMesure(cle)}
     >
       <span className="mesure__fraction">{quantite.includes('.') ? quantite.replace('.', ',') : quantite}</span>
-      <span className="mesure__ml">{unite === 'spray' ? `${String(mlDeMesure(cle)).replace('.', ',')} ml` : mlFr(mlDeMesure(cle))}</span>
+      <span className="mesure__ml">
+        {estPoids(cle) ? unite : unite === 'spray' ? `${String(mlDeMesure(cle)).replace('.', ',')} ml` : mlFr(mlDeMesure(cle))}
+      </span>
     </button>
   );
 }

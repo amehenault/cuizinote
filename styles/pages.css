@@ -1428,3 +1428,36 @@ details[open] > .parametres__repli .parametres__chevron {
   margin-bottom: -44px;
   margin-left: var(--espace-3);
 }
+
+/* Quantité précise (254 g, 1/2 lb) dans le menu des mesures */
+.mesure__precise {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-2);
+}
+.mesure__precise-saisie {
+  width: 7rem;
+  flex: 0 0 auto;
+}
+.mesure__unites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-1);
+}
+.mesure__unite {
+  min-width: 2.75rem;
+  min-height: 2.25rem;
+  padding: 0 var(--espace-2);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 999px;
+  background: var(--couleur-champ);
+  color: var(--couleur-texte);
+  font: inherit;
+  cursor: pointer;
+}
+.mesure__unite--actif {
+  border-color: var(--couleur-primaire);
+  background: var(--couleur-primaire);
+  color: var(--couleur-texte-inverse);
+}

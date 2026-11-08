@@ -11,13 +11,20 @@ import RechercheAliment from './RechercheAliment';
 import SaisieEtiquettes from './SaisieEtiquettes';
 import TeleversementImage from './TeleversementImage';
 import { resumeCalories } from '@/lib/portion';
-import { estHuile, grammesDeMesure, grammesParMl, groupesPour, mesureDepuisTexte } from '@/lib/mesures';
+import { estHuile, grammesDeMesure, grammesParMl, groupesPour, mesureDepuisTexte, UNITES_PRECISES } from '@/lib/mesures';
 
-/** Mesure de départ d'un aliment lié : celle du texte (« 2 c. à soupe »), sinon 1 spray pour une huile. */
+/**
+ * Mesure de départ d'un aliment lié : celle du texte (« 2 c. à soupe », « 1/2 lb », « 254 g ») si elle se convertit
+ * en grammes pour cet aliment, sinon 1 spray pour une huile.
+ */
 function mesureDeDepart(texte, aliment) {
-  if (!grammesParMl(aliment)) return '';
-  return mesureDepuisTexte(texte) || (estHuile(aliment.nom ?? aliment.aliment_nom) ? 'spray:1' : '');
+  const cle = mesureDepuisTexte(texte);
+  if (cle && grammesDeMesure(cle, aliment) != null) return cle;
+  return grammesParMl(aliment) && estHuile(aliment.nom ?? aliment.aliment_nom) ? 'spray:1' : '';
 }
+
+/** Unités de la quantité précise : le poids toujours, les ml seulement si le volume se convertit. */
+const unitesPour = (ing) => UNITES_PRECISES.filter(([u]) => u !== 'ml' || grammesParMl(ing));
 import SelecteurMesure from './SelecteurMesure';
 
 /** Produit lié avec une portion d'étiquette : la quantité est un nombre de portions. */
@@ -64,7 +71,7 @@ function etatInitial(r = {}) {
       portion_g: i.portion_g ?? null,
       portion_texte: i.portion_texte || null,
       kcal: texte(i.kcal_libre),
-      mesure: i.mesure || (i.aliment_id && grammesParMl(i) ? mesureDepuisTexte(i.texte) || '' : ''),
+      mesure: i.mesure || (i.aliment_id ? mesureDeDepart(i.texte, i) : ''),
       // Affiché en nombre de portions de l'étiquette quand c'est possible
       grammes:
         i.aliment_id && i.portion_g && i.grammes != null
@@ -380,13 +387,14 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                         }
                       />
                     )}
-                    {ing.aliment_id && grammesParMl(ing) ? (
+                    {ing.aliment_id ? (
                       <div className="rangee" style={{ flexWrap: 'nowrap', gap: 'var(--espace-1)' }}>
                         <SelecteurMesure
                           valeur={ing.mesure || ''}
                           onChange={(cle) => majIngredient(i, { mesure: cle })}
                           libelle={`Mesure de l'ingrédient ${i + 1}`}
-                          groupes={groupesPour(ing)}
+                          groupes={grammesParMl(ing) ? groupesPour(ing) : []}
+                          unites={unitesPour(ing)}
                           equivalent={ing.mesure && enGrammes(ing) != null ? `≈ ${Math.round(enGrammes(ing))} ${ing.unite || 'g'}` : null}
                           detailManuel={enPortions(ing) ? `Nombre de portions de l’étiquette (1 = ${ing.portion_texte || `${ing.portion_g} ${ing.unite || 'g'}`})` : `Quantité en ${ing.unite || 'g'}`}
                         />
@@ -402,16 +410,6 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
                           />
                         )}
                       </div>
-                    ) : ing.aliment_id ? (
-                    <input
-                      className="champ__saisie champ__saisie--compact"
-                      inputMode="decimal"
-                      placeholder={enPortions(ing) ? 'portions' : ing.unite || 'g / ml'}
-                      title={enPortions(ing) ? `Nombre de portions (1 = ${ing.portion_texte || ing.portion_g + ' ' + (ing.unite || 'g')})` : 'Quantité en grammes ou ml'}
-                      value={ing.grammes}
-                      onChange={(e) => majIngredient(i, { grammes: e.target.value })}
-                      aria-label={enPortions(ing) ? `Nombre de portions de l'ingrédient ${i + 1}` : `Quantité de l'ingrédient ${i + 1}`}
-                    />
                     ) : (
                       <input
                         className="champ__saisie champ__saisie--compact"
