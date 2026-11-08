@@ -1503,3 +1503,48 @@ details[open] > .parametres__repli .parametres__chevron {
     padding-top: 0.35rem;
   }
 }
+
+/* Récapitulatif des calories (page Santé) */
+.recap__reglages {
+  display: grid;
+  gap: var(--espace-1);
+}
+.recap__jours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-1);
+}
+.recap__jours .etiquette {
+  min-width: 2.75rem;
+  min-height: 2.25rem;
+  justify-content: center;
+}
+.recap__navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-2);
+}
+.recap__periode {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-2);
+  font-weight: 600;
+}
+.recap__futur {
+  color: var(--couleur-texte-attenue);
+}
+.recap__defilement {
+  overflow-x: auto;
+}
+.recap__lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--couleur-primaire);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

@@ -395,3 +395,8 @@ ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS mesures_converties_le timestam
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_mcp text UNIQUE;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_mcp_cree_le timestamptz;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS mcp_vu_le timestamptz;
+
+-- Récapitulatif des calories : jour où commence la semaine de la personne (0 = dimanche … 6 = samedi ; 1 = lundi par défaut)
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS recap_debut_semaine smallint NOT NULL DEFAULT 1;
+ALTER TABLE utilisateurs DROP CONSTRAINT IF EXISTS utilisateurs_recap_debut_semaine_check;
+ALTER TABLE utilisateurs ADD CONSTRAINT utilisateurs_recap_debut_semaine_check CHECK (recap_debut_semaine BETWEEN 0 AND 6);

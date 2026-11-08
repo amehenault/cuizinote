@@ -7,6 +7,7 @@ import { api } from '@/lib/client';
 import { enLb, nombreFr, versIso } from '@/lib/dates';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
 import { GraphiqueBarres, GraphiqueLigne } from '@/components/Graphiques';
+import RecapCalories from '@/components/RecapCalories';
 
 const PERIODES = [
   [30, '30 jours'],
@@ -108,7 +109,7 @@ export default function PageSante() {
 
   return (
     <>
-      <EntetePage titre="Santé" sousTitre="Poids (balance VeSync) et pas (Samsung Health)">
+      <EntetePage titre="Santé" sousTitre="Calories de la semaine, poids (balance VeSync) et pas (Samsung Health)">
         <div className="onglets" role="tablist">
           {PERIODES.map(([v, l]) => (
             <button key={v} type="button" role="tab" aria-selected={jours === v} className={`onglets__bouton${jours === v ? ' onglets__bouton--actif' : ''}`} onClick={() => setJours(v)}>
@@ -120,6 +121,8 @@ export default function PageSante() {
 
       <div className="pile pile--large">
         <Message type={message.type}>{message.texte}</Message>
+
+        <RecapCalories />
 
         <div className="grille grille--stats">
           <div className="stat">
