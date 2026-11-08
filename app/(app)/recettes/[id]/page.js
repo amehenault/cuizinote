@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CalendarPlus, Check, CircleAlert, Clock, ExternalLink, Flame, Minus, Pencil, Plus, ShoppingCart, Trash2, Users, Utensils } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, Check, CircleAlert, Clock, Copy, ExternalLink, Flame, Minus, Pencil, Plus, ShoppingCart, Trash2, Users, Utensils } from 'lucide-react';
 import { api, urlImage } from '@/lib/client';
 import { MOMENTS, nombreFr, versIso } from '@/lib/dates';
 import { ajusterIngredient, ecrireQuantite } from '@/lib/quantites';
@@ -97,6 +97,20 @@ export default function PageRecette({ params }) {
     }
   }
 
+  const [duplication, setDuplication] = useState(false);
+
+  /** Crée une copie privée puis l'ouvre en modification (pour la renommer ou en faire une variante). */
+  async function dupliquer() {
+    setDuplication(true);
+    try {
+      const { id: copie } = await api(`/api/recettes/${id}/dupliquer`, { methode: 'POST' });
+      routeur.push(`/recettes/${copie}/modifier`);
+    } catch (e) {
+      setErreur(e.message);
+      setDuplication(false);
+    }
+  }
+
   async function ajouterAEpicerie() {
     const choisis = recette.ingredients.filter((_, n) => aAcheter.has(n));
     if (!choisis.length) {
@@ -182,6 +196,10 @@ export default function PageRecette({ params }) {
           <Pencil size={16} aria-hidden="true" />
           Modifier
         </Link>
+        <button type="button" className="bouton bouton--secondaire" onClick={dupliquer} disabled={duplication}>
+          <Copy size={16} aria-hidden="true" />
+          {duplication ? 'Duplication…' : 'Dupliquer'}
+        </button>
         <button type="button" className="bouton bouton--fantome bouton--icone" onClick={supprimer} aria-label="Supprimer la recette">
           <Trash2 size={18} aria-hidden="true" />
         </button>
