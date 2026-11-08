@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, Calculator, Download, Link2, Pencil, Plus, Save, ScanBarcode, Trash2, Unlink } from 'lucide-react';
+import { ArrowDown, ArrowUp, Calculator, ClipboardPaste, Download, Link2, Pencil, Plus, Save, ScanBarcode, Trash2, Unlink } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Etoiles, Message, Modale, versNombre } from './Elements';
 import AjoutParScan from './AjoutParScan';
@@ -96,6 +96,9 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [lien, setLien] = useState('');
+  // Import par texte collé : pour les sites qui bloquent la lecture automatique.
+  const [modeTexte, setModeTexte] = useState(false);
+  const [texteColle, setTexteColle] = useState('');
   const [importation, setImportation] = useState({ enCours: false, message: '', type: 'info' });
 
   const [scanOuvert, setScanOuvert] = useState(false);
@@ -189,10 +192,11 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
 
   async function importer(e) {
     e.preventDefault();
-    if (!lien.trim()) return;
+    const corps = modeTexte ? { texte: texteColle.trim() } : { url: lien.trim() };
+    if (!(corps.texte || corps.url)) return;
     setImportation({ enCours: true, message: '', type: 'info' });
     try {
-      const brouillon = await api('/api/recettes/import', { methode: 'POST', corps: { url: lien.trim() } });
+      const brouillon = await api('/api/recettes/import', { methode: 'POST', corps });
       setR(etatInitial({ ...brouillon, note: r.note, commentaires: r.commentaires }));
       setImportation({
         enCours: false,
@@ -202,7 +206,11 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
           : 'Seuls le titre et la description ont pu être lus sur cette page. Complétez la recette à la main.',
       });
     } catch (err) {
-      setImportation({ enCours: false, type: 'erreur', message: err.message });
+      setImportation({
+        enCours: false,
+        type: 'erreur',
+        message: modeTexte ? err.message : `${err.message} Vous pouvez aussi coller le texte de la recette (lien ci-dessous).`,
+      });
     }
   }
 
@@ -259,27 +267,54 @@ export default function FormulaireRecette({ initial, recetteId = null, permettre
         <section className="carte carte--accent">
           <div className="carte__corps">
             <h2 className="carte__titre">
-              <Link2 size={18} aria-hidden="true" />
-              Importer depuis un lien
+              {modeTexte ? <ClipboardPaste size={18} aria-hidden="true" /> : <Link2 size={18} aria-hidden="true" />}
+              {modeTexte ? 'Importer un texte collé' : 'Importer depuis un lien'}
             </h2>
             <p className="champ__aide">
-              Collez l&apos;adresse d&apos;une page de recette : titre, ingrédients, étapes, photo et valeurs nutritives sont récupérés automatiquement.
+              {modeTexte
+                ? "Copiez la recette sur la page du site (titre, ingrédients et étapes), puis collez-la ici : l'IA la remet en forme."
+                : "Collez l'adresse d'une page de recette : titre, ingrédients, étapes, photo et valeurs nutritives sont récupérés automatiquement."}
             </p>
-            <form className="importeur" onSubmit={importer}>
-              <input
-                className="champ__saisie importeur__champ"
-                type="url"
-                placeholder="https://..."
-                value={lien}
-                onChange={(e) => setLien(e.target.value)}
-                aria-label="Lien de la recette"
-              />
-              <button type="submit" className="bouton bouton--principal" disabled={importation.enCours}>
-                <Download size={16} aria-hidden="true" />
-                {importation.enCours ? 'Importation...' : 'Importer'}
-              </button>
+            <form className={modeTexte ? 'pile pile--serre' : 'importeur'} onSubmit={importer}>
+              {modeTexte ? (
+                <textarea
+                  className="champ__saisie"
+                  rows={8}
+                  maxLength={30000}
+                  placeholder={'Pâté chinois\n\nIngrédients\n1 lb de bœuf haché\n...\n\nPréparation\n1. ...'}
+                  value={texteColle}
+                  onChange={(e) => setTexteColle(e.target.value)}
+                  aria-label="Texte de la recette"
+                />
+              ) : (
+                <input
+                  className="champ__saisie importeur__champ"
+                  type="url"
+                  placeholder="https://..."
+                  value={lien}
+                  onChange={(e) => setLien(e.target.value)}
+                  aria-label="Lien de la recette"
+                />
+              )}
+              <div className="rangee">
+                <button type="submit" className="bouton bouton--principal" disabled={importation.enCours}>
+                  <Download size={16} aria-hidden="true" />
+                  {importation.enCours ? 'Importation...' : 'Importer'}
+                </button>
+              </div>
             </form>
             <Message type={importation.type}>{importation.message}</Message>
+            <button
+              type="button"
+              className="bouton bouton--fantome bouton--petit"
+              onClick={() => {
+                setModeTexte((m) => !m);
+                setImportation({ enCours: false, message: '', type: 'info' });
+              }}
+            >
+              {modeTexte ? <Link2 size={14} aria-hidden="true" /> : <ClipboardPaste size={14} aria-hidden="true" />}
+              {modeTexte ? 'Importer plutôt depuis un lien' : 'Le site bloque ? Coller le texte de la recette'}
+            </button>
           </div>
         </section>
       )}

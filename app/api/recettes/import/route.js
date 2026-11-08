@@ -1,16 +1,23 @@
 import { z } from 'zod';
-import { importerDepuisLien } from '@/lib/import-recette';
+import { importerDepuisLien, importerDepuisTexte } from '@/lib/import-recette';
 import { fetchSecurise } from '@/lib/fetch-securise';
 import { enregistrerImage } from '@/lib/images';
-import { lireCorps, ok, route } from '@/lib/http';
+import { ErreurHttp, lireCorps, ok, route } from '@/lib/http';
 import { limiter } from '@/lib/limite';
 
-export const maxDuration = 30;
+// Lecture de la page (10 s au plus) puis, si elle n'a pas de données structurées, extraction par l'IA.
+export const maxDuration = 60;
+
+const schema = z.object({
+  url: z.string().trim().max(2000).optional(),
+  texte: z.string().trim().max(30000).optional(),
+});
 
 export const POST = route(async ({ requete, utilisateur }) => {
   await limiter(`import:${utilisateur.id}`, 30, 3600);
-  const { url } = await lireCorps(requete, z.object({ url: z.string().trim().max(2000) }));
-  const brouillon = await importerDepuisLien(url);
+  const { url, texte } = await lireCorps(requete, schema, 100_000);
+  if (!url && !texte) throw new ErreurHttp(400, 'Collez un lien ou le texte de la recette');
+  const brouillon = texte ? await importerDepuisTexte(texte) : await importerDepuisLien(url);
 
   // On rapatrie l'image dans la base pour ne dépendre d'aucun site externe.
   brouillon.image_id = null;
