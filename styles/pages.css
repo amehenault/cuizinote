@@ -1461,3 +1461,45 @@ details[open] > .parametres__repli .parametres__chevron {
   background: var(--couleur-primaire);
   color: var(--couleur-texte-inverse);
 }
+
+/* Filtres des recettes : étiquettes groupées par catégorie, dans un panneau repliable */
+.filtres__panneau {
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-m);
+  background: var(--couleur-surface);
+  padding: var(--espace-2) var(--espace-3);
+}
+.filtres__resume {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  min-height: 2.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filtres__groupes {
+  display: grid;
+  gap: var(--espace-3);
+  padding: var(--espace-2) 0 var(--espace-1);
+}
+.filtres__groupe {
+  display: grid;
+  gap: var(--espace-1);
+}
+.filtres__titre {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--couleur-texte-attenue);
+}
+@media (min-width: 720px) {
+  .filtres__groupe {
+    grid-template-columns: 11rem 1fr;
+    align-items: start;
+  }
+  .filtres__titre {
+    padding-top: 0.35rem;
+  }
+}

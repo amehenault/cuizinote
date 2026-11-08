@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Save, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/client';
-import { formaterEtiquette } from '@/lib/etiquettes';
+import { formaterEtiquette, grouperEtiquettes } from '@/lib/etiquettes';
 import { Message } from './Elements';
 
 const recettes = (n) => `${n} recette${n > 1 ? 's' : ''}`;
@@ -52,8 +52,16 @@ export default function GestionEtiquettes() {
       <Message type="erreur">{erreur}</Message>
       {etiquettes && etiquettes.length === 0 && <p className="champ__aide">Aucune étiquette pour l&apos;instant.</p>}
       {etiquettes && etiquettes.length > 0 && (
+        <p className="champ__aide">
+          Classées automatiquement selon leur nom. Pour fusionner deux étiquettes (ex. : « Boeuf » et « Bœuf »), renommez
+          l&apos;une avec le nom de l&apos;autre.
+        </p>
+      )}
+      {etiquettes && grouperEtiquettes(etiquettes).map(({ categorie, elements }) => (
+        <div key={categorie.id} className="pile pile--serre">
+        <p className="filtres__titre">{categorie.titre}</p>
         <ul className="liste">
-          {etiquettes.map((e) => (
+          {elements.map((e) => (
             <li key={e.id} className="liste__element">
               {edition === e.id ? (
                 <form className="formulaire" onSubmit={(ev) => renommer(ev, e)}>
@@ -101,7 +109,8 @@ export default function GestionEtiquettes() {
             </li>
           ))}
         </ul>
-      )}
+        </div>
+      ))}
     </div>
   );
 }

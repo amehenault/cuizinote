@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Tag, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { contient } from '@/lib/texte';
-import { ETIQUETTES_DE_BASE, formaterEtiquette } from '@/lib/etiquettes';
+import { ETIQUETTES_DE_BASE, formaterEtiquette, grouperEtiquettes } from '@/lib/etiquettes';
 
 const cle = (s) => s.toLocaleLowerCase('fr-CA');
 
@@ -32,9 +32,24 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
   }
 
   const choisies = new Set(valeur.map(cle));
-  const suggestions = [...new Map((existantes.length ? existantes : ETIQUETTES_DE_BASE).map((s) => [cle(s), formaterEtiquette(s)])).values()]
-    .filter((s) => !choisies.has(cle(s)) && (!texte || contient(s, texte.trim())))
-    .slice(0, 14);
+  // Vos étiquettes d'abord (leur écriture l'emporte), puis celles de base que vous n'avez pas encore.
+  const toutes = [...new Map([...ETIQUETTES_DE_BASE, ...existantes].map((s) => [cle(s), formaterEtiquette(s)])).values()].filter(
+    (s) => !choisies.has(cle(s))
+  );
+  const suggestions = texte.trim() ? toutes.filter((s) => contient(s, texte.trim())).slice(0, 14) : [];
+  const groupes = texte.trim() ? [] : grouperEtiquettes(toutes);
+  const pastille = (s) => (
+    <button
+      key={s}
+      type="button"
+      className="etiquette etiquette--neutre etiquette--bouton"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => ajouter(s)}
+    >
+      <Plus size={12} aria-hidden="true" />
+      {s}
+    </button>
+  );
 
   return (
     <div>
@@ -86,20 +101,20 @@ export default function SaisieEtiquettes({ valeur, onChange, id = 'etiquettes' }
           </button>
         )}
       </div>
-      <div className="saisie-etiquettes__suggestions">
-        {suggestions.map((s) => (
-          <button
-            key={s}
-            type="button"
-            className="etiquette etiquette--neutre etiquette--bouton"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => ajouter(s)}
-          >
-            <Plus size={12} aria-hidden="true" />
-            {s}
-          </button>
-        ))}
-      </div>
+      {suggestions.length > 0 && <div className="saisie-etiquettes__suggestions">{suggestions.map(pastille)}</div>}
+      {groupes.length > 0 && (
+        <details className="saisie-etiquettes__categories">
+          <summary className="saisie-etiquettes__resume">Choisir parmi les étiquettes</summary>
+          <div className="filtres__groupes">
+            {groupes.map(({ categorie, elements }) => (
+              <div key={categorie.id} className="filtres__groupe" role="group" aria-label={categorie.titre}>
+                <p className="filtres__titre">{categorie.titre}</p>
+                <div className="filtres__etiquettes">{elements.map(pastille)}</div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

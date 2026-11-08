@@ -891,3 +891,16 @@ a.stat:hover {
   font-weight: 700;
   color: var(--couleur-danger);
 }
+
+.saisie-etiquettes__categories {
+  margin-top: var(--espace-2);
+}
+.saisie-etiquettes__resume {
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--couleur-primaire);
+  cursor: pointer;
+}

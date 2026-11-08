@@ -6,6 +6,7 @@ import { Apple, BookOpen, Bot, Plus, Search, UsersRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, EtatVide, Message } from '@/components/Elements';
 import CarteRecette from '@/components/CarteRecette';
+import { grouperEtiquettes } from '@/lib/etiquettes';
 
 const MEMOIRE = 'cuizinote:recettes';
 function lireMemoire() {
@@ -29,6 +30,8 @@ export default function PageRecettes() {
   const [recherche, setRecherche] = useState('');
   const [filtre, setFiltre] = useState('');
   const [pret, setPret] = useState(false);
+  // Panneau des filtres : ouvert par défaut, état gardé pour la visite.
+  const [ouvert, setOuvert] = useState(true);
   const positionRestauree = useRef(false);
 
   // Recherche et filtre de la dernière visite (lus après l'affichage, pour éviter un décalage avec le serveur).
@@ -36,6 +39,7 @@ export default function PageRecettes() {
     const m = lireMemoire();
     setRecherche(m.recherche || '');
     setFiltre(m.filtre || '');
+    if (m.ouvert === false) setOuvert(false);
     setPret(true);
   }, []);
 
@@ -46,8 +50,8 @@ export default function PageRecettes() {
     return () => window.removeEventListener('scroll', noter);
   }, []);
   useEffect(() => {
-    if (pret) ecrireMemoire({ recherche, filtre });
-  }, [recherche, filtre, pret]);
+    if (pret) ecrireMemoire({ recherche, filtre, ouvert });
+  }, [recherche, filtre, ouvert, pret]);
   useEffect(() => {
     if (!recettes || positionRestauree.current) return;
     const { y } = lireMemoire();
@@ -103,27 +107,42 @@ export default function PageRecettes() {
             aria-label="Rechercher une recette"
           />
         </div>
-        {etiquettes.length > 0 && (
-          <div className="filtres__etiquettes">
-            <button
-              type="button"
-              className={`etiquette etiquette--bouton${filtre === '' ? ' etiquette--active' : ' etiquette--neutre'}`}
-              onClick={() => setFiltre('')}
-            >
-              Toutes
-            </button>
-            {etiquettes.filter((e) => e.total > 0).map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                className={`etiquette etiquette--bouton${filtre === e.nom ? ' etiquette--active' : ''}`}
-                onClick={() => setFiltre(filtre === e.nom ? '' : e.nom)}
-                aria-pressed={filtre === e.nom}
-              >
-                {e.nom} ({e.total})
-              </button>
-            ))}
-          </div>
+        {etiquettes.some((e) => e.total > 0) && (
+          <details className="filtres__panneau" open={ouvert} onToggle={(ev) => setOuvert(ev.currentTarget.open)}>
+            <summary className="filtres__resume">
+              <span>Filtrer par étiquette</span>
+              {filtre && <span className="etiquette etiquette--active">{filtre}</span>}
+            </summary>
+            <div className="filtres__groupes">
+              <div>
+                <button
+                  type="button"
+                  className={`etiquette etiquette--bouton${filtre === '' ? ' etiquette--active' : ' etiquette--neutre'}`}
+                  onClick={() => setFiltre('')}
+                >
+                  Toutes les recettes
+                </button>
+              </div>
+              {grouperEtiquettes(etiquettes.filter((e) => e.total > 0)).map(({ categorie, elements }) => (
+                <div key={categorie.id} className="filtres__groupe" role="group" aria-label={categorie.titre}>
+                  <p className="filtres__titre">{categorie.titre}</p>
+                  <div className="filtres__etiquettes">
+                    {elements.map((e) => (
+                      <button
+                        key={e.id}
+                        type="button"
+                        className={`etiquette etiquette--bouton${filtre === e.nom ? ' etiquette--active' : ''}`}
+                        onClick={() => setFiltre(filtre === e.nom ? '' : e.nom)}
+                        aria-pressed={filtre === e.nom}
+                      >
+                        {e.nom} ({e.total})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
         )}
       </div>
 
