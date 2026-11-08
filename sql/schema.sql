@@ -390,3 +390,8 @@ CREATE OR REPLACE FUNCTION cz_norm(t text) RETURNS text LANGUAGE sql IMMUTABLE A
 ALTER TABLE recette_ingredients ADD COLUMN IF NOT EXISTS mesure text;
 -- Conversion unique des recettes existantes (texte « 1 tasse de farine » -> mesure) : date du passage.
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS mesures_converties_le timestamptz;
+
+-- Serveur MCP personnel (Claude) : clé secrète dans l'URL du connecteur, empreinte SHA-256 seulement
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_mcp text UNIQUE;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS jeton_mcp_cree_le timestamptz;
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS mcp_vu_le timestamptz;

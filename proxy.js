@@ -9,7 +9,9 @@ export function proxy(requete) {
   if (pathname.startsWith('/api/')) {
     // Exception : la réception santé n'utilise aucun cookie, seulement une clé personnelle
     // envoyée par l'application passerelle du téléphone (qui n'envoie pas d'en-tête Origin).
-    if (!METHODES_SURES.has(requete.method) && pathname !== '/api/sante/reception') {
+    // Même chose pour le serveur MCP (/api/mcp/czm_...), appelé par Claude avec sa clé dans l'URL.
+    const sansCookie = pathname === '/api/sante/reception' || /^\/api\/mcp\/czm_[A-Za-z0-9_-]+$/.test(pathname);
+    if (!METHODES_SURES.has(requete.method) && !sansCookie) {
       const origine = requete.headers.get('origin');
       const hote = requete.headers.get('x-forwarded-host') || requete.headers.get('host');
       let valide = false;

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Apple, Bot, ChevronDown, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
+import { Apple, Bot, Cable, ChevronDown, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
+import CleMcp from '@/components/CleMcp';
 import CleWidget from '@/components/CleWidget';
 import GestionCompte from '@/components/GestionCompte';
 import GestionEtiquettes from '@/components/GestionEtiquettes';
@@ -23,6 +24,7 @@ const SECTIONS = [
   { id: 'etiquettes', titre: 'Étiquettes de recettes', Icone: Tags },
   { id: 'samsung', titre: 'Samsung Health', Icone: HeartPulse },
   { id: 'widget', titre: 'Widget Android', Icone: Smartphone },
+  { id: 'claude', titre: 'Connecteur Claude', Icone: Cable },
   { id: 'importation', titre: 'Importation', Icone: Upload },
   { id: 'deconnexion', titre: 'Déconnexion', Icone: LogOut },
   { id: 'suppression', titre: 'Suppression du compte', Icone: Trash2 },
@@ -92,7 +94,7 @@ export default function PageParametres() {
       </div>
 
       <nav className="parametres__sommaire" aria-label="Sections des paramètres">
-        {SECTIONS.filter((s) => s.id !== 'ia' || compte?.admin).map(({ id, titre, Icone }) => (
+        {SECTIONS.filter((s) => !['ia', 'claude'].includes(s.id) || compte?.admin).map(({ id, titre, Icone }) => (
           <a key={id} href={`#${id}`} className="etiquette etiquette--bouton etiquette--neutre">
             <Icone size={14} aria-hidden="true" />
             {titre}
@@ -140,6 +142,12 @@ export default function PageParametres() {
       <Section id="widget" repliable>
         <CleWidget />
       </Section>
+
+      {compte?.admin && (
+        <Section id="claude" repliable>
+          <CleMcp />
+        </Section>
+      )}
 
       <Section id="importation" repliable>
         <ImportCookmate />

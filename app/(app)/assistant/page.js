@@ -135,7 +135,7 @@ export default function PageAssistant({ searchParams }) {
   // La conversation vit uniquement en mémoire : elle disparaît en quittant la page.
   const [fil, setFil] = useState([]);
   const [demande, setDemande] = useState('');
-  const [emplacements, setEmplacements] = useState(['frigo', 'congelateur']);
+  const [emplacements, setEmplacements] = useState(['frigo', 'congelateur', 'garde-manger']);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
 
