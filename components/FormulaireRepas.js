@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Coffee, CupSoda, GlassWater, Pencil, Plus, Tag, Wine } from 'lucide-react';
 import { api } from '@/lib/client';
-import { contient } from '@/lib/texte';
+import { contient, estBoisson } from '@/lib/texte';
 import { MOMENTS, nombreFr } from '@/lib/dates';
 import { Message, versNombre } from './Elements';
 import AjoutParScan from './AjoutParScan';
@@ -50,6 +50,8 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
   // Boissons : on demande dans quel verre (collection de la personne, voir Paramètres)
   const [verres, setVerres] = useState([]);
   const [verre, setVerre] = useState('');
+  // Correction manuelle de la détection (null = automatique)
+  const [forcerBoisson, setForcerBoisson] = useState(null);
 
   useEffect(() => {
     api('/api/recettes').then(setRecettes).catch(() => {});
@@ -64,7 +66,8 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
   const recette = recettes.find((r) => r.id === idChoisi);
   const nbPortions = versNombre(portions) || 1;
 
-  const boisson = type === 'aliment' && aliment?.unite === 'ml' && verres.length > 0;
+  const liquide = type === 'aliment' && aliment?.unite === 'ml' && verres.length > 0;
+  const boisson = liquide && (forcerBoisson ?? estBoisson(aliment));
   const verreChoisi = verres.find((v) => v.id === verre);
   // ml d'un verre : verre de la collection, portion de l'étiquette, ou quantité entrée
   const mlVerre = !boisson ? null : verreChoisi ? verreChoisi.ml : verre === 'etiquette' ? aliment.portion_g || 100 : verre === 'autre' ? versNombre(grammes) : null;
@@ -82,6 +85,7 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
     setAliment(a);
     setGrammes(a.portion_g ? String(a.portion_g) : '100');
     setVerre('');
+    setForcerBoisson(null);
     setType('aliment');
   }
 
@@ -200,6 +204,11 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
                     <input className="champ__saisie" inputMode="decimal" value={grammes} onChange={(e) => setGrammes(e.target.value)} />
                   </label>
                 )
+              )}
+              {liquide && (
+                <button type="button" className="etiquette__retirer" onClick={() => { setForcerBoisson(!boisson); setVerre(''); }}>
+                  {boisson ? 'Ce n’est pas une boisson' : 'C’est une boisson (choisir un verre)'}
+                </button>
               )}
             </div>
           )}
