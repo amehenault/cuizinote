@@ -57,7 +57,11 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
   }, []);
 
   const options = recettes.filter((r) => contient(r.titre, filtre)).slice(0, 60);
-  const recette = recettes.find((r) => r.id === recetteId);
+  // Le navigateur surligne d'office la 1re option quand aucune ne correspond à la valeur :
+  // cliquer dessus ne déclenche alors pas onChange (bug quand le filtre ne laisse qu'une recette).
+  // On aligne donc la sélection réelle sur ce qui est affiché.
+  const idChoisi = options.some((r) => r.id === recetteId) ? recetteId : options[0]?.id || '';
+  const recette = recettes.find((r) => r.id === idChoisi);
   const nbPortions = versNombre(portions) || 1;
 
   const boisson = type === 'aliment' && aliment?.unite === 'ml' && verres.length > 0;
@@ -86,8 +90,8 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
     setErreur('');
     const corps = { jour, moment: m, portions: nbPortions };
     if (type === 'recette') {
-      if (!recetteId) return setErreur('Choisissez un repas dans la liste.');
-      corps.recette_id = recetteId;
+      if (!idChoisi) return setErreur('Choisissez un repas dans la liste.');
+      corps.recette_id = idChoisi;
     }
     if (type === 'aliment') {
       if (!aliment) return setErreur('Choisissez un aliment.');
@@ -138,7 +142,7 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
           {type === 'recette' && (
             <div className="pile pile--serre">
               <input className="champ__saisie" placeholder="Filtrer mes recettes" value={filtre} onChange={(e) => setFiltre(e.target.value)} aria-label="Filtrer les recettes" />
-              <select className="champ__saisie" size={Math.min(8, Math.max(3, options.length))} value={recetteId} onChange={(e) => setRecetteId(e.target.value)} aria-label="Repas">
+              <select className="champ__saisie" size={Math.min(8, Math.max(3, options.length))} value={idChoisi} onChange={(e) => setRecetteId(e.target.value)} aria-label="Repas">
                 {options.map((r) => (
                   <option key={r.id} value={r.id}>{r.titre}{r.kcal != null ? ` (${Math.round(r.kcal)} kcal/portion)` : ''}</option>
                 ))}
