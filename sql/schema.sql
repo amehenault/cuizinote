@@ -400,3 +400,6 @@ ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS mcp_vu_le timestamptz;
 ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS recap_debut_semaine smallint NOT NULL DEFAULT 1;
 ALTER TABLE utilisateurs DROP CONSTRAINT IF EXISTS utilisateurs_recap_debut_semaine_check;
 ALTER TABLE utilisateurs ADD CONSTRAINT utilisateurs_recap_debut_semaine_check CHECK (recap_debut_semaine BETWEEN 0 AND 6);
+
+-- Ce qu'un repas mangé a retiré de l'inventaire (null = rien retiré encore) : remis si le repas est annulé.
+ALTER TABLE journal ADD COLUMN IF NOT EXISTS retraits_inventaire jsonb;

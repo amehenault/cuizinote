@@ -3,6 +3,7 @@ import { q, q1, transaction } from '@/lib/db';
 import { requeteJournalDepuisPlan } from '@/lib/planification';
 import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 import { MOMENTS } from '@/lib/schemas';
+import { remettreDansInventaire, retirerDeInventaire } from '@/lib/consommation';
 
 const schemaModification = z.object({
   jour: z.iso.date().optional(),
@@ -31,9 +32,14 @@ export const PATCH = route(async ({ requete, utilisateur, params }) => {
 
   // Manger un repas du menu l'ajoute au journal ; l'annuler l'en retire.
   if (d.mange === true && !avant.mange) {
-    await transaction([requeteJournalDepuisPlan(id, utilisateur.id, d.jour_mange ?? null)]);
+    const [[entree]] = await transaction([requeteJournalDepuisPlan(id, utilisateur.id, d.jour_mange ?? null)]);
+    if (entree) await retirerDeInventaire(entree.id, utilisateur.id);
   } else if (d.mange === false && avant.mange) {
-    await q('DELETE FROM journal WHERE planification_id = $1 AND utilisateur_id = $2', [id, utilisateur.id]);
+    const supprimees = await q(
+      'DELETE FROM journal WHERE planification_id = $1 AND utilisateur_id = $2 RETURNING retraits_inventaire',
+      [id, utilisateur.id]
+    );
+    for (const e of supprimees) await remettreDansInventaire(e.retraits_inventaire, utilisateur.id);
   }
   return ok(ligne);
 });

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { q, q1 } from '@/lib/db';
 import { ErreurHttp, lireCorps, ok, route, verifierUuid } from '@/lib/http';
 import { MOMENTS } from '@/lib/schemas';
+import { remettreDansInventaire } from '@/lib/consommation';
 
 const schemaModification = z.object({
   kcal: z.number().min(0).max(20000).nullable().optional(),
@@ -25,10 +26,11 @@ export const PATCH = route(async ({ requete, utilisateur, params }) => {
 });
 
 export const DELETE = route(async ({ utilisateur, params }) => {
-  const [ligne] = await q('DELETE FROM journal WHERE id = $1 AND utilisateur_id = $2 RETURNING planification_id', [
+  const [ligne] = await q('DELETE FROM journal WHERE id = $1 AND utilisateur_id = $2 RETURNING planification_id, retraits_inventaire', [
     verifierUuid(params.id),
     utilisateur.id,
   ]);
+  await remettreDansInventaire(ligne?.retraits_inventaire, utilisateur.id);
   // Si le repas venait du menu, il redevient « non mangé ».
   if (ligne?.planification_id) {
     await q(

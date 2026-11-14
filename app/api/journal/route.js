@@ -3,6 +3,7 @@ import { q1 } from '@/lib/db';
 import { ErreurHttp, lireCorps, ok, route } from '@/lib/http';
 import { KCAL_RECETTE, listerJournal } from '@/lib/planification';
 import { schemaJournal } from '@/lib/schemas';
+import { retirerDeInventaire } from '@/lib/consommation';
 
 export const GET = route(async ({ requete, utilisateur }) => {
   const jour = z.iso.date().safeParse(requete.nextUrl.searchParams.get('jour'));
@@ -42,5 +43,6 @@ export const POST = route(async ({ requete, utilisateur }) => {
     [utilisateur.id, d.jour, d.moment, libelle, d.recette_id, d.recette_id ? null : d.aliment_id, d.portions, grammes,
       kcal == null ? null : Math.round(kcal), d.kcal != null]
   );
+  await retirerDeInventaire(ligne.id, utilisateur.id);
   return ok(ligne, 201);
 });
