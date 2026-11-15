@@ -11,6 +11,8 @@ import AjoutParScan from './AjoutParScan';
 import { kcalParPortion, libellePortion, resumeCalories } from '@/lib/portion';
 import RechercheAliment from './RechercheAliment';
 import { libelleContenance } from '@/lib/quantites';
+import { grammesDeMesure, grammesParMl, groupesPour, UNITES_PRECISES } from '@/lib/mesures';
+import SelecteurMesure from './SelecteurMesure';
 
 const TYPES = [
   ['recette', 'Repas'],
@@ -43,6 +45,8 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
   const [kcalLibre, setKcalLibre] = useState('');
   const [portions, setPortions] = useState('1');
   const [grammes, setGrammes] = useState('');
+  // Mesure de cuisine (« tasse:1/2 », « soupe:2 », « g:30 ») ; '' = portions de l'étiquette ou grammes
+  const [mesure, setMesure] = useState('');
   const [m, setM] = useState(moment);
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
@@ -72,18 +76,33 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
   // ml d'un verre : verre de la collection, portion de l'étiquette, ou quantité entrée
   const mlVerre = !boisson ? null : verreChoisi ? verreChoisi.ml : verre === 'etiquette' ? aliment.portion_g || 100 : verre === 'autre' ? versNombre(grammes) : null;
 
+  const avecMesure = type === 'aliment' && aliment && !boisson && !!mesure;
+  const grammesMesure = avecMesure ? grammesDeMesure(mesure, aliment) : null;
+  const parPortionEtiquette = type === 'aliment' && aliment?.portion_g && !boisson && !avecMesure;
+
+  // Grammes (ou ml) réellement mangés pour un aliment, pour l'aperçu des calories et des protéines.
+  let grammesAliment = null;
+  if (type === 'aliment' && aliment) {
+    if (boisson) grammesAliment = mlVerre != null ? mlVerre * nbPortions : null;
+    else if (avecMesure) grammesAliment = grammesMesure;
+    else if (parPortionEtiquette) grammesAliment = aliment.portion_g * nbPortions;
+    else grammesAliment = (versNombre(grammes) ?? 100) * nbPortions;
+  }
+
   let apercu = null;
+  let apercuProteines = null;
   if (type === 'recette' && recette?.kcal != null) apercu = recette.kcal * nbPortions;
-  const parPortionEtiquette = type === 'aliment' && aliment?.portion_g && !boisson;
-  if (type === 'aliment' && aliment?.kcal_100g != null) {
-    if (boisson) apercu = mlVerre != null ? (aliment.kcal_100g * mlVerre) / 100 * nbPortions : null;
-    else apercu = parPortionEtiquette ? kcalParPortion(aliment) * nbPortions : (aliment.kcal_100g * (versNombre(grammes) ?? 100)) / 100 * nbPortions;
+  if (type === 'recette' && recette?.proteines != null) apercuProteines = recette.proteines * nbPortions;
+  if (type === 'aliment' && grammesAliment != null) {
+    if (aliment.kcal_100g != null) apercu = parPortionEtiquette ? kcalParPortion(aliment) * nbPortions : (aliment.kcal_100g * grammesAliment) / 100;
+    if (aliment.proteines_100g != null) apercuProteines = (aliment.proteines_100g * grammesAliment) / 100;
   }
   if (type === 'libre' && cible === 'journal') apercu = versNombre(kcalLibre);
 
   function choisirAliment(a) {
     setAliment(a);
     setGrammes(a.portion_g ? String(a.portion_g) : '100');
+    setMesure('');
     setVerre('');
     setForcerBoisson(null);
     setType('aliment');
@@ -104,6 +123,10 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
         if (!verre) return setErreur('Choisissez votre verre.');
         if (!mlVerre) return setErreur('Entrez la quantité en ml.');
         corps.grammes = verre === 'etiquette' ? null : mlVerre;
+      } else if (avecMesure) {
+        if (!grammesMesure) return setErreur('Impossible de convertir cette mesure pour cet aliment.');
+        corps.grammes = grammesMesure;
+        corps.portions = 1;
       } else {
         corps.grammes = aliment.portion_g ? null : versNombre(grammes);
       }
@@ -198,11 +221,34 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
                   )}
                 </>
               ) : (
-                !aliment?.portion_g && (
-                  <label className="champ">
-                    <span className="champ__libelle">Quantité ({aliment?.unite || 'g'})</span>
-                    <input className="champ__saisie" inputMode="decimal" value={grammes} onChange={(e) => setGrammes(e.target.value)} />
-                  </label>
+                aliment && (
+                  <div className="champ">
+                    <span className="champ__libelle">Mesure</span>
+                    <SelecteurMesure
+                      valeur={mesure}
+                      onChange={setMesure}
+                      libelle="Mesure de l'aliment"
+                      groupes={grammesParMl(aliment) ? groupesPour(aliment) : []}
+                      unites={UNITES_PRECISES.filter(([u]) => u !== 'ml' || grammesParMl(aliment))}
+                      equivalent={grammesMesure != null ? `≈ ${Math.round(grammesMesure)} ${aliment.unite || 'g'}` : null}
+                      detailManuel={
+                        aliment.portion_g
+                          ? `Nombre de portions de l’étiquette (1 = ${libellePortion(aliment)})`
+                          : `Quantité en ${aliment.unite || 'g'}`
+                      }
+                    />
+                    {!grammesParMl(aliment) && (
+                      <span className="champ__aide">
+                        Cuillères et tasses indisponibles : l&apos;étiquette de cet aliment ne donne pas sa portion en volume.
+                      </span>
+                    )}
+                    {!mesure && !aliment.portion_g && (
+                      <label className="champ">
+                        <span className="champ__libelle">Quantité ({aliment.unite || 'g'})</span>
+                        <input className="champ__saisie" inputMode="decimal" value={grammes} onChange={(e) => setGrammes(e.target.value)} />
+                      </label>
+                    )}
+                  </div>
                 )
               )}
               {liquide && (
@@ -228,7 +274,7 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
             </div>
           )}
 
-          {type !== 'libre' && (
+          {type !== 'libre' && !avecMesure && (
             <label className="champ">
               <span className="champ__libelle">
                 {boisson ? 'Nombre de verres' : parPortionEtiquette ? `Nombre de portions (1 portion = ${libellePortion(aliment)})` : 'Portions'}
@@ -237,7 +283,12 @@ export default function FormulaireRepas({ cible = 'journal', jour, moment, onEnr
             </label>
           )}
 
-          {apercu != null && <p className="journal__apercu">{nombreFr(apercu)} kcal</p>}
+          {(apercu != null || apercuProteines != null) && (
+            <p className="journal__apercu">
+              {apercu != null ? `${nombreFr(apercu)} kcal` : 'kcal ?'}
+              {apercuProteines != null && ` · ${nombreFr(apercuProteines)} g de protéines`}
+            </p>
+          )}
           <Message type="erreur">{erreur}</Message>
           <div className="formulaire__actions">
             <button type="submit" className="bouton bouton--principal" disabled={envoi}>

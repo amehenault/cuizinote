@@ -17,7 +17,7 @@ export const GET = route(async ({ requete, utilisateur }) => {
 
   const [jours, poids, prefs] = await Promise.all([
     q(
-      `SELECT to_char(jour, 'YYYY-MM-DD') AS jour, round(coalesce(sum(kcal), 0))::int AS kcal, count(*)::int AS repas
+      `SELECT to_char(jour, 'YYYY-MM-DD') AS jour, round(coalesce(sum(kcal), 0))::int AS kcal, round(coalesce(sum(proteines), 0))::int AS proteines, count(*)::int AS repas
          FROM journal WHERE utilisateur_id = $1 AND jour BETWEEN $2 AND $3
         GROUP BY jour ORDER BY jour`,
       [utilisateur.id, debut.data, fin.data]
@@ -30,7 +30,7 @@ export const GET = route(async ({ requete, utilisateur }) => {
     ),
     q1('SELECT recap_debut_semaine FROM utilisateurs WHERE id = $1', [utilisateur.id]),
   ]);
-  return ok({ jours, poids, objectif: utilisateur.objectif_kcal ?? null, debut_semaine: prefs?.recap_debut_semaine ?? 1 });
+  return ok({ jours, poids, objectif: utilisateur.objectif_kcal ?? null, objectif_proteines: utilisateur.objectif_proteines ?? null, debut_semaine: prefs?.recap_debut_semaine ?? 1 });
 });
 
 /** Jour où commence la semaine du récapitulatif (ex. : 2 = mardi, jour de la pesée). */

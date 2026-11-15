@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Scale, Settings, Smartphone, Trash2, Upload } from 'lucide-react';
+import { Settings, Smartphone, Trash2, Upload } from 'lucide-react';
 import { api } from '@/lib/client';
 import { enLb, nombreFr } from '@/lib/dates';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
@@ -87,35 +87,73 @@ export default function PageSante() {
     charger();
   }
 
-  const dernier = poids[poids.length - 1];
-  const variation = poids.length > 1 ? dernier.poids_kg - poids[0].poids_kg : null;
-
-  return (
-    <>
-      <EntetePage titre="Santé" sousTitre="Calories de la semaine et poids">
-        <div className="onglets" role="tablist">
+  const ongletPoids = (
+    <div className="pile">
+      <div className="rangee rangee--espacee">
+        <div className="onglets" role="tablist" aria-label="Période du graphique">
           {PERIODES.map(([v, l]) => (
             <button key={v} type="button" role="tab" aria-selected={jours === v} className={`onglets__bouton${jours === v ? ' onglets__bouton--actif' : ''}`} onClick={() => setJours(v)}>
               {l}
             </button>
           ))}
         </div>
-      </EntetePage>
+        <BoutonImport
+          libelle="Importer VeSync"
+          route="/api/sante/poids/import"
+          onTermine={(n) => { setMessage({ type: 'succes', texte: `${n} pesée(s) importée(s) depuis VeSync.` }); charger(); }}
+          onErreur={erreur}
+        />
+      </div>
+      {poids.length > 0 ? (
+        <GraphiqueLigne points={poids.map((p) => ({ x: p.mesure_le, y: Math.round(enLb(p.poids_kg) * 10) / 10 }))} unite="lb" libelle="Évolution du poids" />
+      ) : (
+        <p className="champ__aide">Aucune pesée sur la période.</p>
+      )}
+      <form className="rangee" onSubmit={ajouterPoids}>
+        <input className="champ__saisie champ__saisie--court" type="datetime-local" value={saisiePoids.mesure_le} onChange={(e) => setSaisiePoids({ ...saisiePoids, mesure_le: e.target.value })} aria-label="Date de la pesée" required />
+        <input className="champ__saisie champ__saisie--court" inputMode="decimal" placeholder="Poids" value={saisiePoids.valeur} onChange={(e) => setSaisiePoids({ ...saisiePoids, valeur: e.target.value })} aria-label="Poids" required />
+        <select className="champ__saisie champ__saisie--court" value={saisiePoids.unite} onChange={(e) => setSaisiePoids({ ...saisiePoids, unite: e.target.value })} aria-label="Unité">
+          <option value="lb">lb</option>
+          <option value="kg">kg</option>
+        </select>
+        <button type="submit" className="bouton bouton--principal">Ajouter</button>
+      </form>
+      {poids.length > 0 && (
+        <ul className="liste">
+          {[...poids].reverse().slice(0, 5).map((p) => (
+            <li key={p.id} className="liste__element">
+              <div className="liste__principal">
+                <p className="liste__titre">{nombreFr(enLb(p.poids_kg), 1)} lb</p>
+                <p className="liste__detail">
+                  {new Date(p.mesure_le).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })} · {p.source}
+                </p>
+              </div>
+              <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => supprimer('poids', p.id)} aria-label="Supprimer la pesée">
+                <Trash2 size={16} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <details>
+        <summary className="champ__aide">Comment exporter mes pesées depuis VeSync ?</summary>
+        <p className="champ__aide">
+          Pour un import ponctuel : dans l&apos;application VeSync, ouvrez votre balance, allez dans
+          l&apos;historique des mesures puis utilisez l&apos;option d&apos;exportation des données (fichier CSV). Importez ce
+          fichier ici : les doublons sont mis à jour, jamais dupliqués. Les livres sont converties en kilogrammes.
+        </p>
+      </details>
+    </div>
+  );
+
+  return (
+    <>
+      <EntetePage titre="Santé" sousTitre="Calories, protéines et poids, jour par jour et par semaine" />
 
       <div className="pile pile--large">
         <Message type={message.type}>{message.texte}</Message>
 
-        <RecapCalories />
-
-        <div className="grille grille--stats">
-          <div className="stat">
-            <span className="stat__libelle"><Scale size={16} aria-hidden="true" />Dernier poids</span>
-            <span className="stat__valeur">{dernier ? `${nombreFr(enLb(dernier.poids_kg), 1)} lb` : '-'}</span>
-            {variation != null && (
-              <span className="stat__note">{variation > 0 ? '+' : ''}{nombreFr(enLb(variation), 1)} lb sur la période</span>
-            )}
-          </div>
-        </div>
+        <RecapCalories ongletPoids={ongletPoids} versionPoids={poids.length ? poids[poids.length - 1].id : 0} />
 
         <Link href="/parametres" className="carte carte--accent carte--lien">
           <div className="carte__corps">
@@ -126,59 +164,6 @@ export default function PageSante() {
             </p>
           </div>
         </Link>
-
-        <section className="carte">
-          <div className="carte__entete">
-            <h2 className="carte__titre"><Scale size={18} aria-hidden="true" />Poids (lb)</h2>
-            <BoutonImport
-              libelle="Importer VeSync"
-              route="/api/sante/poids/import"
-              onTermine={(n) => { setMessage({ type: 'succes', texte: `${n} pesée(s) importée(s) depuis VeSync.` }); charger(); }}
-              onErreur={erreur}
-            />
-          </div>
-          <div className="carte__corps">
-            {poids.length > 0 ? (
-              <GraphiqueLigne points={poids.map((p) => ({ x: p.mesure_le, y: Math.round(enLb(p.poids_kg) * 10) / 10 }))} unite="lb" libelle="Évolution du poids" />
-            ) : (
-              <p className="champ__aide">Aucune pesée sur la période.</p>
-            )}
-            <form className="rangee" onSubmit={ajouterPoids}>
-              <input className="champ__saisie champ__saisie--court" type="datetime-local" value={saisiePoids.mesure_le} onChange={(e) => setSaisiePoids({ ...saisiePoids, mesure_le: e.target.value })} aria-label="Date de la pesée" required />
-              <input className="champ__saisie champ__saisie--court" inputMode="decimal" placeholder="Poids" value={saisiePoids.valeur} onChange={(e) => setSaisiePoids({ ...saisiePoids, valeur: e.target.value })} aria-label="Poids" required />
-              <select className="champ__saisie champ__saisie--court" value={saisiePoids.unite} onChange={(e) => setSaisiePoids({ ...saisiePoids, unite: e.target.value })} aria-label="Unité">
-                <option value="lb">lb</option>
-                <option value="kg">kg</option>
-              </select>
-              <button type="submit" className="bouton bouton--principal">Ajouter</button>
-            </form>
-            {poids.length > 0 && (
-              <ul className="liste">
-                {[...poids].reverse().slice(0, 5).map((p) => (
-                  <li key={p.id} className="liste__element">
-                    <div className="liste__principal">
-                      <p className="liste__titre">{nombreFr(enLb(p.poids_kg), 1)} lb</p>
-                      <p className="liste__detail">
-                        {new Date(p.mesure_le).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })} · {p.source}
-                      </p>
-                    </div>
-                    <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => supprimer('poids', p.id)} aria-label="Supprimer la pesée">
-                      <Trash2 size={16} aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <details>
-              <summary className="champ__aide">Comment exporter mes pesées depuis VeSync ?</summary>
-              <p className="champ__aide">
-                Pour un import ponctuel : dans l&apos;application VeSync, ouvrez votre balance, allez dans
-                l&apos;historique des mesures puis utilisez l&apos;option d&apos;exportation des données (fichier CSV). Importez ce
-                fichier ici : les doublons sont mis à jour, jamais dupliqués. Les livres sont converties en kilogrammes.
-              </p>
-            </details>
-          </div>
-        </section>
       </div>
     </>
   );

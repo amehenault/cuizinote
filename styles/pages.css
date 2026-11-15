@@ -1553,3 +1553,14 @@ details[open] > .parametres__repli .parametres__chevron {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Récapitulatif santé : 3 tuiles (calories, protéines, poids), une par ligne sur téléphone */
+.grille--trois {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 759px) {
+  .grille--stats.grille--trois {
+    grid-template-columns: 1fr;
+  }
+}
