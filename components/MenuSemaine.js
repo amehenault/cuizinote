@@ -104,15 +104,19 @@ function FicheRepasMenu({ repas, jours, onFait }) {
 }
 
 /** Encadré « Menu du jour » (même style que les tuiles Pas et Poids) : évite de défiler jusqu'au bon jour. */
-function MenuDuJour({ repas, objectif, onOuvrir, onPlanifier }) {
+function MenuDuJour({ repas, objectif, objectifProteines, onOuvrir, onPlanifier }) {
   const total = repas.reduce((s, r) => s + (r.kcal || 0), 0);
+  const proteines = repas.reduce((s, r) => s + (r.proteines || 0), 0);
   const moments = MOMENTS.filter((m) => repas.some((r) => r.moment === m.valeur));
   return (
     <section className="stat menu-du-jour" aria-label="Menu du jour">
       <div className="menu-du-jour__entete">
         <span className="stat__libelle"><Utensils size={16} aria-hidden="true" />Menu du jour</span>
         {repas.length > 0 && (
-          <span className="stat__note">{nombreFr(total)}{objectif ? ` / ${nombreFr(objectif)}` : ''} kcal</span>
+          <span className="stat__note">
+            {nombreFr(total)}{objectif ? ` / ${nombreFr(objectif)}` : ''} kcal · {nombreFr(proteines)}
+            {objectifProteines ? ` / ${nombreFr(objectifProteines)}` : ''} g prot.
+          </span>
         )}
       </div>
       {repas.length === 0 ? (
@@ -158,6 +162,7 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
   const [debut, setDebut] = useState(() => debutInitial || debutSemaine());
   const [repas, setRepas] = useState([]);
   const [objectif, setObjectif] = useState(null);
+  const [objectifProteines, setObjectifProteines] = useState(null);
   const [ajout, setAjout] = useState(null);
   const [fiche, setFiche] = useState(null);
   const [erreur, setErreur] = useState('');
@@ -182,7 +187,12 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
   }, [charger]);
 
   useEffect(() => {
-    api('/api/compte').then((u) => setObjectif(u.objectif_kcal)).catch(() => {});
+    api('/api/compte')
+      .then((u) => {
+        setObjectif(u.objectif_kcal);
+        setObjectifProteines(u.objectif_proteines);
+      })
+      .catch(() => {});
   }, []);
 
   function apresChangement() {
@@ -197,6 +207,7 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
       <MenuDuJour
         repas={repasAujourdhui}
         objectif={objectif}
+        objectifProteines={objectifProteines}
         onOuvrir={setFiche}
         onPlanifier={() => setAjout({ jour: aujourdhui, moment: 'souper' })}
       />
@@ -223,6 +234,7 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
         {jours.map((jour) => {
           const duJour = repas.filter((r) => r.jour === jour);
           const total = duJour.reduce((s, r) => s + (r.kcal || 0), 0);
+          const proteines = duJour.reduce((s, r) => s + (r.proteines || 0), 0);
           return (
             <section key={jour} className={`semaine__jour${jour === aujourdhui ? ' semaine__jour--aujourdhui' : ''}`} aria-label={formaterJour(jour)}>
               <div className="semaine__entete">
@@ -232,6 +244,8 @@ export default function MenuSemaine({ debutInitial, onChange, onSemaine }) {
                 </span>
                 <span className="semaine__total">
                   {nombreFr(total)}{objectif ? ` / ${nombreFr(objectif)}` : ''} kcal
+                  <br />
+                  {nombreFr(proteines)}{objectifProteines ? ` / ${nombreFr(objectifProteines)}` : ''} g prot.
                 </span>
               </div>
               {objectif > 0 && (

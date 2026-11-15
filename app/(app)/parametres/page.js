@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Apple, Bot, Cable, ChevronDown, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
+import { Apple, Beef, Bot, Cable, ChevronDown, CupSoda, HeartPulse, LogOut, Smartphone, Tags, Target, Trash2, Upload, UserRound } from 'lucide-react';
 import { api } from '@/lib/client';
 import { Chargement, EntetePage, Message } from '@/components/Elements';
 import CleMcp from '@/components/CleMcp';
@@ -12,6 +12,7 @@ import GestionEtiquettes from '@/components/GestionEtiquettes';
 import GestionVerres from '@/components/GestionVerres';
 import ImportCookmate from '@/components/ImportCookmate';
 import ObjectifCalorique from '@/components/ObjectifCalorique';
+import ObjectifProteines from '@/components/ObjectifProteines';
 import SuppressionCompte from '@/components/SuppressionCompte';
 import SynchroSante from '@/components/SynchroSante';
 import UtilisationIA from '@/components/UtilisationIA';
@@ -19,6 +20,7 @@ import UtilisationIA from '@/components/UtilisationIA';
 const SECTIONS = [
   { id: 'compte', titre: 'Gestion du compte', Icone: UserRound },
   { id: 'objectif', titre: 'Objectif calorique', Icone: Target },
+  { id: 'proteines', titre: 'Objectif de protéines', Icone: Beef },
   { id: 'ia', titre: 'Utilisation de l’IA', Icone: Bot },
   { id: 'verres', titre: 'Mes verres et tasses', Icone: CupSoda },
   { id: 'etiquettes', titre: 'Étiquettes de recettes', Icone: Tags },
@@ -117,6 +119,14 @@ export default function PageParametres() {
             aide={compte.objectif_kcal ? <span className="etiquette">{compte.objectif_kcal} kcal / jour</span> : null}
           >
             <ObjectifCalorique key={`${compte.objectif_mode}-${compte.objectif_manuel}`} compte={compte} onChange={charger} />
+          </Section>
+
+          <Section
+            id="proteines"
+            repliable
+            aide={compte.objectif_proteines ? <span className="etiquette">{compte.objectif_proteines} g / jour</span> : null}
+          >
+            <ObjectifProteines key={`${compte.proteines_mode}-${compte.proteines_manuel}`} compte={compte} onChange={charger} />
           </Section>
         </>
       )}

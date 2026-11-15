@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { q1 } from '@/lib/db';
 import { ErreurHttp, lireCorps, ok, route } from '@/lib/http';
-import { KCAL_RECETTE, listerJournal } from '@/lib/planification';
+import { KCAL_RECETTE, PROTEINES_RECETTE, listerJournal } from '@/lib/planification';
 import { schemaJournal } from '@/lib/schemas';
 import { retirerDeInventaire } from '@/lib/consommation';
 
@@ -17,31 +17,35 @@ export const POST = route(async ({ requete, utilisateur }) => {
   let libelle = d.libelle;
   let kcal = d.kcal;
   let grammes = d.grammes;
+  let proteines = null;
 
   if (d.recette_id) {
     const r = await q1(
-      `SELECT r.titre, (${KCAL_RECETTE})::float AS kcal_portion FROM recettes r WHERE r.id = $1 AND r.utilisateur_id = $2`,
+      `SELECT r.titre, (${KCAL_RECETTE})::float AS kcal_portion, (${PROTEINES_RECETTE})::float AS proteines_portion FROM recettes r WHERE r.id = $1 AND r.utilisateur_id = $2`,
       [d.recette_id, utilisateur.id]
     );
     if (!r) throw new ErreurHttp(400, 'Recette invalide');
     libelle = libelle || r.titre;
     if (kcal == null && r.kcal_portion != null) kcal = r.kcal_portion * d.portions;
+    if (r.proteines_portion != null) proteines = r.proteines_portion * d.portions;
   } else if (d.aliment_id) {
     const a = await q1(
-      'SELECT nom, kcal_100g::float, portion_g::float FROM aliments WHERE id = $1',
+      'SELECT nom, kcal_100g::float, proteines_100g::float, portion_g::float FROM aliments WHERE id = $1',
       [d.aliment_id]
     );
     if (!a) throw new ErreurHttp(400, 'Aliment invalide');
     libelle = libelle || a.nom;
     grammes = grammes ?? a.portion_g ?? 100;
     if (kcal == null && a.kcal_100g != null) kcal = (a.kcal_100g * grammes) / 100 * d.portions;
+    if (a.proteines_100g != null) proteines = (a.proteines_100g * grammes) / 100 * d.portions;
   }
 
   const ligne = await q1(
-    `INSERT INTO journal (utilisateur_id, jour, moment, libelle, recette_id, aliment_id, portions, grammes, kcal, kcal_manuel)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+    `INSERT INTO journal (utilisateur_id, jour, moment, libelle, recette_id, aliment_id, portions, grammes, kcal, kcal_manuel, proteines)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
     [utilisateur.id, d.jour, d.moment, libelle, d.recette_id, d.recette_id ? null : d.aliment_id, d.portions, grammes,
-      kcal == null ? null : Math.round(kcal), d.kcal != null]
+      kcal == null ? null : Math.round(kcal), d.kcal != null,
+      proteines == null ? null : Math.round(proteines * 10) / 10]
   );
   await retirerDeInventaire(ligne.id, utilisateur.id);
   return ok(ligne, 201);

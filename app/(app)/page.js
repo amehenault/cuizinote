@@ -99,7 +99,7 @@ export default function PageAccueil() {
             </div>
           </div>
 
-          <JournalJour key={jour} jour={jour} objectif={utilisateur.objectif_kcal} />
+          <JournalJour key={jour} jour={jour} objectif={utilisateur.objectif_kcal} objectifProteines={utilisateur.objectif_proteines} />
 
           {expirent.length > 0 && (
             <section className="carte">

@@ -403,3 +403,23 @@ ALTER TABLE utilisateurs ADD CONSTRAINT utilisateurs_recap_debut_semaine_check C
 
 -- Ce qu'un repas mangé a retiré de l'inventaire (null = rien retiré encore) : remis si le repas est annulé.
 ALTER TABLE journal ADD COLUMN IF NOT EXISTS retraits_inventaire jsonb;
+
+-- Protéines : objectif quotidien (auto = poids x coefficient selon l'âge, ou saisi) et protéines du journal (figées comme les calories).
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS proteines_mode text NOT NULL DEFAULT 'auto';
+ALTER TABLE utilisateurs DROP CONSTRAINT IF EXISTS utilisateurs_proteines_mode_check;
+ALTER TABLE utilisateurs ADD CONSTRAINT utilisateurs_proteines_mode_check CHECK (proteines_mode IN ('auto', 'manuel'));
+ALTER TABLE utilisateurs ADD COLUMN IF NOT EXISTS objectif_proteines integer;
+ALTER TABLE journal ADD COLUMN IF NOT EXISTS proteines numeric(8,2);
+-- Remplissage des protéines du journal déjà saisi (une seule fois : seulement les entrées encore vides).
+UPDATE journal j
+   SET proteines = a.proteines_100g * coalesce(j.grammes, a.portion_g, 100) / 100 * j.portions
+  FROM aliments a
+ WHERE a.id = j.aliment_id AND j.recette_id IS NULL AND j.proteines IS NULL AND a.proteines_100g IS NOT NULL;
+UPDATE journal j
+   SET proteines = j.portions * (CASE WHEN r.nutrition_manuelle THEN r.proteines_portion ELSE coalesce(
+         (SELECT sum(CASE WHEN a.id IS NOT NULL AND ri.grammes IS NOT NULL THEN a.proteines_100g * ri.grammes / 100 END)
+            FROM recette_ingredients ri LEFT JOIN aliments a ON a.id = ri.aliment_id
+           WHERE ri.recette_id = r.id) / nullif(r.portions, 0),
+         r.proteines_portion) END)
+  FROM recettes r
+ WHERE r.id = j.recette_id AND j.proteines IS NULL;

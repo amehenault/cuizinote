@@ -6,6 +6,7 @@ import { remettreDansInventaire } from '@/lib/consommation';
 
 const schemaModification = z.object({
   kcal: z.number().min(0).max(20000).nullable().optional(),
+  proteines: z.number().min(0).max(1000).nullable().optional(),
   moment: z.enum(MOMENTS).optional(),
   libelle: z.string().trim().min(1).max(200).optional(),
 });
@@ -17,9 +18,11 @@ export const PATCH = route(async ({ requete, utilisateur, params }) => {
     // Calories changées à la main : elles ne seront plus recalculées (kcal_manuel).
     `UPDATE journal SET kcal = CASE WHEN $1::boolean THEN $2 ELSE kcal END,
             kcal_manuel = kcal_manuel OR ($1::boolean AND $2::numeric IS DISTINCT FROM round(kcal)),
-            moment = coalesce($3, moment), libelle = coalesce($4, libelle)
+            moment = coalesce($3, moment), libelle = coalesce($4, libelle),
+            proteines = CASE WHEN $7::boolean THEN $8 ELSE proteines END
       WHERE id = $5 AND utilisateur_id = $6 RETURNING id`,
-    [d.kcal !== undefined, d.kcal ?? null, d.moment ?? null, d.libelle ?? null, verifierUuid(params.id), utilisateur.id]
+    [d.kcal !== undefined, d.kcal ?? null, d.moment ?? null, d.libelle ?? null, verifierUuid(params.id), utilisateur.id,
+      d.proteines !== undefined, d.proteines ?? null]
   );
   if (!ligne) throw new ErreurHttp(404, 'Entrée introuvable');
   return ok(ligne);

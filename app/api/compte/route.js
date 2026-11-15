@@ -11,7 +11,7 @@ export const GET = route(async ({ utilisateur }) => {
 });
 
 // Liste fermée : seuls ces noms de colonnes peuvent entrer dans la requête.
-const CHAMPS = ['nom', 'objectif_mode', 'objectif_kcal', 'sexe', 'date_naissance', 'taille_cm', 'activite', 'but'];
+const CHAMPS = ['nom', 'objectif_mode', 'objectif_kcal', 'sexe', 'date_naissance', 'taille_cm', 'activite', 'but', 'proteines_mode', 'objectif_proteines'];
 
 export const PATCH = route(async ({ requete, utilisateur }) => {
   const d = await lireCorps(requete, schemaCompte);

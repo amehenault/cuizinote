@@ -11,6 +11,7 @@ import { quantiteEnPortions } from '@/lib/portion';
 
 function ModifierEntree({ entree, onFait }) {
   const [kcal, setKcal] = useState(entree.kcal == null ? '' : String(entree.kcal));
+  const [proteines, setProteines] = useState(entree.proteines == null ? '' : String(entree.proteines));
   const [moment, setMoment] = useState(entree.moment);
   const [erreur, setErreur] = useState('');
 
@@ -18,7 +19,11 @@ function ModifierEntree({ entree, onFait }) {
     e.preventDefault();
     try {
       const n = versNombre(kcal);
-      await api(`/api/journal/${entree.id}`, { methode: 'PATCH', corps: { kcal: n == null ? null : Math.round(n), moment } });
+      const p = versNombre(proteines);
+      await api(`/api/journal/${entree.id}`, {
+        methode: 'PATCH',
+        corps: { kcal: n == null ? null : Math.round(n), proteines: p == null ? null : Math.round(p * 10) / 10, moment },
+      });
       onFait();
     } catch (err) {
       setErreur(err.message);
@@ -43,6 +48,10 @@ function ModifierEntree({ entree, onFait }) {
           <input className="champ__saisie" inputMode="numeric" value={kcal} onChange={(e) => setKcal(e.target.value)} />
         </label>
         <label className="champ">
+          <span className="champ__libelle">Protéines (g)</span>
+          <input className="champ__saisie" inputMode="decimal" value={proteines} onChange={(e) => setProteines(e.target.value)} />
+        </label>
+        <label className="champ">
           <span className="champ__libelle">Catégorie</span>
           <select className="champ__saisie" value={moment} onChange={(e) => setMoment(e.target.value)}>
             {MOMENTS.map((x) => <option key={x.valeur} value={x.valeur}>{x.libelle}</option>)}
@@ -65,7 +74,7 @@ function ModifierEntree({ entree, onFait }) {
 }
 
 /** Calories mangées dans la journée, par catégorie, avec total et objectif. */
-export default function JournalJour({ jour, objectif }) {
+export default function JournalJour({ jour, objectif, objectifProteines }) {
   const [entrees, setEntrees] = useState(null);
   const [ajout, setAjout] = useState(null);
   const [edition, setEdition] = useState(null);
@@ -90,6 +99,8 @@ export default function JournalJour({ jour, objectif }) {
 
   const total = entrees.reduce((s, e) => s + (e.kcal || 0), 0);
   const depassement = objectif ? total - objectif : null;
+  const totalProteines = entrees.reduce((s, e) => s + (e.proteines || 0), 0);
+  const resteProteines = objectifProteines ? objectifProteines - totalProteines : null;
   const libelleJour = jour === versIso() ? "aujourd'hui" : `le ${formaterJour(jour, { day: 'numeric', month: 'long' })}`;
 
   return (
@@ -127,7 +138,10 @@ export default function JournalJour({ jour, objectif }) {
                           </>
                         )}
                       </span>
-                      <span className="journal__valeur">{e.kcal != null ? `${nombreFr(e.kcal)} kcal` : 'kcal ?'}</span>
+                      <span className="journal__valeur">
+                        {e.kcal != null ? `${nombreFr(e.kcal)} kcal` : 'kcal ?'}
+                        {e.proteines != null && <span className="journal__detail"> · {nombreFr(e.proteines)} g prot.</span>}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -154,6 +168,28 @@ export default function JournalJour({ jour, objectif }) {
         )}
         {depassement != null && depassement <= 0 && total > 0 && (
           <p className="champ__aide">Il vous reste {nombreFr(-depassement)} kcal {libelleJour}.</p>
+        )}
+        <div className="rangee rangee--espacee">
+          <span className="journal__titre">Protéines</span>
+          <span className="journal__total-valeur">
+            {nombreFr(totalProteines)}{objectifProteines ? ` / ${nombreFr(objectifProteines)}` : ''} g
+          </span>
+        </div>
+        {objectifProteines > 0 && (
+          <div className="jauge" role="img" aria-label={`${Math.round((totalProteines / objectifProteines) * 100)} % de l'objectif de protéines`}>
+            <div className="jauge__remplissage" style={{ width: `${Math.min(100, (totalProteines / objectifProteines) * 100)}%` }} />
+          </div>
+        )}
+        {resteProteines > 0 && totalProteines > 0 && (
+          <p className="champ__aide">Il vous manque {nombreFr(resteProteines)} g de protéines {libelleJour}.</p>
+        )}
+        {resteProteines != null && resteProteines <= 0 && (
+          <p className="champ__aide">Objectif de protéines atteint {libelleJour}.</p>
+        )}
+        {!objectifProteines && (
+          <p className="champ__aide">
+            <Link href="/parametres#proteines">Définissez votre objectif de protéines</Link> pour suivre vos apports.
+          </p>
         )}
         {!objectif && (
           <p className="champ__aide">

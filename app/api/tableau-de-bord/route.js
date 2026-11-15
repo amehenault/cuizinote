@@ -35,7 +35,7 @@ export const GET = route(async ({ requete, utilisateur }) => {
   ]);
 
   return ok({
-    utilisateur: { nom: utilisateur.nom, objectif_kcal: utilisateur.objectif_kcal },
+    utilisateur: { nom: utilisateur.nom, objectif_kcal: utilisateur.objectif_kcal, objectif_proteines: utilisateur.objectif_proteines },
     journal,
     poids,
     pas,

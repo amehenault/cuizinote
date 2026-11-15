@@ -192,7 +192,7 @@ export default function ObjectifCalorique({ compte, onChange }) {
       </div>
       <Message type={message.type}>{message.texte}</Message>
       <p className="champ__aide">
-        Utilisé dans l&apos;accueil, le menu de la semaine et le widget. Les pas sont dans <Link href="/sante">Santé</Link>.
+        Utilisé dans l&apos;accueil, le menu de la semaine et le widget. Vos pesées sont dans <Link href="/sante">Santé</Link>.
       </p>
     </form>
   );
