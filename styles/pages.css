@@ -983,7 +983,7 @@ button.semaine__repas-nom:hover {
   white-space: nowrap;
 }
 
-/* Pas et Poids : toujours 2 colonnes sur téléphone */
+/* Tuiles de statistiques : 2 colonnes sur téléphone */
 @media (max-width: 759px) {
   .grille--stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -993,6 +993,11 @@ button.semaine__repas-nom:hover {
   .grille--stats > .stat {
     padding: var(--espace-3);
   }
+}
+
+/* Une tuile seule (ex. Poids) prend toute la largeur */
+.grille--stats > .stat:only-child {
+  grid-column: 1 / -1;
 }
 
 /* Titres des tuiles (Pas, Poids, Communauté) en gras */
