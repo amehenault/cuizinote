@@ -25,7 +25,7 @@ function Copiable({ libelle, valeur }) {
   );
 }
 
-/** Samsung Health -> Health Connect -> Life Dashboard Companion -> Cuizinote (pas et poids). */
+/** Samsung Health -> Health Connect -> Life Dashboard Companion -> Cuizinote (poids). */
 export default function SynchroSante() {
   const [etat, setEtat] = useState(null);
   const [cle, setCle] = useState('');
@@ -58,7 +58,7 @@ export default function SynchroSante() {
   return (
     <div className="pile">
       <p className="champ__aide">
-        Vos pas et votre poids arrivent tout seuls dans Cuizinote. Samsung Health ne parle pas directement aux sites Web :
+        Votre poids arrive tout seul dans Cuizinote. Samsung Health ne parle pas directement aux sites Web :
         une petite application gratuite fait le pont. <strong>Faites ces étapes sur le téléphone</strong> (environ 10
         minutes, une seule fois).
       </p>
@@ -78,7 +78,7 @@ export default function SynchroSante() {
           <p className="etapes__titre">Autorisez Samsung Health à partager</p>
           <p className="champ__aide">
             Samsung Health, menu <strong>≡</strong> (ou <strong>⋮</strong>), Paramètres, <strong>Health Connect</strong>.
-            Activez le partage des <strong>Pas</strong> et du <strong>Poids</strong>.
+            Activez le partage du <strong>Poids</strong>.
           </p>
         </li>
         <li className="etapes__element">
@@ -119,7 +119,7 @@ export default function SynchroSante() {
         <li className="etapes__element">
           <p className="etapes__titre">Collez-la dans Life Dashboard Companion</p>
           <p className="champ__aide">
-            Onglet Santé : autorisez la lecture des pas et du poids. Ajoutez un <strong>webhook</strong> : collez
+            Onglet Santé : autorisez la lecture du poids. Ajoutez un <strong>webhook</strong> : collez
             l&apos;adresse. Dans <strong>Headers</strong>, ajoutez le nom <strong>Authorization</strong> et la valeur qui
             commence par <strong>Bearer czs_</strong>.
           </p>
@@ -151,7 +151,6 @@ export default function SynchroSante() {
 /** Diagnostic : ce que la passerelle a réellement envoyé la dernière fois. */
 function DernierEnvoi({ envoi }) {
   const { retenu = {} } = envoi;
-  const jours = { ...(retenu.intervalles_par_jour || {}), ...(retenu.totaux_quotidiens || {}) };
   const texte = JSON.stringify(envoi, null, 2);
   return (
     <details className="pile pile--serre">
@@ -159,9 +158,7 @@ function DernierEnvoi({ envoi }) {
       <p className="champ__aide">
         Reçu le {new Date(envoi.recu_le).toLocaleString('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })}
         {envoi.test ? ' (envoi de test)' : ''}.
-        {Object.keys(jours).length
-          ? ` Pas retenus : ${Object.entries(jours).sort().map(([j, n]) => `${j} = ${n}`).join(', ')}.`
-          : ' Aucun pas retenu dans cet envoi.'}
+        {retenu.pesees ? ` Pesées reçues : ${retenu.pesees}.` : ' Aucune pesée dans cet envoi.'}
       </p>
       <pre className="champ__aide" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: '20rem', overflow: 'auto' }}>{texte}</pre>
       <div>

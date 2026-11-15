@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Footprints, Scale, Settings, Smartphone, Trash2, Upload } from 'lucide-react';
+import { Scale, Settings, Smartphone, Trash2, Upload } from 'lucide-react';
 import { api } from '@/lib/client';
-import { enLb, nombreFr, versIso } from '@/lib/dates';
+import { enLb, nombreFr } from '@/lib/dates';
 import { EntetePage, Message, versNombre } from '@/components/Elements';
-import { GraphiqueBarres, GraphiqueLigne } from '@/components/Graphiques';
+import { GraphiqueLigne } from '@/components/Graphiques';
 import RecapCalories from '@/components/RecapCalories';
 
 const PERIODES = [
@@ -52,16 +52,13 @@ function BoutonImport({ libelle, route, onTermine, onErreur }) {
 export default function PageSante() {
   const [jours, setJours] = useState(90);
   const [poids, setPoids] = useState([]);
-  const [pas, setPas] = useState([]);
   const [message, setMessage] = useState({ type: 'info', texte: '' });
   const [saisiePoids, setSaisiePoids] = useState({ mesure_le: maintenantLocal(), valeur: '', unite: 'lb' });
-  const [saisiePas, setSaisiePas] = useState({ jour: versIso(), nombre: '' });
 
   const erreur = (texte) => setMessage({ type: 'erreur', texte });
 
   const charger = useCallback(() => {
     api(`/api/sante/poids?jours=${jours}`).then(setPoids).catch((e) => erreur(e.message));
-    api(`/api/sante/pas?jours=${Math.min(jours, 90)}`).then(setPas).catch((e) => erreur(e.message));
   }, [jours]);
 
   useEffect(() => {
@@ -85,19 +82,6 @@ export default function PageSante() {
     }
   }
 
-  async function ajouterPas(e) {
-    e.preventDefault();
-    const n = versNombre(saisiePas.nombre);
-    if (n == null) return;
-    try {
-      await api('/api/sante/pas', { methode: 'POST', corps: { jour: saisiePas.jour, nombre: Math.round(n) } });
-      setSaisiePas({ ...saisiePas, nombre: '' });
-      charger();
-    } catch (err) {
-      erreur(err.message);
-    }
-  }
-
   async function supprimer(type, id) {
     await api(`/api/sante/${type}/${id}`, { methode: 'DELETE' }).catch((e) => erreur(e.message));
     charger();
@@ -105,11 +89,10 @@ export default function PageSante() {
 
   const dernier = poids[poids.length - 1];
   const variation = poids.length > 1 ? dernier.poids_kg - poids[0].poids_kg : null;
-  const moyennePas = pas.length ? Math.round(pas.reduce((s, p) => s + p.nombre, 0) / pas.length) : null;
 
   return (
     <>
-      <EntetePage titre="Santé" sousTitre="Calories de la semaine, poids (balance VeSync) et pas (Samsung Health)">
+      <EntetePage titre="Santé" sousTitre="Calories de la semaine et poids">
         <div className="onglets" role="tablist">
           {PERIODES.map(([v, l]) => (
             <button key={v} type="button" role="tab" aria-selected={jours === v} className={`onglets__bouton${jours === v ? ' onglets__bouton--actif' : ''}`} onClick={() => setJours(v)}>
@@ -132,18 +115,13 @@ export default function PageSante() {
               <span className="stat__note">{variation > 0 ? '+' : ''}{nombreFr(enLb(variation), 1)} lb sur la période</span>
             )}
           </div>
-          <div className="stat">
-            <span className="stat__libelle"><Footprints size={16} aria-hidden="true" />Moyenne de pas</span>
-            <span className="stat__valeur">{moyennePas != null ? nombreFr(moyennePas) : '-'}</span>
-            <span className="stat__note">par jour</span>
-          </div>
         </div>
 
         <Link href="/parametres" className="carte carte--accent carte--lien">
           <div className="carte__corps">
             <h2 className="carte__titre"><Smartphone size={18} aria-hidden="true" />Connecter Samsung Health</h2>
             <p className="champ__aide">
-              Recevez vos pas et votre poids automatiquement depuis votre téléphone. La connexion se configure dans
+              Recevez votre poids automatiquement depuis votre téléphone. La connexion se configure dans
               Paramètres (icône <Settings size={12} aria-hidden="true" className="icone-en-ligne" />).
             </p>
           </div>
@@ -197,54 +175,6 @@ export default function PageSante() {
                 Pour un import ponctuel : dans l&apos;application VeSync, ouvrez votre balance, allez dans
                 l&apos;historique des mesures puis utilisez l&apos;option d&apos;exportation des données (fichier CSV). Importez ce
                 fichier ici : les doublons sont mis à jour, jamais dupliqués. Les livres sont converties en kilogrammes.
-              </p>
-            </details>
-          </div>
-        </section>
-
-        <section className="carte">
-          <div className="carte__entete">
-            <h2 className="carte__titre"><Footprints size={18} aria-hidden="true" />Pas quotidiens</h2>
-            <BoutonImport
-              libelle="Importer Samsung Health"
-              route="/api/sante/pas/import"
-              onTermine={(n) => { setMessage({ type: 'succes', texte: `${n} journée(s) de pas importée(s) depuis Samsung Health.` }); charger(); }}
-              onErreur={erreur}
-            />
-          </div>
-          <div className="carte__corps">
-            {pas.length > 0 ? (
-              <GraphiqueBarres points={pas.map((p) => ({ x: p.jour, y: p.nombre }))} unite="pas" libelle="Pas par jour" objectif={10000} />
-            ) : (
-              <p className="champ__aide">Aucune donnée de pas sur la période.</p>
-            )}
-            {pas.length > 0 && <p className="champ__aide">Ligne pointillée : repère de 10 000 pas.</p>}
-            <form className="rangee" onSubmit={ajouterPas}>
-              <input className="champ__saisie champ__saisie--court" type="date" value={saisiePas.jour} onChange={(e) => setSaisiePas({ ...saisiePas, jour: e.target.value })} aria-label="Jour" required />
-              <input className="champ__saisie champ__saisie--court" inputMode="numeric" placeholder="Nombre de pas" value={saisiePas.nombre} onChange={(e) => setSaisiePas({ ...saisiePas, nombre: e.target.value })} aria-label="Nombre de pas" required />
-              <button type="submit" className="bouton bouton--principal">Ajouter</button>
-            </form>
-            {pas.length > 0 && (
-              <ul className="liste">
-                {[...pas].reverse().slice(0, 5).map((p) => (
-                  <li key={p.id} className="liste__element">
-                    <div className="liste__principal">
-                      <p className="liste__titre">{nombreFr(p.nombre)} pas</p>
-                      <p className="liste__detail">{p.jour} · {p.source}</p>
-                    </div>
-                    <button type="button" className="bouton bouton--fantome bouton--icone" onClick={() => supprimer('pas', p.id)} aria-label="Supprimer">
-                      <Trash2 size={16} aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <details>
-              <summary className="champ__aide">Comment exporter mes pas depuis Samsung Health ?</summary>
-              <p className="champ__aide">
-                Pour un import ponctuel sans application passerelle : dans Samsung Health, ouvrez Menu, Paramètres,
-                puis « Télécharger les données personnelles ». Dans le dossier créé sur le téléphone, choisissez le fichier
-                dont le nom contient <strong>step_daily_trend</strong> et importez-le ici.
               </p>
             </details>
           </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Flame, Footprints, Scale } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Flame, Scale } from 'lucide-react';
 import { api } from '@/lib/client';
 import { EMPLACEMENTS, ajouterJours, debutSemaine, enLb, formaterJour, joursRestants, nombreFr, versIso } from '@/lib/dates';
 import { Chargement, Message } from '@/components/Elements';
@@ -17,16 +17,10 @@ const SOURCES = {
   manuel: 'saisie manuelle',
 };
 
-function Sante({ poids, pas, jour }) {
-  const pasDuJour = pas.find((p) => p.jour === jour);
-  const moyenne = pas.length ? pas.reduce((s, p) => s + p.nombre, 0) / pas.length : null;
+function Sante({ poids }) {
   const dernier = poids[0];
   const ecart = dernier && poids[1] ? dernier.poids_kg - poids[1].poids_kg : null;
-  // Chaque note est découpée en lignes courtes qui tiennent dans une tuile étroite (2 colonnes sur téléphone).
-  const notePas = [
-    pasDuJour ? SOURCES[pasDuJour.source] || pasDuJour.source : 'Aucune donnée',
-    moyenne != null ? `moyenne : ${nombreFr(moyenne)}` : null,
-  ];
+  // Chaque note est découpée en lignes courtes qui tiennent dans une tuile étroite.
   const notePoids = dernier
     ? [
         SOURCES[dernier.source] || dernier.source,
@@ -44,11 +38,6 @@ function Sante({ poids, pas, jour }) {
     ));
   return (
     <div className="grille grille--stats">
-      <Link href="/sante" className="stat">
-        <span className="stat__libelle"><Footprints size={16} aria-hidden="true" />Pas</span>
-        <span className="stat__valeur">{pasDuJour ? nombreFr(pasDuJour.nombre) : '-'}</span>
-        {lignes(notePas)}
-      </Link>
       <Link href="/sante" className="stat">
         <span className="stat__libelle"><Scale size={16} aria-hidden="true" />Poids</span>
         <span className="stat__valeur">{dernier ? `${nombreFr(enLb(dernier.poids_kg), 1)} lb` : '-'}</span>
@@ -72,13 +61,13 @@ export default function PageAccueil() {
   if (erreur) return <Message type="erreur">{erreur}</Message>;
   if (!donnees) return <Chargement />;
 
-  const { utilisateur, poids, pas, expirent } = donnees;
+  const { utilisateur, poids, expirent } = donnees;
   const libelleEmplacement = (v) => EMPLACEMENTS.find((e) => e.valeur === v)?.libelle;
   const semaineProchaine = ajouterJours(debutSemaine(), 7);
 
   return (
     <div className="pile pile--large">
-      <Sante poids={poids} pas={pas} jour={jour} />
+      <Sante poids={poids} />
 
       <CommunauteAccueil />
 
