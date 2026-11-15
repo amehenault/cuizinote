@@ -127,7 +127,7 @@ export default function SynchroSante() {
         <li className="etapes__element">
           <p className="etapes__titre">Testez</p>
           <p className="champ__aide">
-            Touchez « Send test ». Rechargez cette page : le message vert « Connecté » doit apparaître. C&apos;est fini.
+            Touchez « Test ping » (sous le bouton « Sync Now »). Rechargez cette page : le message vert « Connecté » doit apparaître. C&apos;est fini.
           </p>
         </li>
       </ol>
